@@ -1,0 +1,103 @@
+.newsletter-popup__layout{
+  background-color: var(--color_popup_nlt_bg);  
+}
+.newsletter-popup__text{
+  text-align: center;
+  text-transform: none;
+  font-size: 18px;
+}
+.newsletter-popup__text .line1{
+  font-weight: 500;
+}
+.newsletter-popup__text .line2{
+  font-size: 70px;
+  font-weight: 600;
+  line-height: 1.2em;
+  color: var(--color_nlt_per);
+}
+.newsletter-popup__layout .newsletter-popup__header{
+  display: none;
+}
+.newsletter-popup__layout a.modal__close-text{
+  text-align: center;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-top: 15px;
+  display: inline-block;
+  cursor: pointer;
+  color: var(--color_dropdown_heading);
+}
+.newsletter-popup__layout a.modal__close-text:hover{
+  color: var(--color_dropdown_text_hover);
+}
+.newsletter-popup__layout .modal__content{
+  background-color: transparent; 
+  position: relative;
+  padding-bottom: 20px;
+  padding-top: 0;
+  max-height: 100vh;
+  overflow: initial;
+  max-width: 350px;
+}
+.newsletter-popup__layout .modal__content:before{
+  content: '';
+  position: absolute;
+  top: 100px;
+  left: 0px;
+  right: 0px;
+  bottom: 0;
+  border-radius: 30px;
+  background-color: var(--color_dropdown_bg);
+}
+.newsletter-popup__body{
+  text-align: center;
+  position: relative;
+}
+.newsletter-popup__body-gr{
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.newsletter-popup__layout .top-news-image{
+  margin-bottom: 20px;
+  margin-left: -100px;
+  margin-right: -100px;
+  max-width: calc(100% + 150px);
+}
+@media screen and (max-width: 575px){
+  .newsletter-popup__layout .top-news-image{
+    margin-left: -50px;
+    margin-right: -50px;
+    max-width: calc(100% + 100px);
+  }
+}
+@media screen and (max-width: 375px){
+   .newsletter-popup__layout .top-news-image{
+    margin-left: -20px;
+    margin-right: -20px;
+    max-width: calc(100% + 40px);
+  }
+}
+.newsletter-popup__layout .newsletter-form__field-wrapper{
+  border: 0;
+  display: block;
+}
+.newsletter-popup__layout .newsletter-form__button,
+.newsletter-popup__layout .newsletter-form__field-wrapper .field__input{
+  width: 100%;
+  height: 40px;
+  line-height: 40px;
+  border-radius: 20px;
+}
+.newsletter-popup__layout .newsletter-form__button{
+  line-height: 38px;
+  margin-top: 20px;
+}
+
+.newsletter-popup__layout .modal__body{
+  max-height: 100%;
+  overflow-y: initial;
+}
