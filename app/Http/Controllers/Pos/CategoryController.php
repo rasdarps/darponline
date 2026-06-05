@@ -28,6 +28,7 @@ class CategoryController extends Controller
 
 
     public function create(){
+
      return view('backend.category.create');
     } // End Mehtod 
 
@@ -36,6 +37,8 @@ class CategoryController extends Controller
 
         $validatedData = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,',
+            'description' => 'nullable|string',
+            'show_on_homepage' => 'boolean',
         ], [
             'name.required' => 'Please enter a Category name',
             'name.unique' => 'This category already exists',
@@ -50,6 +53,8 @@ class CategoryController extends Controller
             DB::transaction(function () use ($data) {
                 Category::create($data);
             });
+
+            
 
             return response()->json([
                 'status' => 200,
@@ -67,7 +72,7 @@ class CategoryController extends Controller
      public function edit($encryptedId){
         try {
             $id = Crypt::decrypt($encryptedId);
-            $category = Category::find($id);
+            $category = Category::findorfail($id);
             
             if (!$category) {
                 return redirect()->route('categories.index')->with('error', 'Category not found.');
@@ -94,17 +99,18 @@ class CategoryController extends Controller
 
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255|unique:categories,name,' . $id,
+                'description' => 'nullable|string',
+                'show_on_homepage' => 'boolean',
             ], [
                 'name.required' => 'Please enter a category name',
                 'name.unique' => 'This category already exists',
             ]);
 
+
+            $validatedData['updated_by'] = Auth::id();
             try {
                 DB::transaction(function () use ($validatedData, $category) {
-                    $category->update([
-                        'name' => $validatedData['name'],
-                        'updated_by' => Auth::id(),
-                    ]);
+                    $category->update($validatedData);
                 });
 
                 return response()->json([
@@ -132,14 +138,24 @@ class CategoryController extends Controller
     public function destroy($encryptedId){
         try {
             $id = Crypt::decrypt($encryptedId);
-            $category = Category::find($id);
+            $category = Category::findOrFail($id);
+            
+
+            
             
             if (!$category) {
                 return response()->json([
                     'status' => 404,
                     'message' => 'Category not found.',
                 ]);
-            }
+            } 
+            // Check if category has products
+            if ($category->products()->count() > 0) {
+               return response()->json([
+                   'status' => 422,
+                   'message' => 'Cannot delete category with associated products. Reassign products first.'
+               ], 422);
+           }
             
             $categoryName = $category->name;
             
@@ -155,11 +171,75 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 400,
-                'message' => 'Invalid category ID.',
+                'message' => 'Failed to delete category',
             ]);
         }
 
     } // End Method 
 
+    public function updateWebsiteStatus(Request $request)
+    {
+
+        $request->validate([
+            'id' => 'required|exists:categories,id',
+            'show_on_homepage' => 'required|boolean'
+        ]);
+
+        try {
+            // Decrypt ID if it's encrypted
+            $id = $request->id;
+            if (is_string($id) && strpos($id, 'eyJ') === 0) {
+                $id = Crypt::decrypt($id);
+            }
+            
+            $category = Category::findOrFail($id);
+            $category->show_on_homepage = $request->show_on_homepage;
+            $category->save();
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Category visibility updated successfully',
+                'data' => [
+                    'id' => $category->id,
+                    'show_on_homepage' => $category->show_on_homepage
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update category visibility: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Bulk update website visibility
+     */
+    public function bulkUpdateWebsiteStatus(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:categories,id',
+            'show_on_homepage' => 'required|boolean'
+        ]);
+        
+        try {
+            $updatedCount = Category::whereIn('id', $request->ids)
+                ->update(['show_on_homepage' => $request->show_on_homepage]);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Categories updated successfully',
+                'updated_count' => $updatedCount
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update categories'
+            ], 500);
+        }
+    }
 
 }

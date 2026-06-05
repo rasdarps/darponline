@@ -44,8 +44,40 @@
                                             <div class="form-group">
                                                 <label for="name"><strong>Category <span class="text-danger">*</span></strong></label>
                                                 <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="enter category" onkeypress="return isCharKey(event)">
+                                                <small class="text-muted">This will be displayed on the website</small>
+
                                             </div>
+
+                                            <div class="form-group">
+                                                <label>Description</label>
+                                                <textarea name="description" rows="4" class="form-control">{{ old('description', $category->description ?? '') }}</textarea>
+                                                <small class="text-muted">Brief description of the category (optional)</small>
+                                            </div>
+
+                                            <div class="form-group mt-2">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" name="show_on_homepage" class="custom-control-input" id="show_on_homepage" 
+                                                           value="1" {{ isset($category) && $category->show_on_homepage ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="show_on_homepage">Show on Online Shop Website</label>
+                                                </div>
+                                                <small class="text-muted">Display this category on the homepage of the online shop</small>
+                                            </div>
+
                                         </div>
+
+                                        <div class="col-md-6  mx-auto">
+                                            <!-- Category Image -->
+                                            
+                                            
+                                            <!-- Banner Image -->
+                                        
+                                            
+                                            <!-- Settings -->
+                                         
+                                                   
+                                           
+                                        </div>
+                                  
                                     
                                     {{-- </div> --}}
                                     {{-- row 1 ends --}}
@@ -79,13 +111,7 @@
 @section('styles')
 <style>
 
-    .card {
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease-in-out;
-        border-radius: 15px;
-        overflow: hidden;
-        transform: translateY(0);
-    }
+   
 
     .card:hover {
         box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.3);
@@ -114,10 +140,7 @@
         z-index: 2;
     }
 
-    .card {
-        background: linear-gradient(145deg, #ffffff, #f0f0f0);
-        border: none;
-    }
+   
 
     .card:hover {
         background: linear-gradient(145deg, #f8f9fa, #e9ecef);

@@ -145,7 +145,7 @@
                                     Notiflix.Notify.success(response.message || 'Login successful!');
                                     setTimeout(() => {
                                         window.location.href = response.redirect || "{{route('shop.home')}}";
-                                    }, 1500);
+                                    }, 100);
                                 } else {
                                     Notiflix.Notify.warning(response.message || 'Login failed');
                                 }

@@ -4,7 +4,8 @@
         <script src="{{ asset('backend/assets/libs/metismenu/metisMenu.min.js') }}"></script>
         <script src="{{ asset('backend/assets/libs/simplebar/simplebar.min.js') }}"></script>
         <script src="{{ asset('backend/assets/libs/node-waves/waves.min.js') }}"></script>
-        
+        <script src="{{ asset('js/custom.js') }}"></script>
+
         <!-- apexcharts -->
         <script src="{{ asset('backend/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
 
@@ -16,8 +17,7 @@
          <!-- CDN Scripts -->
          <!-- JQUERY DataTables -->
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <!-- Bootstrap 4 integration -->
-        <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+      
         <!-- Responsive -->
         <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
         <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap4.min.js"></script>
@@ -34,6 +34,7 @@
         
         <!-- Datatable init js -->
         <script src="{{ asset('backend/assets/js/pages/datatables.init.js') }}"></script>
+        <script src="{{ asset('backend/datatables/buttons.server-side.js') }}"></script>
 
         {{-- Yajra Data Table Scripts end--}}
 

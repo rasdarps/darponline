@@ -5,6 +5,9 @@ use App\Http\Controllers\ClientSide\Auth\ClientLoginController;
 use App\Http\Controllers\ClientSide\Auth\ClientRegistrationController;
 use App\Http\Controllers\ClientSide\OnlineShoppingController;
 use App\Http\Controllers\ClientSide\ShopAuthController;
+use App\Http\Controllers\ClientSide\ShopCartController;
+use App\Http\Controllers\ClientSide\ShopCategoryController;
+use App\Http\Controllers\ClientSide\ShopHomeController;
 use App\Http\Controllers\ClientSide\ShopOrderController;
 use App\Http\Controllers\ClientSide\ShopProductController;
 use App\Http\Controllers\ClientSide\ShopProfileController;
@@ -133,7 +136,11 @@ Route::prefix('admin')->group(function () {
                 Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [CategoryController::class, 'update'])->name('update');
                 Route::delete('/destroy/{id}', [CategoryController::class, 'destroy'])->name('destroy');
-                
+                Route::post('/update-website-status', [CategoryController::class, 'updateWebsiteStatus'])
+                ->name('update-website-status');
+            Route::post('/bulk-update-website', [CategoryController::class, 'bulkUpdateWebsiteStatus'])
+                ->name('bulk-update-website');
+    
 
             });
 
@@ -280,9 +287,9 @@ Route::prefix('shop')->name('shop.')->group(function () {
     Route::middleware('guest:customer')->group(function () {
 
 
-        Route::get('login', [ShopAuthController::class, 'index'])->name('login_page');
+        Route::get('login', [ShopAuthController::class, 'login_index'])->name('login_page');
 
-        Route::get('/register', [ShopAuthController::class, 'index'])->name('registration_page');
+        Route::get('/register', [ShopAuthController::class, 'register_index'])->name('registration_page');
         Route::post('login', [ShopAuthController::class, 'login'])->name('login');
         Route::post('/register', [ShopAuthController::class, 'register_post'])->name('register');
         Route::get('/forgot-password', [ShopAuthController::class, 'showForgotForm'])->name('password.request');
@@ -338,6 +345,9 @@ Route::prefix('shop')->name('shop.')->group(function () {
         Route::get('/contact', [ShopHomeController::class, 'contact'])->name('contact');
         Route::post('/contact', [ShopHomeController::class, 'submitContact'])->name('contact.submit');
 
+        // collections
+        Route::get('/collections{slug}', [ShopCategoryController::class, 'show'])->name('collections.show');
+        Route::get('/collections/all', [ShopCategoryController::class, 'getAllCategories'])->name('collections.all');
 });
 
  

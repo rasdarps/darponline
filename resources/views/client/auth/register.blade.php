@@ -168,7 +168,7 @@
                                     Notiflix.Notify.success(response.message || 'Registration successful!');
                                     setTimeout(() => {
                                         window.location.href = response.redirect || "{{route('shop.login')}}";
-                                    }, 1500);
+                                    }, 100);
                                 } else {
                                     Notiflix.Notify.warning(response.message || 'Registration failed');
                                 }

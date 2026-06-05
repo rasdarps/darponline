@@ -193,109 +193,30 @@
                                 <div class="ltn__main-menu">
                                     <ul>
                                       
-                                        <li class="menu-icon mega-menu-parent"><a href="/collections/all">Shop</a>
-                                            <ul class="mega-menu column-4">
-                                                <li><a href="/collections/new-arrivals">New Arrivals</a>
-                                                    <ul>
-                                                        <li><a href="/products/g-a-product">Mugs</a></li>
-                                                        <li><a href="/products/m-n-s-product-title">Coasters</a></li>
-                                                        <li><a
-                                                                href="/products/j-l-p-t-praesent-adipiscing-phasellus-ullamcorper-ipsum-rutrum-nunc">Pillows</a>
-                                                        </li>
-                                                        <li><a
-                                                                href="/products/12-unique-content-for-each-product-on-the-product-tab">Candles</a>
-                                                        </li>
-                                                        <li><a href="/products/b-n-badge-product">Soap</a></li>
-                                                    </ul>
-                                                </li>
-                                                <li><a href="/collections/best-selling">Best Selling</a>
-                                                    <ul>
-                                                        <li><a
-                                                                href="/products/12-unique-content-for-each-product-on-the-product-tab">Furniture</a>
-                                                        </li>
-                                                        <li><a href="/products/b-n-badge-product">Blankets <span
-                                                                    class="menu-item-badge">New</span></a></li>
-                                                        <li><a href="/products/a-n-s-product-title">Rugs</a></li>
-                                                        <li><a href="/products/p-s-o-product">Curtains</a></li>
-                                                        <li><a href="/products/k-p-v-product">Pillows</a></li>
-                                                    </ul>
-                                                </li>
-                                                <li><a href="/collections/special-offers">Special Offers</a>
-                                                    <ul>
-                                                        <li><a href="/products/g-a-product">Hats</a></li>
-                                                        <li><a href="/products/f-v-w-s-product">Scarves</a></li>
-                                                        <li><a href="/products/e-s-product">Sculptures</a></li>
-                                                        <li><a href="/products/f-v-w-s-product">Jewelry</a></li>
-                                                        <li><a href="/products/n-n-product">Clothing</a></li>
-                                                    </ul>
-                                                </li>
-                                                <li class="menu-image">
-                                                    <a href="/collections/featured">
-                                                        <img src="{{ asset('client/shop/collections/33_large.jpg?v=1667903805') }}"
-                                                            alt="" loading="lazy">
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </li>
-                                        <li class="menu-icon"><a
-                                                href="/products/j-l-p-t-praesent-adipiscing-phasellus-ullamcorper-ipsum-rutrum-nunc">Product
-                                                <span class="menu-item-badge" style="background-color: red;">New</span></a>
-                                            <ul>
-                                                <li><a href="/products/c-v-product">Variants Product</a></li>
-                                                <li><a
-                                                        href="/products/j-l-p-t-praesent-adipiscing-phasellus-ullamcorper-ipsum-rutrum-nunc">Variants
-                                                        Image Product</a></li>
-                                                <li><a href="/products/x-complementary-product">Complementary Product <span
-                                                            class="menu-item-badge"
-                                                            style="background-color: red;">New</span></a></li>
-                                                <li><a href="/products/e-s-product">Simple Product</a></li>
-                                                <li><a href="/products/h-c-d-product">Countdown Product </a></li>
-                                                <li><a href="/products/w-unit-price-product">Unit Price Product <span
-                                                            class="menu-item-badge">Hot</span></a></li>
-                                                <li><a href="/products/u-product-video">Video Product</a></li>
-                                                <li><a href="/products/v-ar-3d-product">AR/3D Product</a></li>
-                                                <li><a href="/products/new99-gift-card">Gift Card <span
-                                                            class="menu-item-badge">Hot</span></a></li>
-                                                <li><a href="/products/z-digital-downloads-product">Digital Downloads
-                                                        Product<span class="menu-item-badge"
-                                                            style="background-color: red;">New</span></a></li>
-                                                <li><a href="/products/za-pre-order-product">Pre-order Product</a></li>
-                                            </ul>
-                                        </li>
+                                      
                                         <li class="menu-icon"><a href="/collections">Collections <span
                                                     class="menu-item-badge">Hot</span></a>
                                             <ul>
-                                                <li><a href="/collections/accessories">Accessories</a></li>
-                                                <li><a href="/collections/garden-decor">Garden Decor</a></li>
-                                                <li><a href="/collections/gift">Gift</a></li>
-                                                <li><a href="/collections/handcraft">Handcraft <span
-                                                            class="menu-item-badge">Hot</span></a></li>
-                                                <li><a href="/collections/home-decor">Home Decor</a></li>
-                                                <li><a href="/collections/interior-design">Interior Design</a></li>
-                                                <li><a href="/collections/kids">Kids</a></li>
-                                                <li><a href="/collections/knitting-sewing">Knitting &amp; Sewing</a></li>
-                                                <li><a href="/collections/toys">Toys</a></li>
+
+                                                @foreach ($collections as $collection)
+                                                    <li><a href="{{route('shop.collections.show', $collection->slug)}}">{{$collection->name}}</a></li>
+
+                                                @endforeach
+                                             
+                                                {{-- <li><a href="/collections/handcraft">Handcraft <span
+                                                            class="menu-item-badge">Hot</span></a></li> --}}
+                                               
                                             </ul>
                                         </li>
-                                        <li><a href="/blogs/news">Blogs</a></li>
-                                        <li class="menu-icon"><a href="#">Pages</a>
+                                        <li><a href="#">About</a></li>
+
+                                        <li><a href="#">Contact</a></li>
+                                        <li><a href="/pages/faq">Faq</a></li>
+                                       
+                                        <li class="menu-icon"><a href="#">Policies</a>
                                             <ul>
-                                                <li><a href="/pages/about">About</a></li>
-                                                <li><a href="/pages/contact">Contact</a></li>
-                                                <li><a href="/pages/service">Services <span
-                                                            class="menu-item-badge">New</span></a></li>
-                                                <li><a
-                                                        href="https://checkout.shopify.com/gift_cards/2709520502/f83404a6af04a3bedb5e2b221dedc92a">Gift
-                                                        Card <span class="menu-item-badge">New</span></a></li>
-                                                <li><a href="/pages/faq">Faq</a></li>
                                                 <li><a href="/policies/privacy-policy">Privacy Policy</a></li>
                                                 <li><a href="/policies/refund-policy">Refund Policy</a></li>
-                                                <li><a href="/policies/shipping-policy">Shipping Policy</a></li>
-                                                <li><a href="/policies/terms-of-service">Terms of Service</a></li>
-                                                <li><a href="#">404 Page</a></li>
-                                                <li><a href="#">Purchase now <span
-                                                            class="menu-item-badge" style="background-color: red;">Buy from
-                                                            Envato</span></a></li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -567,142 +488,27 @@
             </div>
             <div class="ltn__utilize-menu">
                 <ul>
-                    <li><span class="menu-expand"></span><a href="/">Home <span class="menu-item-badge"
-                                style="background-color: red;">New</span></a>
-                        <ul class="sub-menu">
-                            <li><span class="menu-expand"></span><a href="#">Home Demos</a>
-                                <ul class="sub-menu">
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=122774421622">Home Demo
-                                            #01</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123294089334">Home Demo
-                                            #02</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293991030">Home Demo
-                                            #03</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293925494">Home Demo
-                                            #04</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293892726">Home Demo
-                                            #05</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293827190">Home Demo
-                                            #06</a></li>
-                                </ul>
-                            </li>
-                            <li><span class="menu-expand"></span><a
-                                    href="https://new-99.myshopify.com/?preview_theme_id=122340081782">Home Demos</a>
-                                <ul class="sub-menu">
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293565046">Home Demo
-                                            #07</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293466742">Home Demo
-                                            #08</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293139062">Home Demo
-                                            #09</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123293040758">Home Demo
-                                            #Animation <span class="menu-item-badge"
-                                                style="background-color: red;">New</span></a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123292778614">Home Demo
-                                            #Dark</a></li>
-                                    <li><a href="https://new-99.myshopify.com/?preview_theme_id=123292516470">Home Demo
-                                            #RTL</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li><span class="menu-expand"></span><a href="/collections/all">Shop</a>
-                        <ul class="sub-menu">
-                            <li><span class="menu-expand"></span><a href="/collections/new-arrivals">New Arrivals</a>
-                                <ul class="sub-menu">
-                                    <li><a href="/products/g-a-product">Mugs</a></li>
-                                    <li><a href="/products/m-n-s-product-title">Coasters</a></li>
-                                    <li><a
-                                            href="/products/j-l-p-t-praesent-adipiscing-phasellus-ullamcorper-ipsum-rutrum-nunc">Pillows</a>
-                                    </li>
-                                    <li><a
-                                            href="/products/12-unique-content-for-each-product-on-the-product-tab">Candles</a>
-                                    </li>
-                                    <li><a href="/products/b-n-badge-product">Soap</a></li>
-                                </ul>
-                            </li>
-                            <li><span class="menu-expand"></span><a href="/collections/best-selling">Best Selling</a>
-                                <ul class="sub-menu">
-                                    <li><a
-                                            href="/products/12-unique-content-for-each-product-on-the-product-tab">Furniture</a>
-                                    </li>
-                                    <li><a href="/products/b-n-badge-product">Blankets <span
-                                                class="menu-item-badge">New</span></a></li>
-                                    <li><a href="/products/a-n-s-product-title">Rugs</a></li>
-                                    <li><a href="/products/p-s-o-product">Curtains</a></li>
-                                    <li><a href="/products/k-p-v-product">Pillows</a></li>
-                                </ul>
-                            </li>
-                            <li><span class="menu-expand"></span><a href="/collections/special-offers">Special
-                                    Offers</a>
-                                <ul class="sub-menu">
-                                    <li><a href="/products/g-a-product">Hats</a></li>
-                                    <li><a href="/products/f-v-w-s-product">Scarves</a></li>
-                                    <li><a href="/products/e-s-product">Sculptures</a></li>
-                                    <li><a href="/products/f-v-w-s-product">Jewelry</a></li>
-                                    <li><a href="/products/n-n-product">Clothing</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/collections/featured"><img loading="lazy"
-                                        src="shop/collections/33_large.jpg?v=1667903805" alt=""></a></li>
-                        </ul>
-                    </li>
-                    <li><span class="menu-expand"></span><a
-                            href="/products/j-l-p-t-praesent-adipiscing-phasellus-ullamcorper-ipsum-rutrum-nunc">Product
-                            <span class="menu-item-badge" style="background-color: red;">New</span></a>
-                        <ul class="sub-menu">
-                            <li><a href="/products/c-v-product">Variants Product</a></li>
-                            <li><a
-                                    href="/products/j-l-p-t-praesent-adipiscing-phasellus-ullamcorper-ipsum-rutrum-nunc">Variants
-                                    Image Product</a></li>
-                            <li><a href="/products/x-complementary-product">Complementary Product <span
-                                        class="menu-item-badge" style="background-color: red;">New</span></a></li>
-                            <li><a href="/products/e-s-product">Simple Product</a></li>
-                            <li><a href="/products/h-c-d-product">Countdown Product </a></li>
-                            <li><a href="/products/w-unit-price-product">Unit Price Product <span
-                                        class="menu-item-badge">Hot</span></a></li>
-                            <li><a href="/products/u-product-video">Video Product</a></li>
-                            <li><a href="/products/v-ar-3d-product">AR/3D Product</a></li>
-                            <li><a href="/products/new99-gift-card">Gift Card <span
-                                        class="menu-item-badge">Hot</span></a>
-                            </li>
-                            <li><a href="/products/z-digital-downloads-product">Digital Downloads Product<span
-                                        class="menu-item-badge" style="background-color: red;">New</span></a></li>
-                            <li><a href="/products/za-pre-order-product">Pre-order Product</a></li>
-                        </ul>
-                    </li>
+                    
+                
+                  
                     <li><span class="menu-expand"></span><a href="/collections">Collections <span
                                 class="menu-item-badge">Hot</span></a>
                         <ul class="sub-menu">
-                            <li><a href="/collections/accessories">Accessories</a></li>
-                            <li><a href="/collections/garden-decor">Garden Decor</a></li>
-                            <li><a href="/collections/gift">Gift</a></li>
-                            <li><a href="/collections/handcraft">Handcraft <span
-                                        class="menu-item-badge">Hot</span></a></li>
-                            <li><a href="/collections/home-decor">Home Decor</a></li>
-                            <li><a href="/collections/interior-design">Interior Design</a></li>
-                            <li><a href="/collections/kids">Kids</a></li>
-                            <li><a href="/collections/knitting-sewing">Knitting &amp; Sewing</a></li>
-                            <li><a href="/collections/toys">Toys</a></li>
+                            @foreach ($collections as $collection)
+                                <li><a href="{{route('shop.collections.show', $collection->slug)}}">{{$collection->name}}</a></li>
+
+                            @endforeach
                         </ul>
                     </li>
-                    <li><a href="/blogs/news">Blogs</a></li>
-                    <li><span class="menu-expand"></span><a href="#">Pages</a>
-                        <ul class="sub-menu">
-                            <li><a href="/pages/about">About</a></li>
-                            <li><a href="/pages/contact">Contact</a></li>
-                            <li><a href="/pages/service">Services <span class="menu-item-badge">New</span></a></li>
-                            <li><a
-                                    href="https://checkout.shopify.com/gift_cards/2709520502/f83404a6af04a3bedb5e2b221dedc92a">Gift
-                                    Card <span class="menu-item-badge">New</span></a></li>
-                            <li><a href="/pages/faq">Faq</a></li>
+                    <li><a href="#">About</a></li>
+
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="/pages/faq">Faq</a></li>
+                   
+                    <li class="menu-icon"><a href="#">Policies</a>
+                        <ul>
                             <li><a href="/policies/privacy-policy">Privacy Policy</a></li>
                             <li><a href="/policies/refund-policy">Refund Policy</a></li>
-                            <li><a href="/policies/shipping-policy">Shipping Policy</a></li>
-                            <li><a href="/policies/terms-of-service">Terms of Service</a></li>
-                            <li><a href="https://new-99.myshopify.com/404">404 Page</a></li>
-                            <li><a href="https://1.envato.market/Y9xZqj">Purchase now <span class="menu-item-badge"
-                                        style="background-color: red;">Buy from Envato</span></a></li>
                         </ul>
                     </li>
                 </ul>
