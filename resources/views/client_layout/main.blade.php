@@ -193,7 +193,11 @@
                                 <div class="ltn__main-menu">
                                     <ul>
                                       
-                                      
+                                        @php
+                                            $collections = App\Models\Category::active()
+                                                            ->homepage()
+                                                            ->get();
+                                        @endphp
                                         <li class="menu-icon"><a href="/collections">Collections <span
                                                     class="menu-item-badge">Hot</span></a>
                                             <ul>

@@ -12,12 +12,10 @@ class OnlineShoppingController extends Controller
 
     public function index(){
 
-        $collections = Category::active()
-        ->homepage()
-        ->get();
+        
 
         
-        return view('client.index', compact('collections'));
+        return view('client.index');
     }
 
     public function collection_page(){
