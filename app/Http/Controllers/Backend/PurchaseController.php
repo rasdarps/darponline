@@ -31,7 +31,7 @@ class PurchaseController extends Controller
 
     // RESTful Methods
     public function index(){
-        $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->where('status','1')->get();
+        $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->get();
         return view('backend.purchase.index',compact('allData'));
     } // End Method
 
@@ -90,7 +90,6 @@ class PurchaseController extends Controller
                 'purchase_no' => $request->purchase_no,
                 'date' => $request->date,
                 'description' => $request->description,
-                'status' => 1,
                 'created_by' => Auth::id(),
             ]);
 
@@ -105,7 +104,6 @@ class PurchaseController extends Controller
                 $purchase_details->unit_price = $request->unit_price[$i];
                 $purchase_details->buying_price = $request->buying_price[$i];
                 $purchase_details->unit_id = $request->unit_id[$i];
-                $purchase_details->status = 1;
                 $purchase_details->save();
 
                 // stock addition control
@@ -216,7 +214,7 @@ class PurchaseController extends Controller
 
     public function PrintPurchaseList(){
 
-    $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->where('status','1')->get();
+    $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->get();
        return view('backend.purchase.print_purchase_list',compact('allData'));
     } // End Method
 
@@ -237,7 +235,7 @@ class PurchaseController extends Controller
 
         $sdate = date('Y-m-d',strtotime($request->start_date));
         $edate = date('Y-m-d',strtotime($request->end_date));
-        $allData = Purchase::whereBetween('date',[$sdate,$edate])->where('status','1')->get();
+        $allData = Purchase::whereBetween('date',[$sdate,$edate])->get();
 
 
         $start_date = date('Y-m-d',strtotime($request->start_date));

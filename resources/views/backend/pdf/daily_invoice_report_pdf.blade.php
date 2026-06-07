@@ -33,7 +33,7 @@
             <div class="invoice-title">
                 
                 <h3>
-                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> RICT Shopping Mall - Daily Sales Invoice
+                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> {{ $companyInfo->name }} - Daily Sales Invoice
                 </h3>
             </div>
             <hr>
@@ -41,9 +41,11 @@
             <div class="row">
                 <div class="col-6 mt-4">
                     <address>
-                        <strong>RICT Shopping Mall</strong><br>
-                       Adum, Kumasi<br>
-                        support@rictconsult.com
+                    <strong>{{ $companyInfo->name }}</strong>
+                    <br>
+                       {{ $companyInfo->address }}
+                    <br>
+                        {{ $companyInfo->phone }} | {{ $companyInfo->email }}
                     </address>
                 </div>
                 <div class="col-6 mt-4 text-end">

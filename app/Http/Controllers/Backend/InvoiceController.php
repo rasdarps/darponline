@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
@@ -28,17 +29,10 @@ class InvoiceController extends Controller
     }
 
     public function index(){
-        $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->where('status','1')->get();
+        $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
             return view('backend.invoice.index',compact('allData'));
 
     } // End Method
-
-    // public function ApprovedList(){
-    //     $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->where('status','1')->get();
-    //         return view('backend.invoice.invoice_approved_list',compact('allData'));
-
-    // } // End Method
-
 
     public function create(){ 
 
@@ -94,7 +88,6 @@ class InvoiceController extends Controller
                 'invoice_no' => $request->invoice_no,
                 'date' => $request->date,
                 'description' => $request->description,
-                'status' => 1,
                 'created_by' => Auth::id(),
             ]);
 
@@ -109,7 +102,6 @@ class InvoiceController extends Controller
                 $invoice_details->unit_price = $request->unit_price[$i];
                 $invoice_details->selling_price = $request->selling_price[$i];
                 $invoice_details->unit_id = $request->unit_id[$i];
-                $invoice_details->status = '1';
                 $invoice_details->save();
 
                 // stock deduction control
@@ -216,75 +208,24 @@ class InvoiceController extends Controller
     }// End Method
 
 
-
-    // public function InvoiceApprove($id){
-
-    //     $invoice = Invoice::with('invoice_details')->findOrFail($id);
-    //     return view('backend.invoice.invoice_approve',compact('invoice'));
-
-    // }// End Method
-
-
-    // public function ApprovalStore(Request $request, $id){
-
-    //     foreach($request->selling_qty as $key => $val){
-    //         $invoice_details = InvoiceDetail::where('id',$key)->first();
-    //         $product = Product::where('id',$invoice_details->product_id)->first();
-    //         if($product->quantity < $request->selling_qty[$key]){
-
-    //     $notification = array(
-    //     'message' => 'Sorry stock quantity is less than invoice quantity', 
-    //     'alert-type' => 'error'
-    // );
-    // return redirect()->back()->with($notification); 
-
-    //         }
-    //     } // End foreach 
-
-    //     $invoice = Invoice::findOrFail($id);
-    //     $invoice->updated_by = Auth::user()->id;
-    //     $invoice->status = '1';
-
-    //     DB::transaction(function() use($request,$invoice,$id){
-    //         foreach($request->selling_qty as $key => $val){
-    //          $invoice_details = InvoiceDetail::where('id',$key)->first();
-
-    //          $invoice_details->status = '1';
-    //          $invoice_details->save();
-
-    //          $product = Product::where('id',$invoice_details->product_id)->first();
-    //          $product->quantity = ((float)$product->quantity) - ((float)$request->selling_qty[$key]);
-    //          $product->save();
-    //         } // end foreach
-
-    //         $invoice->save();
-    //     });
-
-    // $notification = array(
-    //     'message' => 'Invoice Approve Successfully', 
-    //     'alert-type' => 'success'
-    // );
-    // return redirect()->route('invoice.pending.list')->with($notification);  
-
-    // } // End Method
-
-
     public function PrintInvoiceList(){
 
-    $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->where('status','1')->get();
+    $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
        return view('backend.invoice.print_invoice_list',compact('allData'));
     } // End Method
 
 
     public function PrintInvoice($id){
         $invoice = Invoice::with('invoice_details')->findOrFail($id);
-        return view('backend.pdf.invoice_pdf',compact('invoice'));
+        $companyInfo = Company::first();
+        return view('backend.pdf.invoice_pdf',compact('invoice','companyInfo'));
 
     } // End Method
 
 
     public function DailyInvoiceReport(){
-        return view('backend.invoice.daily_invoice_report');
+        $companyInfo = Company::first();
+        return view('backend.invoice.daily_invoice_report',compact('companyInfo'));
     } // End Method
 
 
@@ -292,12 +233,13 @@ class InvoiceController extends Controller
 
         $sdate = date('Y-m-d',strtotime($request->start_date));
         $edate = date('Y-m-d',strtotime($request->end_date));
-        $allData = Invoice::whereBetween('date',[$sdate,$edate])->where('status','1')->get();
+        $allData = Invoice::whereBetween('date',[$sdate,$edate])->get();
 
 
         $start_date = date('Y-m-d',strtotime($request->start_date));
         $end_date = date('Y-m-d',strtotime($request->end_date));
-        return view('backend.pdf.daily_invoice_report_pdf',compact('allData','start_date','end_date'));
+        $companyInfo = Company::first();
+        return view('backend.pdf.daily_invoice_report_pdf',compact('allData','start_date','end_date','companyInfo'));
     } // End Method
 
 
