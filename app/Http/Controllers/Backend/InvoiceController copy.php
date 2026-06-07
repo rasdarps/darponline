@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Pos;
+namespace App\Http\Controllers\Backend;
 
 use App\Models\Unit;
 use App\Models\Invoice;

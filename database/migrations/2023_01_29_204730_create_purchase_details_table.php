@@ -44,11 +44,8 @@ return new class extends Migration
             ->unsigned()
             ->onUpdate('cascade')
             ->onDelete('cascade');
-            
+        
             $table->double('buying_price');
-
-            $table->tinyInteger('status')->default(1); 
-
             $table->timestamps();
         });
     }

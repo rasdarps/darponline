@@ -23,8 +23,8 @@ class CategoryDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->addColumn('action', 'category.action')
             ->addColumn('edit_button', function($row) {
-                    $editUrl = route('units.edit', Crypt::encrypt($row->id));
-                    $deleteUrl = route('units.destroy', Crypt::encrypt($row->id));
+                    $editUrl = route('categories.edit', Crypt::encrypt($row->id));
+                    $deleteUrl = route('categories.destroy', Crypt::encrypt($row->id));
                     $csrf = csrf_field();
                     $method = method_field('DELETE');
 

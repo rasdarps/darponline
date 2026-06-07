@@ -1,14 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Backend;
 
-use App\Models\Unit;
-use App\Models\User;
-use App\Models\Brand;
+use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\Product;
 use App\Models\Purchase;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -32,10 +28,10 @@ class DashboardController extends Controller
     public function index()
     {
         
-        $total_purchase = Purchase::where('status','1')->count(); 
-        $total_invoice =Invoice::where('status','1')->count();
-        $pending_purchase = Purchase::where('status','0')->count();
-        $approved_purchase =Purchase::where('status','1')->count();
+        $total_purchase = Purchase::get()->count(); 
+        $total_invoice =Invoice::get()->count();
+        $pending_purchase = Purchase::get()->count();
+        $approved_purchase =Purchase::get()->count();
        
         $products = DB::select('SELECT * FROM products WHERE quantity < stock_level');
         

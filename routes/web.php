@@ -1,21 +1,22 @@
 <?php
 
+use App\Http\Controllers\Backend\AdminController;
+use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\CompanyController;
+use App\Http\Controllers\Backend\CustomerController;
+use App\Http\Controllers\Backend\DashboardController;
+use App\Http\Controllers\Backend\DefaultController;
+use App\Http\Controllers\Backend\InvoiceController;
+use App\Http\Controllers\Backend\ProductController;
+use App\Http\Controllers\Backend\PurchaseController;
+use App\Http\Controllers\Backend\RoleController;
+use App\Http\Controllers\Backend\StockController;
+use App\Http\Controllers\Backend\SupplierController;
+use App\Http\Controllers\Backend\UnitController;
+use App\Http\Controllers\Backend\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\Pos\UnitController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Pos\StockController;
-use App\Http\Controllers\Pos\DefaultController;
-use App\Http\Controllers\Pos\InvoiceController;
-use App\Http\Controllers\Pos\ProductController;
-use App\Http\Controllers\Pos\CategoryController;
-use App\Http\Controllers\Pos\CustomerController;
-use App\Http\Controllers\Pos\PurchaseController;
-use App\Http\Controllers\Pos\SupplierController;
+
 
 
 //Route::get('/dashboard', function () {
@@ -50,7 +51,16 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
             
         });
 
-        Route::resource('/companies', CompanyController::class);
+        Route::prefix('companies')->name('companies.')->group(function () {
+         route::get('/', [CompanyController::class, 'index'])->name('index');
+            Route::get('/create', [CompanyController::class, 'create'])->name('create');
+            Route::post('/store', [CompanyController::class, 'store'])->name('store');
+            Route::get('/edit/{id}', [CompanyController::class, 'edit'])->name('edit');
+            Route::patch('/update/{id}', [CompanyController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [CompanyController::class, 'destroy'])->name('destroy');
+
+        });
+
         Route::resource('/roles', RoleController::class);
         Route::resource('/users', UserController::class);
 

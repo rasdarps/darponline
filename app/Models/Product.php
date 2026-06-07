@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+    use Auditable;
     // protected $guarded = [];
     protected $fillable = [
     'name',
@@ -17,12 +20,16 @@ class Product extends Model
     'stock_level',
     'created_by',
     'updated_by',
+    'deleted_by',
 ];
 
 protected $casts = [
     'quantity' => 'double',
     'stock_level' => 'double', 
     'status' => 'boolean',
+    'created_by' => 'integer',
+    'updated_by' => 'integer',
+    'deleted_by' => 'integer',
 ];
 
     /*public function supplier(){
@@ -57,6 +64,11 @@ protected $casts = [
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
    

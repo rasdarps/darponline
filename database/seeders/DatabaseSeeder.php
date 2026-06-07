@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PermissionTableSeeder::class,
             CategorySeeder::class,
             UnitSeeder::class,
+            CompanySeeder::class,
            
 
         ]);

@@ -48,15 +48,15 @@
                                         <li>
                                             <a href="javascript: void(0);" class="has-arrow waves-effect">
                                                 <i class="ri-compass-2-fill"></i>
-                                                <span>Invoice</span>
+                                                <span>Sales</span>
                                             </a>
                                             <ul class="sub-menu" aria-expanded="false">
                                                 <li><a href="{{ route('invoices.create') }}">Create</a></li>
-                                                <li><a href="{{ route('invoices.index') }}">All Invoice</a></li>
+                                                <li><a href="{{ route('invoices.index') }}">All Sales</a></li>
                                                 {{-- <li><a href="{{ route('invoice.approved.list') }}">Approved List</a></li>
                                                 <li><a href="{{ route('invoice.pending.list') }}">Pending Approval</a></li> --}}
-                                                <li><a href="{{ route('print.invoice.list') }}">Print Invoice List</a></li>
-                                                <li><a href="{{ route('daily.invoice.report') }}">Daily Invoice Report</a></li>
+                                                <li><a href="{{ route('print.invoice.list') }}">Print Sales List</a></li>
+                                                <li><a href="{{ route('daily.invoice.report') }}">Daily Sales Report</a></li>
                                             </ul>
                                         </li>
                                     </ul><!--drop ul ends-->    
@@ -71,6 +71,18 @@
                                 <span>Manage Setups</span>
                             </a>
                             <ul><!--drop ul-->
+                                 <li>
+                                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                        <i class="fa fa-building"></i>
+                                        <span>Company</span>
+                                    </a>
+                                    <ul class="sub-menu" aria-expanded="false">
+                                        <li><a href="{{ route('companies.create') }}">Create</a></li>
+                                        <li><a href="{{ route('companies.index') }}">All Company</a></li>
+                                        
+                                    </ul>
+                                </li>
+
                                 <li>
                                     <a href="javascript: void(0);" class="has-arrow waves-effect">
                                         <i class="fa fa-users"></i>
