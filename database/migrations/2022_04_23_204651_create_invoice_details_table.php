@@ -45,7 +45,6 @@ return new class extends Migration
             ->onDelete('cascade');
 
             $table->double('selling_price');
-            $table->tinyInteger('status')->default(1); 
             $table->timestamps();
         });
     } 

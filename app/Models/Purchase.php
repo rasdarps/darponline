@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Purchase extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+    use Auditable;
     
     protected $fillable = [
         'purchase_no',
@@ -16,11 +19,15 @@ class Purchase extends Model
         'status',
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [
         'date' => 'date',
         'status' => 'integer',
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+        'deleted_by' => 'integer',
     ];
 
     // User relationships
@@ -32,6 +39,11 @@ class Purchase extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
     // Existing relationships

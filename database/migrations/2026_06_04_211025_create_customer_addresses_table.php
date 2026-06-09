@@ -28,6 +28,7 @@ return new class extends Migration
             $table->boolean('is_shipping')->default(true);
             $table->text('delivery_instructions')->nullable();
             $table->timestamps();
+            $table->softDeletes();
             $table->index('customer_id');
             $table->index('is_default');
         });

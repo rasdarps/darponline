@@ -4,15 +4,17 @@ namespace App\Models;
 
 use App\Models\CustomerAddress;
 use App\Models\ShopOrder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Traits\Auditable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Authenticatable
 {
-    use HasFactory, SoftDeletes, Notifiable, HasRoles;
+    use HasFactory, SoftDeletes, Notifiable, HasRoles, Auditable;
 
     protected $fillable = [
         'name',
@@ -37,6 +39,9 @@ class Customer extends Authenticatable
         'status' => 'boolean',
         'email_verified_at' => 'datetime',
 
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+        'deleted_by' => 'integer',
     ];
 
     // User relationships

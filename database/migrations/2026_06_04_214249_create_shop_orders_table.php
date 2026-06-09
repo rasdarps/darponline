@@ -40,7 +40,8 @@ return new class extends Migration
             $table->timestamp('cancelled_at')->nullable();
             
             $table->timestamps();
-            
+            $table->softDeletes();
+
             $table->index('order_number');
             $table->index('customer_id');
             $table->index('status');

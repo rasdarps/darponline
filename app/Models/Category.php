@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+    use Auditable;
 
     protected $fillable = [
         'name',
@@ -28,7 +31,10 @@ class Category extends Model
     protected $casts = [
         'status' => 'boolean',
         'show_on_homepage' => 'boolean',
-        'sort_order' => 'integer'
+        'sort_order' => 'integer',
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+        'deleted_by' => 'integer',
     ];
 
     // Boot method to auto-generate slug

@@ -21,9 +21,6 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable()->after('email');
             $table->string('username')->nullable()->after('name');
             $table->rememberToken();
-            $table->softDeletes();
-            $table->unsignedBigInteger('deleted_by')->nullable();
-            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
 
 
         });

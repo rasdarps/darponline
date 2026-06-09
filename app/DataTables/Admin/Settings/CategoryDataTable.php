@@ -23,17 +23,19 @@ class CategoryDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->addColumn('action', 'category.action')
             ->addColumn('edit_button', function($row) {
+                    $editUrl = route('categories.edit', Crypt::encrypt($row->id));
+                    $deleteUrl = route('categories.destroy', Crypt::encrypt($row->id));
                     $csrf = csrf_field();
                     $method = method_field('DELETE');
 
                     return '
-                        <form style="display:inline-block" action="'.route('categories.edit', Crypt::encrypt($row->id)).'" method="GET">
+                        <form style="display:inline-block" action="'.$editUrl.'" method="GET">
                             '.$csrf.'
                             <button style="border:none; background:none; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
                                 <i class="fas fa-edit" style="color:#010033; justify-content:center;"></i>
                             </button>
                         </form>
-                        <form style="display:inline-block" action="'.route('categories.destroy', Crypt::encrypt($row->id)).'" method="POST">
+                        <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
                             '.$csrf.'
                             '.$method.'
                             <button type="button" style="border:none; background:none; cursor:pointer;" class="btn-delete btn btn-sm btn-danger">
