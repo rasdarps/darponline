@@ -44,7 +44,23 @@ class CategoryDataTable extends DataTable
                         </form>
                     ';
                 })
-            
+
+                ->addColumn('image', function ($row) {
+
+                    $media = $row->getMedia('category_image');
+                    
+                    $mediaArray = $row->getMedia('category_image');
+                    $count = count($mediaArray);
+                    if ($count > 0) {
+                        for ($i = $count - 1; $i >= 0; $i--) {
+                            $media = $mediaArray[$i];
+                            if ($media) {
+                                return '<img src="'. $media->getUrl('thumb') .'" border="0" style="display:block;visibility:visible;" width="100" height="100">';
+                            }
+                        }
+                    }
+                    return '<img src="'. $row->getFirstMediaUrl('category_image', 'thumb') .'" border="0" style="display:block;visibility:visible;" width="100" height="100">';
+                 })            
             ->editColumn('created_at', function($row)
             {
                 return  Carbon::parse($row->created_at)->format('jS F, Y g:i A');
@@ -87,7 +103,7 @@ class CategoryDataTable extends DataTable
                     : '';
             })
 
-             ->rawColumns(['edit_button', 'show_description', 'show_on_website'])
+             ->rawColumns(['edit_button', 'show_description', 'show_on_website', 'image'])
             ->setRowId('id');
     }
 
@@ -136,6 +152,8 @@ class CategoryDataTable extends DataTable
     {
         return [
             Column::make('name'),
+            Column::make('image')->width('100px')->searchable(false)->printable(false)->exportable(false),
+
             Column::make('description')->title('Description')->width('300px')->visible(false),
             Column::make('show_description')->title('Description')->width('250px')->searchable(false),
             Column::make('show_on_website')->title('Website Visibility')->width('150px')->searchable(false),

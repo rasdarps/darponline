@@ -5,12 +5,15 @@ namespace App\Models;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Category extends Model
+class Category extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, InteractsWithMedia;
     use Auditable;
 
     protected $fillable = [
@@ -29,13 +32,22 @@ class Category extends Model
     ];
 
     protected $casts = [
-        'status' => 'boolean',
+        'is_active' => 'boolean',
         'show_on_homepage' => 'boolean',
         'sort_order' => 'integer',
         'created_by' => 'integer',
         'updated_by' => 'integer',
         'deleted_by' => 'integer',
     ];
+
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+              ->width(368)
+              ->height(232)
+              ->sharpen(10);
+    }
 
     // Boot method to auto-generate slug
 
@@ -81,7 +93,7 @@ class Category extends Model
      // Scopes
      public function scopeActive($query)
      {
-         return $query->where('status', true);
+         return $query->where('is_active', true);
      }
  
      public function scopeParentCategories($query)
@@ -92,7 +104,7 @@ class Category extends Model
      public function scopeHomepage($query)
      {
          return $query->where('show_on_homepage', true)
-                      ->where('status', true)
+                      ->where('is_active', true)
                       ->orderBy('sort_order');
      }
 

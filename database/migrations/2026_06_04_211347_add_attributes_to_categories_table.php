@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::table('categories', function (Blueprint $table) {
             //
             $table->string('slug')->after('name');
+            $table->boolean('is_active')->default(true);
             $table->text('description')->nullable();
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();

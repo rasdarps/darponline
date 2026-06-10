@@ -3,15 +3,14 @@
 
 @section('content')
 
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <div class="page-content">
-<div class="container-fluid">
+    <div class="container-fluid">
 
             <div class="row">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header with-border">
+                        <div class="card-header">
                             <span class="card-title" style="font-size:20px;">Create | Category </span>
 
                             {{-- @can('create asset category') --}}
@@ -38,7 +37,7 @@
                                         <ul id="errors"></ul>
                                     </div>
 
-                                    {{-- <div class="row col-md-10 mx-auto"> --}}
+                                    <div class="row ">
 
                                         <div class="col-md-6 mx-auto">
                                             <div class="form-group">
@@ -65,18 +64,23 @@
 
                                         </div>
 
-                                        <div class="col-md-6  mx-auto">
+                                        <div class="col-md-6 mx-auto">
                                             <!-- Category Image -->
                                             
-                                            
-                                            <!-- Banner Image -->
-                                        
-                                            
-                                            <!-- Settings -->
-                                         
+                                                <div class="card-body py-16pt text-center card_content">
+                                                  
+                                                 
+                                                    <x-uppy-file-input input-wrapper-class="col-lg-12 col-md-12" label="Upload Category Image" name="category_image"/>
+                                                    <p class="card-subtitle text-70 mb-24pt">you can edit the file by clicking on the pen icon</p>
+
+                                                </div>
+                                          
                                                    
                                            
                                         </div>
+                                    </div>
+
+                                        
                                   
                                     
                                     {{-- </div> --}}
@@ -99,11 +103,13 @@
                     <div>
                 </div>
                 <!-- end col 12-->
-            </div>
+                </div>
             <!-- end row -->
-        </div>
+             </div>
         <!-- container fluid ends -->
     </div>
+
+</div>
     <!-- page content ends -->
 
 @endsection 
@@ -177,6 +183,9 @@
 @endsection
 
 @section('scripts')
+
+<x-uppy-file-script name="category_image" only-pdf="false" only-images="true" />
+
 <script type="text/javascript">
         $(document).ready(function (){
            
@@ -209,6 +218,13 @@
                         if (data.status === 200) {
                             Notiflix.Notify.success(data.message);
                             $('#myForm')[0].reset();
+                            //reset uppy dashboard
+                            if (typeof uppy_category_image !== 'undefined') {
+                                const files = uppy_category_image.getFiles();
+                                files.forEach(file => {
+                                    uppy_category_image.removeFile(file.id);
+                                });
+                            }
                             if (data.redirect) {
                                 window.location.href = data.redirect;
                             }
@@ -239,7 +255,7 @@
 
             
         });
-    </script>
+</script>
 
 @endsection
 

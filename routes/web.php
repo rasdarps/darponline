@@ -24,6 +24,7 @@ use App\Http\Controllers\ClientSide\ShopHomeController;
 use App\Http\Controllers\ClientSide\ShopOrderController;
 use App\Http\Controllers\ClientSide\ShopProductController;
 use App\Http\Controllers\ClientSide\ShopProfileController;
+use App\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -54,9 +55,12 @@ Route::prefix('admin')->group(function () {
 
         Route::middleware('auth')->group(function(){
 
+            //UPLOADS ROUTE
+
+            Route::post('uploads', [UploadController::class, 'store'])->name('uploads');  
 
 
-            { // Admin All Route 
+             // Admin All Route 
                 Route::controller(AdminController::class)->group(function () {
                 Route::get('/admin/logout', 'destroy')->name('admin.logout');
                 Route::get('/admin/profile', 'Profile')->name('admin.profile');
@@ -262,7 +266,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/category/wise/pdf', 'CategoryWisePdf')->name('category.wise.pdf');
 
             
-            });}
+            });
 
 
 

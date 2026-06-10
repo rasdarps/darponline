@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Backend;
 use App\DataTables\Admin\Settings\CategoryDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\TemporaryFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 
 class CategoryController extends Controller
@@ -39,9 +41,11 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:categories,name,',
             'description' => 'nullable|string',
             'show_on_homepage' => 'boolean',
+            'category_image' => 'required',
         ], [
             'name.required' => 'Please enter a Category name',
             'name.unique' => 'This category already exists',
+            'category_image.required' => 'Please upload a category image',
         ]);
 
         try {
@@ -50,10 +54,25 @@ class CategoryController extends Controller
             $data['created_by'] = Auth::id();
             
             // Use a transaction to ensure data integrity
-            DB::transaction(function () use ($data) {
-                Category::create($data);
-            });
+            DB::transaction(function () use ($data, $request) {
+               $category = Category::create($data);
+                if($request->category_image)
+                {
+                   
+                        $tempFile = TemporaryFile::where('folder', $request->category_image)->first();
+                        if ($tempFile) {
 
+                                
+                            $category->addMedia(storage_path('app/public/category/tmp/'. $tempFile->folder . '/' . $tempFile->filename))
+                                ->toMediaCollection('category_image');
+
+                            rmdir(storage_path('app/public/category/tmp/' . $tempFile->folder));
+                            $tempFile->delete();
+                        }
+                }
+                
+            });
+           
             
 
             return response()->json([

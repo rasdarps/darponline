@@ -44,10 +44,29 @@
         <link href="{{ asset('backend/assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
 
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" >
-        
+        <link href="{{ asset('uppy/dist/uppy.min.css') }}" rel="stylesheet">
+
         @yield('styles')
 
         <style>
+            /* Uppy Dashboard Style */
+            [data-uppy-drag-drop-supported=true] .uppy-Dashboard-AddFiles {
+                border: 1px dashed #0f9cf3 !important;
+                border-radius: 3px;
+                height: calc(100% - 14px);
+                margin: 7px;
+            }
+
+            .uppy-Dashboard-inner {
+                background-color: #e2ebf1 !important;
+                /* border: 1px solid #0f9cf3; */
+                border-radius: 5px;
+                max-height: 100%;
+                max-width: 100%;
+                outline: none;
+                position: relative;
+            }
+
             /* Yajra DataTables Global Styles */
             table.dataTable thead th {
                 border-bottom: 2px solid #dee2e6 !important;

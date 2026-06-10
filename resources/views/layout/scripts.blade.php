@@ -17,7 +17,8 @@
          <!-- CDN Scripts -->
          <!-- JQUERY DataTables -->
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-      
+        <script src="{{ asset('uppy/dist/uppy.min.js') }}"></script>
+
         <!-- Responsive -->
         <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
         <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap4.min.js"></script>
