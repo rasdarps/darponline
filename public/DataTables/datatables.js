@@ -14140,7 +14140,7 @@ $.extend( true, DataTable.ext.classes, {
 		select: "form-select form-select-sm"
 	},
 	processing: {
-		container: "dt-processing card"
+		container: "dt-processing"
 	},
 	layout: {
 		row: 'row mt-2 justify-content-between',

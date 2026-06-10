@@ -3,15 +3,14 @@
 
 @section('content')
 
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <div class="page-content">
-<div class="container-fluid">
+    <div class="container-fluid">
 
             <div class="row">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header with-border">
+                        <div class="card-header">
                             <span class="card-title" style="font-size:20px;">Create | Category </span>
 
                             {{-- @can('create asset category') --}}
@@ -38,14 +37,51 @@
                                         <ul id="errors"></ul>
                                     </div>
 
-                                    {{-- <div class="row col-md-10 mx-auto"> --}}
+                                    <div class="row ">
 
                                         <div class="col-md-6 mx-auto">
                                             <div class="form-group">
                                                 <label for="name"><strong>Category <span class="text-danger">*</span></strong></label>
                                                 <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="enter category" onkeypress="return isCharKey(event)">
+                                                <small class="text-muted">This will be displayed on the website</small>
+
                                             </div>
+
+                                            <div class="form-group">
+                                                <label>Description</label>
+                                                <textarea name="description" rows="4" class="form-control">{{ old('description', $category->description ?? '') }}</textarea>
+                                                <small class="text-muted">Brief description of the category (optional)</small>
+                                            </div>
+
+                                            <div class="form-group mt-2">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" name="show_on_homepage" class="custom-control-input" id="show_on_homepage" 
+                                                           value="1" {{ isset($category) && $category->show_on_homepage ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="show_on_homepage">Show on Online Shop Website</label>
+                                                </div>
+                                                <small class="text-muted">Display this category on the homepage of the online shop</small>
+                                            </div>
+
                                         </div>
+
+                                        <div class="col-md-6 mx-auto">
+                                            <!-- Category Image -->
+                                            
+                                                <div class="card-body py-16pt text-center card_content">
+                                                  
+                                                 
+                                                    <x-uppy-file-input input-wrapper-class="col-lg-12 col-md-12" label="Upload Category Image" name="category_image"/>
+                                                    <p class="card-subtitle text-70 mb-24pt">you can edit the file by clicking on the pen icon</p>
+
+                                                </div>
+                                          
+                                                   
+                                           
+                                        </div>
+                                    </div>
+
+                                        
+                                  
                                     
                                     {{-- </div> --}}
                                     {{-- row 1 ends --}}
@@ -67,11 +103,13 @@
                     <div>
                 </div>
                 <!-- end col 12-->
-            </div>
+                </div>
             <!-- end row -->
-        </div>
+             </div>
         <!-- container fluid ends -->
     </div>
+
+</div>
     <!-- page content ends -->
 
 @endsection 
@@ -79,13 +117,7 @@
 @section('styles')
 <style>
 
-    .card {
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease-in-out;
-        border-radius: 15px;
-        overflow: hidden;
-        transform: translateY(0);
-    }
+   
 
     .card:hover {
         box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.3);
@@ -114,10 +146,7 @@
         z-index: 2;
     }
 
-    .card {
-        background: linear-gradient(145deg, #ffffff, #f0f0f0);
-        border: none;
-    }
+   
 
     .card:hover {
         background: linear-gradient(145deg, #f8f9fa, #e9ecef);
@@ -154,6 +183,9 @@
 @endsection
 
 @section('scripts')
+
+<x-uppy-file-script name="category_image" only-pdf="false" only-images="true" />
+
 <script type="text/javascript">
         $(document).ready(function (){
            
@@ -186,6 +218,13 @@
                         if (data.status === 200) {
                             Notiflix.Notify.success(data.message);
                             $('#myForm')[0].reset();
+                            //reset uppy dashboard
+                            if (typeof uppy_category_image !== 'undefined') {
+                                const files = uppy_category_image.getFiles();
+                                files.forEach(file => {
+                                    uppy_category_image.removeFile(file.id);
+                                });
+                            }
                             if (data.redirect) {
                                 window.location.href = data.redirect;
                             }
@@ -216,7 +255,7 @@
 
             
         });
-    </script>
+</script>
 
 @endsection
 
