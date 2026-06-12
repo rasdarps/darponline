@@ -76,14 +76,19 @@ class ProductController extends Controller
         ]);
 
         try {
-            // Use only validated data and add created_by
             $data = $validatedData;
             $data['created_by'] = Auth::id();
             $data['quantity'] = $validatedData['stock_level']; // Set initial quantity to stock level
-            
-            // Use a transaction to ensure data integrity
-            DB::transaction(function () use ($data) {
-                Product::create($data);
+            $product = null;
+
+            DB::transaction(function () use ($data, &$product) {
+                $product = Product::create($data);
+
+                if (empty($product->barcode)) {
+                    $barcode = Product::generateBarcode($product->name, $product->id, $product->created_at);
+                    $product->barcode = $barcode;
+                    $product->saveQuietly();
+                }
             });
 
             return response()->json([
@@ -156,6 +161,7 @@ class ProductController extends Controller
                 'barcode'     => 'nullable|string|max:50|unique:products,barcode,' . $id,
                 'unit_id' => 'required|exists:units,id',
                 'category_id' => 'required|exists:categories,id',
+                'stock_level' => 'required|numeric|min:0',
             ], [
                 'name.required' => 'Please enter a product name',
                 'name.unique' => 'This product already exists',
@@ -166,7 +172,9 @@ class ProductController extends Controller
                 'unit_id.exists' => 'Selected unit is invalid',
                 'category_id.required' => 'Please select a category',
                 'category_id.exists' => 'Selected category is invalid',
-                
+                'stock_level.required' => 'Please enter stock level',
+                'stock_level.numeric' => 'Stock level must be a number',
+                'stock_level.min' => 'Stock level cannot be negative',
             ]);
 
             try {

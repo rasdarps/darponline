@@ -13,15 +13,16 @@ class Product extends Model
     use Auditable;
     // protected $guarded = [];
     protected $fillable = [
-    'name',
-    'unit_id',
-    'category_id',
-    'quantity',
-    'stock_level',
-    'created_by',
-    'updated_by',
-    'deleted_by',
-];
+        'name',
+        'barcode',
+        'unit_id',
+        'category_id',
+        'quantity',
+        'stock_level',
+        'created_by',
+        'updated_by',
+        'deleted_by',
+    ];
 
 protected $casts = [
     'quantity' => 'double',
@@ -69,6 +70,28 @@ protected $casts = [
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    //for generating barcode automatically for products
+    public static function generateBarcode(string $name, int $id, $createdAt = null): string
+    {
+        $createdAt = $createdAt ?: now();
+        $yearSuffix = $createdAt->format('y');
+
+        $cleanName = trim(preg_replace('/[^A-Za-z0-9\s]/u', '', $name));
+        $parts = preg_split('/\s+/', $cleanName, -1, PREG_SPLIT_NO_EMPTY);
+
+        if (count($parts) >= 2) {
+            $prefix = mb_substr($parts[0], 0, 1) . mb_substr($parts[1], 0, 1);
+        } elseif (count($parts) === 1) {
+            $prefix = mb_substr($parts[0], 0, 2);
+        } else {
+            $prefix = 'PR';
+        }
+
+        $prefix = strtoupper($prefix);
+
+        return $prefix . $id . $yearSuffix;
     }
 
    
