@@ -64,7 +64,7 @@ class CategoryController extends Controller
 
                                 
                             $category->addMedia(storage_path('app/public/category/tmp/'. $tempFile->folder . '/' . $tempFile->filename))
-                                ->toMediaCollection('category_image');
+                            ->withResponsiveImages()->toMediaCollection('category_image');
 
                             rmdir(storage_path('app/public/category/tmp/' . $tempFile->folder));
                             $tempFile->delete();

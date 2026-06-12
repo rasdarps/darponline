@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Models\Unit;
-use App\Models\Product;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Unit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -50,7 +51,9 @@ class ProductController extends Controller
     public function create(){
         $unit = Unit::orderBy('name', 'asc')->get();
         $category = Category::orderBy('name', 'asc')->get();
-        return view('backend.product.create', compact('unit', 'category'));
+        $brands = Brand::where('is_active', true)->orderBy('name', 'asc')->get();
+
+        return view('backend.product.create', compact('unit', 'category', 'brands'));
     } // End Method 
 
     public function store(Request $request){
