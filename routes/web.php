@@ -40,6 +40,10 @@ Route::get('/admin/home', function () {
     return view('welcome');
 });
 
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
 Route::get('/', function () {
     return redirect()->route('shop.home');
 });

@@ -27,7 +27,7 @@
 
 <script>
     setTimeout(function() {
-        window.location = "{{'login'}}";
+        window.location = "{{'admin/login'}}";
     }, 2000);
 </script>
 

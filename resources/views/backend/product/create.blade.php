@@ -76,6 +76,13 @@
                                                 </select>
                                             </div>
                                         </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="stock_level"><strong>Stock Level <span class="text-danger">*</span></strong></label>
+                                                <input type="number" id="stock_level" name="stock_level" class="form-control" value="{{ old('stock_level', 0) }}" placeholder="enter stock level" min="0">
+                                            </div>
+                                        </div>
                                     </div>
                                     {{-- row 2 ends --}}
 
