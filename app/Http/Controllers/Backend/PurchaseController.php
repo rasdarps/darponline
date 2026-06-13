@@ -58,7 +58,7 @@ class PurchaseController extends Controller
         $rules = [
             'date' => ['required', 'date'],
             'purchase_no' => ['required'],
-            'barcode' => ['nullable', 'string'],
+            // 'barcode' => ['nullable', 'string'],
             'category_id' => ['required', 'array', 'min:1'],
             'category_id.*' => ['required'],
             'product_id' => ['required', 'array', 'min:1'],

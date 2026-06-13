@@ -23,23 +23,23 @@ class CustomerDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->addColumn('action', 'customer.action')
             ->addColumn('edit_button', function($row) {
-                    $editUrl = route('units.edit', Crypt::encrypt($row->id));
-                    $deleteUrl = route('units.destroy', Crypt::encrypt($row->id));
+                    $editUrl = route('customers.edit', Crypt::encrypt($row->id));
+                    $deleteUrl = route('customers.destroy', Crypt::encrypt($row->id));
                     $csrf = csrf_field();
                     $method = method_field('DELETE');
 
                     return '
                         <form style="display:inline-block" action="'.$editUrl.'" method="GET">
                             '.$csrf.'
-                            <button style="border:none; background:none; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
-                                <i class="fas fa-edit" style="color:#010033; justify-content:center;"></i>
+                            <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
+                                <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
                             </button>
                         </form>
                         <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
                             '.$csrf.'
                             '.$method.'
-                            <button type="button" style="border:none; background:none; cursor:pointer;" class="btn-delete btn btn-sm btn-danger">
-                                <i class="fas fa-trash" style="color:red; justify-content:center;"></i>
+                            <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete btn btn-sm btn-danger">
+                                <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                             </button>
                         </form>
                     ';
@@ -92,11 +92,11 @@ class CustomerDataTable extends DataTable
     {
         return [
             Column::make('name'),
-            Column::make('mobile'),
+            Column::make('mobile_no'),
              Column::make('email'),
              Column::make('address'),
-             Column::make('created_at'),
-             Column::make('updated_at'),
+            //  Column::make('created_at'),
+            //  Column::make('updated_at'),
              Column::make('edit_button')->title('Actions')
             ->searchable(false)->printable(false)->exportable(false),
         ];

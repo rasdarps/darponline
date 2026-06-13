@@ -24,7 +24,6 @@ class Purchase extends Model
 
     protected $casts = [
         'date' => 'date',
-        'status' => 'integer',
         'created_by' => 'integer',
         'updated_by' => 'integer',
         'deleted_by' => 'integer',

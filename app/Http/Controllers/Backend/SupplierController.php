@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\DataTables\Admin\Settings\SupplierDataTable;
+use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
@@ -19,9 +20,8 @@ class SupplierController extends Controller
          $this->middleware('permission:supplier-delete', ['only' => ['destroy']]);
     }
 
-    public function index(){
-        $supplier = Supplier::orderBy('name', 'asc')->get();
-        return view('backend.supplier.index', compact('supplier'));
+    public function index(SupplierDataTable $dataTable){
+        return $dataTable->render('backend.supplier.index');
     } // End Method 
 
     public function create(){

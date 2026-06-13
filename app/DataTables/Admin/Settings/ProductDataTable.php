@@ -7,10 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
-use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Html\Editor\Editor;
-use Yajra\DataTables\Html\Editor\Fields;
 use Yajra\DataTables\Services\DataTable;
 
 class ProductDataTable extends DataTable
@@ -76,7 +73,7 @@ class ProductDataTable extends DataTable
             return '<span class="font-weight-bold">₵' . number_format($row->price, 2) . '</span>';
         })
         ->addColumn('stock', function($row) {
-            $status = $row->stock_status;
+            $status = $row->quantity > 0 ? 'in_stock' : 'out_of_stock';
             $badgeClass = $status == 'in_stock' ? 'success' : ($status == 'low_stock' ? 'warning' : 'danger');
             $statusText = $status == 'in_stock' ? 'In Stock' : ($status == 'low_stock' ? 'Low Stock' : 'Out of Stock');
             
@@ -84,7 +81,7 @@ class ProductDataTable extends DataTable
                 <div>
                     <span class="badge badge-' . $badgeClass . '">' . $statusText . '</span>
                     <br>
-                    <small>' . number_format($row->stock_quantity) . ' units</small>
+                    <small>' . number_format($row->quantity) . ' units</small>
                 </div>
             ';
         })
@@ -208,12 +205,12 @@ class ProductDataTable extends DataTable
     // Filter by stock status
     if ($this->stock_filter) {
         if ($this->stock_filter == 'in_stock') {
-            $query->where('stock_quantity', '>', 0);
+            $query->where('quantity', '>', 0);
         } elseif ($this->stock_filter == 'low_stock') {
-            $query->where('stock_quantity', '>', 0)
-                  ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
+            $query->where('quantity', '>', 0)
+                  ->whereColumn('quantity', '<=', 'low_stock_threshold');
         } elseif ($this->stock_filter == 'out_of_stock') {
-            $query->where('stock_quantity', 0);
+            $query->where('quantity', 0);
         }
     }
     

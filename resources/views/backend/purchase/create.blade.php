@@ -126,10 +126,10 @@
                                     <div class="row mt-3">
                                         <div class="form-group col-md-3">
                                             <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
-                                            <select name="paid_status" id="paid_status" class="form-control">
+                                            <select name="paid_status" id="paid_status" class="form-control" readonly>
                                                 {{-- <option value="">Select Payment Status</option> --}}
                                                 <option value="full_paid">Full Paid</option>
-                                                <option value="full_due" disabled>Full Due</option>
+                                                <option value="full_due" disabled>Credit</option>
                                                 <option value="partial_paid" disabled>Partial Paid</option>
                                             </select>
                                             <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">

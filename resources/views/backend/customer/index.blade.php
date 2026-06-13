@@ -44,7 +44,7 @@
                     let form = this.closest('form');
                     Notiflix.Confirm.show(
                         'Delete Confirmation',
-                        'Are you sure you want to delete this purchase?',
+                        'Are you sure you want to delete this customer?',
                         'Yes',
                         'No',
                         function okCb() {
