@@ -134,7 +134,7 @@ public function registerMediaConversions(?Media $media = null): void
 
     public function purchasedetails()
     {
-        return $this->hasMany(PurchaseDetail::class);
+        return $this->hasMany(PurchaseDetail::class, 'product_id', 'id');
     }
 
     public function brand()
@@ -145,7 +145,7 @@ public function registerMediaConversions(?Media $media = null): void
     
     public function invoicedetails()
     {
-        return $this->hasMany(InvoiceDetail::class);
+        return $this->hasMany(InvoiceDetail::class, 'product_id', 'id');
     }
 
     public function scopeNewArrivals($query)

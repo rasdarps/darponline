@@ -35,7 +35,9 @@ class AllPurchasesDataTable extends DataTable
             })
 
             ->addColumn('amount', function($row) {
-                return $row->purchase_payment ? $row->purchase_payment->total_amount : '';
+                return $row->purchase_payment 
+                    ? number_format($row->purchase_payment->total_amount, 2) 
+                    : number_format(0, 2);
             })
 
              ->editColumn('date', function($row)
@@ -62,9 +64,31 @@ class AllPurchasesDataTable extends DataTable
      */
     public function query(Purchase $model): QueryBuilder
     {
-        return $model->newQuery()
+        $query = $model->newQuery()
                  ->with(['purchase_payment', 'supplier'])
                  ->orderBy('date', 'desc');
+
+        // Apply filters
+        if ($purchaseinvoiceId = $this->request()->get('purchase_id')) {
+            $query->where('id', $purchaseinvoiceId);
+        }
+
+        if ($supplierId = $this->request()->get('supplier_id')) {
+            $query->whereHas('purchase_payment.supplier', function ($q) use ($supplierId) {
+                $q->where('id', $supplierId);
+            });
+        }
+
+        if ($fromDate = $this->request()->get('from_date')) {
+            $query->whereDate('date', '>=', $fromDate);
+        }
+
+        if ($toDate = $this->request()->get('to_date')) {
+            $query->whereDate('date', '<=', $toDate);
+        }
+
+        return $query;
+
     }
 
     /**
@@ -95,8 +119,6 @@ class AllPurchasesDataTable extends DataTable
             Column::make('purchase_no'),
             Column::make('supplier_name')->title('Supplier Name'),
             Column::make('amount')->title('Amount (Gh¢)'),
-            Column::make('created_at')->title('Created At'),
-
             Column::make('edit_button')->title('Actions')
             ->searchable(false)->printable(false)->exportable(false),
         ];

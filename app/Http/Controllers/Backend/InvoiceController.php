@@ -36,7 +36,9 @@ class InvoiceController extends Controller
     // } // End Method
      public function index(AllSalesDataTable $dataTable){
         // $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
-        return $dataTable->render('backend.invoice.index');
+        $customers = Customer::orderBy('name')->get();
+        $invoices = Invoice::orderBy('invoice_no')->get();
+        return $dataTable->render('backend.invoice.index', compact('customers', 'invoices'));
 
     }
 

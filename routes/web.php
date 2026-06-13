@@ -247,6 +247,8 @@ Route::prefix('admin')->group(function () {
 
             // Stock All Route 
             Route::controller(StockController::class)->group(function () {
+                
+                Route::get('/detailed_stock_report', 'DetailedStockReport')->name('stock.detailed_stock_report');
                 Route::get('/stock/report', 'StockReport')->name('stock.report');
                 Route::get('/stock/report/pdf', 'StockReportPdf')->name('stock.report.pdf'); 
 

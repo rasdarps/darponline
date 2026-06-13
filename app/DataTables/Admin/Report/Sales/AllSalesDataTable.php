@@ -36,7 +36,9 @@ class AllSalesDataTable extends DataTable
             })
 
             ->addColumn('amount', function($row) {
-                return $row->payment ? $row->payment->total_amount : '';
+                return $row->payment 
+                    ? number_format($row->payment->total_amount, 2) 
+                    : number_format(0, 2);
             })
 
              ->editColumn('date', function($row)
@@ -54,7 +56,8 @@ class AllSalesDataTable extends DataTable
                     : '';
             })
 
-            ->rawColumns(['edit_button'])
+            
+            ->rawColumns(['amount','edit_button'])
             ->setRowId('id');
     }
 
@@ -63,9 +66,30 @@ class AllSalesDataTable extends DataTable
      */
     public function query(Invoice $model): QueryBuilder
     {
-        return $model->newQuery()
-                 ->with(['payment', 'customer'])
-                 ->orderBy('date', 'desc');
+        $query = $model->newQuery()
+            ->with(['payment.customer'])
+            ->orderBy('date', 'desc');
+
+        // Apply filters
+        if ($invoiceId = $this->request()->get('invoice_id')) {
+            $query->where('id', $invoiceId);
+        }
+
+        if ($customerId = $this->request()->get('customer_id')) {
+            $query->whereHas('payment.customer', function ($q) use ($customerId) {
+                $q->where('id', $customerId);
+            });
+        }
+
+        if ($fromDate = $this->request()->get('from_date')) {
+            $query->whereDate('date', '>=', $fromDate);
+        }
+
+        if ($toDate = $this->request()->get('to_date')) {
+            $query->whereDate('date', '<=', $toDate);
+        }
+
+        return $query;
     }
 
     /**
@@ -96,8 +120,6 @@ class AllSalesDataTable extends DataTable
             Column::make('invoice_no'),
             Column::make('customer_name')->title('Customer Name'),
             Column::make('amount')->title('Amount (Gh¢)'),
-            Column::make('created_at')->title('Created At'),
-
             Column::make('edit_button')->title('Actions')
             ->searchable(false)->printable(false)->exportable(false),
             

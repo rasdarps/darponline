@@ -12,7 +12,7 @@
                             <li class="menu-title">Menu</li>
 
                             <li>
-                                <a href="{{ url('/dashboard') }}" class="waves-effect">
+                                <a href="{{ route('dashboard') }}" class="waves-effect">
                                     <i class="ri-dashboard-line"></i>
                                     <span>Dashboard</span>
                                 </a>
@@ -38,9 +38,9 @@
                                                 <li><a href="{{ route('purchases.index') }}">All Purchase</a></li>
                                                 {{-- <li><a href="{{ route('purchase.approved.list') }}">Approved List</a></li>
                                                 <li><a href="{{ route('purchase.pending.list') }}">Pending Approval</a></li> --}}
-                                                <li><a href="{{ route('print.purchase.list') }}">Print Purchase List</a></li>
+                                                {{-- <li><a href="{{ route('print.purchase.list') }}">Print Purchase List</a></li> --}}
                                                 <!--<li><a href="{{-- route('purchase.pending') --}}">Approval Purchase</a></li>-->
-                                                <li><a href="{{ route('daily.purchase.report') }}">Daily Purchase Report</a></li>
+                                                {{-- <li><a href="{{ route('daily.purchase.report') }}">Daily Purchase Report</a></li> --}}
                                             
                                             </ul>
                                         </li>
@@ -55,8 +55,8 @@
                                                 <li><a href="{{ route('invoices.index') }}">All Sales</a></li>
                                                 {{-- <li><a href="{{ route('invoice.approved.list') }}">Approved List</a></li>
                                                 <li><a href="{{ route('invoice.pending.list') }}">Pending Approval</a></li> --}}
-                                                <li><a href="{{ route('print.invoice.list') }}">Print Sales List</a></li>
-                                                <li><a href="{{ route('daily.invoice.report') }}">Daily Sales Report</a></li>
+                                                {{-- <li><a href="{{ route('print.invoice.list') }}">Print Sales List</a></li> --}}
+                                                {{-- <li><a href="{{ route('daily.invoice.report') }}">Daily Sales Report</a></li> --}}
                                             </ul>
                                         </li>
                                     </ul><!--drop ul ends-->    
@@ -201,7 +201,8 @@
                                 <ul class="sub-menu" aria-expanded="false">
                                 
                                     <li><a href="{{ route('stock.report') }}">Stock Report</a></li>
-                                    <li><a href="{{ route('stock.category.wise') }}">Category / Product Wise </a></li>            
+                                    <li><a href="{{ route('stock.detailed_stock_report') }}">Detailed Stock Report</a></li>
+                                    {{-- <li><a href="{{ route('stock.category.wise') }}">Category / Product Wise </a></li>             --}}
                                     <li><a href="#">Backup</a></li>
                                 </ul>
                             </li>

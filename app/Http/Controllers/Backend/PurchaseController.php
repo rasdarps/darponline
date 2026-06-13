@@ -37,7 +37,9 @@ class PurchaseController extends Controller
     //     return view('backend.purchase.index',compact('allData'));
     // } // End Method
     public function index(AllPurchasesDataTable $dataTable){
-        return $dataTable->render('backend.purchase.index');
+        $suppliers = Supplier::orderBy('name')->get();
+        $purchase_invoices = Purchase::orderBy('purchase_no')->get();
+        return $dataTable->render('backend.purchase.index', compact('suppliers', 'purchase_invoices'));
     } // End Method
 
     public function create(){ 

@@ -2,108 +2,125 @@
 @section('title') {{'View Invoice'}} @endsection
 
 @section('content')
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
+<div class="page-content">
+    <div class="container-fluid">
 
-
-    <div class="page-content">
-        <div class="container-fluid">
-
-            <!-- start page title -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0">Inovice All</h4>  
-                    </div>
+        <!-- start page title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Invoice All</h4>  
                 </div>
             </div>
-            <!-- end page title -->
+        </div>
+        <!-- end page title -->
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
 
-                    <a href="{{ route('invoices.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;"><i class="fas fa-plus-circle"> Add Inovice </i></a> <br>  <br>               
+                        <a href="{{ route('invoices.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;">
+                            <i class="fas fa-plus-circle"></i> Add Invoice
+                        </a> 
+                        <br><br>               
 
-                        <h4 class="card-title">Inovice All Data </h4>
-                        
-                    {{-- 
-                        <table id="datatable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
-                            <thead>
-                            <tr>
-                                <th>Sl</th>
-                                <th>Customer Name</th> 
-                                <th>Invoice No </th>
-                                <th>Date </th>
-                                <th>Amount (Gh¢) </th>
-                                <th>Action</th>
-                                
-                            </thead>
+                        <h4 class="card-title">Invoice All Data</h4>      
 
+                        <!-- 🔎 Filter boxes -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label>Invoice Number</label>
+                                <select id="filter_invoice_id" class="form-control select2">
+                                    <option value="">All Invoices</option>
+                                    @foreach($invoices as $invoice)
+                                        <option value="{{ $invoice->id }}">{{ $invoice->invoice_no }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Customer Name</label>
+                                <select id="filter_customer_id" class="form-control">
+                                    <option value="">All Customers</option>
+                                    @foreach($customers as $customer)
+                                        <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>From Date</label>
+                                <input type="date" id="filter_from_date" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>To Date</label>
+                                <input type="date" id="filter_to_date" class="form-control">
+                            </div>
+                        </div>
 
-                            <tbody>
-                                
-                                @foreach($allData as $key => $item)
-                            <tr>
-                                <td> {{ $key+1}} </td>
-                                <td> {{ date('d-m-Y',strtotime($item->date))  }} </td> 
-                                <td> {{ $item->invoice_no }} </td>              
-                                <td> {{ $item['payment'] && $item['payment']['customer'] ? $item['payment']['customer']['name'] : '' }}</td>    
-                                <td> {{ $item['payment']['total_amount'] }} </td>
-                                <td>
-                                    <a href="{{ route('print.invoice',$item->id) }}" class="btn btn-info sm" title="Print Invoice" >  <i class="fa fa-print"></i> </a>
-                                    <form action="{{ route('invoices.destroy', Crypt::encrypt($item->id)) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="button" class="btn btn-danger sm delete-confirm-btn" title="Delete Data"><i class="fas fa-trash-alt"></i></button>
-                                    </form>
-                            
-                                </td>
-                            
-                            </tr>
-                            @endforeach
-                            
-                            </tbody>
-                        </table>
-                     --}}
+                        <!-- Reset Filters Button -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <button id="reset_filters" class="btn btn-secondary">Reset Filters</button>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
-                            {!! $dataTable->table() !!}
+                            {!! $dataTable->table(['class' => 'table table-bordered table-striped'], true) !!}
                         </div>
                     </div>
                 </div>
             </div> <!-- end col -->
         </div> <!-- end row -->
-        
-                     
-                        
     </div> <!-- container-fluid -->
 </div>
- 
-
 @endsection
 
 @section('scripts')
     {{ $dataTable->scripts() }}
     <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.6/dist/notiflix-aio-3.2.6.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.delete-confirm-btn').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    let form = this.closest('form');
-                    Notiflix.Confirm.show(
-                        'Delete Confirmation',
-                        'Are you sure you want to delete this customer?',
-                        'Yes',
-                        'No',
-                        function okCb() {
-                            form.submit();
-                        },
-                        function cancelCb() {
-                            // Do nothing
-                        }
-                    );
-                });
+        $(function() {
+            let table = $('#allsales-table').DataTable();
+
+            // Reload table when filters change
+            $('#filter_invoice_id, #filter_customer_id, #filter_from_date, #filter_to_date').on('change', function() {
+                table.ajax.reload();
+            });
+
+            // Reset filters
+            $('#reset_filters').on('click', function() {
+                $('#filter_invoice_id').val('');
+                $('#filter_customer_id').val('');
+                $('#filter_from_date').val('');
+                $('#filter_to_date').val('');
+                table.ajax.reload();
+            });
+
+            // Pass filter values into AJAX
+            table.on('preXhr.dt', function(e, settings, data) {
+                data.invoice_id = $('#filter_invoice_id').val();
+                data.customer_id = $('#filter_customer_id').val();
+                data.from_date = $('#filter_from_date').val();
+                data.to_date = $('#filter_to_date').val();
+            });
+
+            // ✅ Footer totals calculation for Amount column (index 3)
+            table.on('draw.dt', function() {
+                let intVal = i => typeof i === 'string' ? i.replace(/[\$,]/g, '')*1 : (typeof i === 'number' ? i : 0);
+
+               let totalAmount = table.column(3, {page:'current'}).data()
+                    .reduce((a, b) => intVal(a) + intVal(b), 0);
+
+                $(table.column(3).footer()).html('Gh¢ ' + totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+            });
+
+            // Handle DataTables errors gracefully
+            $.fn.dataTable.ext.errMode = 'none';
+            $('#allsales-table').on('error.dt', function(e, settings, techNote, message) {
+                Notiflix.Notify.failure("DataTables error: " + message);
             });
         });
     </script>
