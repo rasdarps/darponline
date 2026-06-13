@@ -35,18 +35,20 @@
             <div class="invoice-title">
                 <h4 class="float-end font-size-16"><strong>Invoice No # {{ $invoice->invoice_no }}</strong></h4>
                 <h3>
-                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> RICT Shopping Mall - Customer Invoice
+                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> {{ $companyInfo->name }} - Sales Invoice
                 </h3>
             </div>
             <hr>
              
             <div class="row">
                 <div class="col-6 mt-4">
-                    <h3 class="font-size-16"><strong>Supplier Details</strong></h3>
+                    <h3 class="font-size-16"><strong>Company Details</strong></h3>
                     <address>
-                        <strong>RICT Shopping Mall:</strong><br>
-                       Adum, Kumasi<br>
-                        support@rictconsult.com
+                    <strong>{{ $companyInfo->name }}</strong>
+                    <br>
+                       {{ $companyInfo->address }}
+                    <br>
+                        {{ $companyInfo->phone }} | {{ $companyInfo->email }}
                     </address>
                 </div>
                 <div class="col-6 mt-4 text-end">
@@ -63,7 +65,7 @@
     $payment = App\Models\Payment::where('invoice_id',$invoice->id)->first();
     @endphp   
 
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-12">
             <div>
                 <div class="col-6 mt-4">
@@ -78,7 +80,8 @@
             </div>
 
         </div>
-    </div> <!-- end row -->
+    </div>  --}}
+    <!-- end row -->
 
 
 
@@ -120,7 +123,7 @@
             <td class="text-center">{{ $details['product']['name'] }}</td>  
             <td class="text-center">{{ $details->selling_qty }}</td>
             <td class="text-center">{{ $details->unit_price }}</td>
-            <td class="text-end">{{ $details->selling_price }}</td>
+            <td class="text-end">{{ number_format($details->selling_price, 2) }}</td>
             
         </tr>
          @php
@@ -135,7 +138,7 @@
                 <td class="thick-line"></td>
                 <td class="thick-line text-center">
                     <strong>Subtotal</strong></td>
-                <td class="thick-line text-end">{{ $total_sum }}</td>
+                <td class="thick-line text-end">{{ number_format($total_sum, 2) }}</td>
             </tr>
             <tr>
                 
@@ -145,7 +148,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Discount Amount</strong></td>
-                <td class="no-line text-end">{{ $payment->discount_amount }}</td>
+                <td class="no-line text-end">{{ number_format($payment->discount_amount, 2) }}</td>
             </tr>
              <tr>
                 
@@ -155,7 +158,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Paid Amount</strong></td>
-                <td class="no-line text-end">{{ $payment->paid_amount }}</td>
+                <td class="no-line text-end">{{ number_format($payment->paid_amount, 2) }}</td>
             </tr>
 
              <tr>
@@ -166,7 +169,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Due Amount</strong></td>
-                <td class="no-line text-end">{{ $payment->due_amount }}</td>
+                <td class="no-line text-end">{{ number_format($payment->due_amount, 2) }}</td>
             </tr>
             <tr>
                 
@@ -176,7 +179,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Grand Amount</strong></td>
-                <td class="no-line text-end"><h4 class="m-0">Gh¢{{ $payment->total_amount }}</h4></td>
+                <td class="no-line text-end"><h4 class="m-0">Gh¢{{ number_format($payment->total_amount, 2) }}</h4></td>
             </tr>
                             </tbody>
                         </table>

@@ -35,18 +35,20 @@
             <div class="purchase-title">
                 <h4 class="float-end font-size-16"><strong>Purchase No # {{ $purchase->purchase_no }}</strong></h4>
                 <h3>
-                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> RICT Shopping Mall - Supplier Invoice
+                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> {{ $companyInfo->name }} - Purchase Invoice
                 </h3>
             </div>
             <hr>
              
             <div class="row">
                 <div class="col-6 mt-4">
-                    <h3 class="font-size-16"><strong>Customer Details</strong></h3>
-                    <address>
-                        <strong>RICT Shopping Mall</strong><br>
-                       Adum, Kumasi<br>
-                        support@rictconsult.com
+                    <h3 class="font-size-16"><strong>Company Details</strong></h3>
+                   <address>
+                    <strong>{{ $companyInfo->name }}</strong>
+                    <br>
+                       {{ $companyInfo->address }}
+                    <br>
+                        {{ $companyInfo->phone }} | {{ $companyInfo->email }}
                     </address>
                 </div>
                 <div class="col-6 mt-4 text-end">
@@ -120,7 +122,7 @@
             
             <td class="text-center">{{ $details->buying_qty }}</td>
             <td class="text-center">{{ $details->unit_price }}</td>
-            <td class="text-end">{{ $details->buying_price }}</td>
+            <td class="text-end">{{ number_format($details->buying_price, 2) }}</td>
             
         </tr>
          @php
@@ -135,7 +137,7 @@
                 <td class="thick-line"></td>
                 <td class="thick-line text-center">
                     <strong>Subtotal</strong></td>
-                <td class="thick-line text-end">{{ $total_sum }}</td>
+                <td class="thick-line text-end">{{ number_format($total_sum, 2) }}</td>
             </tr>
             <tr>
                 
@@ -145,7 +147,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Discount Amount</strong></td>
-                <td class="no-line text-end">{{ $purchase_payment->discount_amount }}</td>
+                <td class="no-line text-end">{{ number_format($purchase_payment->discount_amount, 2) }}</td>
             </tr>
              <tr>
                 
@@ -155,7 +157,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Paid Amount</strong></td>
-                <td class="no-line text-end">{{ $purchase_payment->paid_amount }}</td>
+                <td class="no-line text-end">{{ number_format($purchase_payment->paid_amount, 2) }}</td>
             </tr>
 
              <tr>
@@ -166,7 +168,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Due Amount</strong></td>
-                <td class="no-line text-end">{{ $purchase_payment->due_amount }}</td>
+                <td class="no-line text-end">{{ number_format($purchase_payment->due_amount, 2) }}</td>
             </tr>
             <tr>
                 
@@ -176,7 +178,7 @@
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Grand Amount</strong></td>
-                <td class="no-line text-end"><h4 class="m-0">Gh¢{{ $purchase_payment->total_amount }}</h4></td>
+                <td class="no-line text-end"><h4 class="m-0">Gh¢{{ number_format($purchase_payment->total_amount, 2) }}</h4></td>
             </tr>
                             </tbody>
                         </table>

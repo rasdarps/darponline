@@ -11,7 +11,6 @@ use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\TemporaryFile;
 use App\Models\Unit;
-use id;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;

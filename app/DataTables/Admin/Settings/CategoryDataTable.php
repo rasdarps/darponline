@@ -60,11 +60,13 @@ class CategoryDataTable extends DataTable
                         }
                     }
                     return '<img src="'. $row->getFirstMediaUrl('category_image', 'thumb') .'" border="0" style="display:block;visibility:visible;" width="100" height="100">';
-                 })            
+                 }) 
+
             ->editColumn('created_at', function($row)
             {
                 return  Carbon::parse($row->created_at)->format('jS F, Y g:i A');
             })
+            
             ->addColumn('show_description', function($row) {
                 $description = $row->description ?? 'No description available';
                 $shortDesc = strlen($description) > 50 ? substr($description, 0, 50) . '...' : $description;

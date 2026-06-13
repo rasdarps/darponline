@@ -46,8 +46,14 @@ class Invoice extends Model
     }
 
     // Existing relationships
-    public function payment(){
-        return $this->belongsTo(Payment::class,'id','invoice_id');
+    public function payment()
+    {
+        return $this->hasOne(Payment::class, 'invoice_id', 'id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
 
      public function invoice_details(){

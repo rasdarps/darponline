@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\DataTables\Admin\Report\Sales\AllSalesDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Company;
@@ -28,11 +29,16 @@ class InvoiceController extends Controller
          $this->middleware('permission:invoice-delete', ['only' => ['destroy']]);
     }
 
-    public function index(){
-        $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
-            return view('backend.invoice.index',compact('allData'));
+    // public function index(){
+    //     $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
+    //         return view('backend.invoice.index',compact('allData'));
 
-    } // End Method
+    // } // End Method
+     public function index(AllSalesDataTable $dataTable){
+        // $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
+        return $dataTable->render('backend.invoice.index');
+
+    }
 
     public function create(){ 
 
@@ -215,10 +221,13 @@ class InvoiceController extends Controller
     } // End Method
 
 
-    public function PrintInvoice($id){
+    //detail invoice print
+    public function PrintInvoice($encryptedId){
+
+        $id = Crypt::decrypt($encryptedId);
         $invoice = Invoice::with('invoice_details')->findOrFail($id);
         $companyInfo = Company::first();
-        return view('backend.pdf.invoice_pdf',compact('invoice','companyInfo'));
+        return view('backend.invoice.invoice_receipt',compact('invoice','companyInfo'));
 
     } // End Method
 

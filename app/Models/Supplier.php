@@ -47,4 +47,9 @@ class Supplier extends Model
     {
         return $this->belongsTo(User::class, 'deleted_by');
     }
+
+    public function purchase_payments()
+    {
+        return $this->hasMany(PurchasePayment::class, 'supplier_id', 'id');
+    }
 }

@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Models\Unit;
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Purchase;
-use App\Models\Supplier;
-use Illuminate\Http\Request;
-use App\Models\PurchaseDetail;
-use Illuminate\Support\Carbon;
-use App\Models\PurchasePayment;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
+use App\DataTables\Admin\Report\Purchase\AllPurchasesDataTable;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Category;
+use App\Models\Company;
+use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\PurchaseDetail;
+use App\Models\PurchasePayment;
 use App\Models\PurchasePaymentDetail;
+use App\Models\Supplier;
+use App\Models\Unit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
   
 class PurchaseController extends Controller
 
@@ -30,9 +32,12 @@ class PurchaseController extends Controller
     }
 
     // RESTful Methods
-    public function index(){
-        $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->get();
-        return view('backend.purchase.index',compact('allData'));
+    // public function index(){
+    //     $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->get();
+    //     return view('backend.purchase.index',compact('allData'));
+    // } // End Method
+    public function index(AllPurchasesDataTable $dataTable){
+        return $dataTable->render('backend.purchase.index');
     } // End Method
 
     public function create(){ 
@@ -219,9 +224,14 @@ class PurchaseController extends Controller
     } // End Method
 
 
-    public function PrintPurchase($id){
+    //detail purchase print
+    public function PrintPurchase($encryptedId){
+        
+        $id = Crypt::decrypt($encryptedId);
         $purchase = Purchase::with('purchase_details')->findOrFail($id);
-        return view('backend.pdf.purchase_pdf',compact('purchase'));
+        $companyInfo = Company::first();
+
+        return view('backend.purchase.purchase_receipt',compact('purchase','companyInfo'));
 
     } // End Method
 
