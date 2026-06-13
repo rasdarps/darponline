@@ -355,6 +355,13 @@
                             } else {
                                 alert(data.message);
                             }
+
+
+                            // 🚀 Open the receipt page
+                            if (data.print_url) {
+                                window.location.href = data.print_url;
+                            }
+                            
                             // Clear form fields
                             $('#invoiceForm')[0].reset();
                             // Remove all dynamic invoice items

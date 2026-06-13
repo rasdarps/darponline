@@ -168,3 +168,33 @@
 
     });
 </script>
+
+{{-- //Download JS --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+
+        // Capture invoice area
+        const invoice = document.getElementById("invoiceArea");
+        const canvas = await html2canvas(invoice, { scale: 2 }); // higher scale = better quality
+        const imgData = canvas.toDataURL("image/png");
+
+        // Create PDF
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        // Calculate image dimensions to fit page
+        const imgWidth = pageWidth;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+        let position = 0;
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+
+        // Save file
+        pdf.save("invoice.pdf");
+    }
+</script>
