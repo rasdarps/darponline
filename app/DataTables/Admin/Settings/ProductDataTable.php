@@ -186,35 +186,48 @@ class ProductDataTable extends DataTable
      */
     public function query(Product $model): QueryBuilder
     {
+
+        $category_id = $this->request()->get('category_id');
+        $status = $this->request()->get('status');
+        $online_status = $this->request()->get('online_status');
+        $stock_filter = $this->request()->get('stock_filter');
+        $featured = $this->request()->get('featured');
+
         $query = $model->newQuery()
         ->with(['category', 'brand', 'unit'])
         ->orderBy('created_at', 'desc');
     
     // Filter by category
-    if ($this->category_id) {
-        $query->where('shop_category_id', $this->category_id);
+    if ($this->request()->filled('category_id')) {
+        
+        $query->where('category_id', $category_id);
     }
     
     // Filter by status
-    if ($this->status !== null && $this->status !== '') {
-        $query->where('is_active', $this->status);
+    if ($this->request()->filled('status')) {
+        $query->where('is_active', $status);
     }
     
     // Filter by online status
-    if ($this->online_status !== null && $this->online_status !== '') {
-        $query->where('is_online', $this->online_status);
+    if ($this->request()->filled('online_status')) {
+        $query->where('is_online', $online_status);
     }
     
     // Filter by stock status
-    if ($this->stock_filter) {
-        if ($this->stock_filter == 'in_stock') {
-            $query->where('stock_quantity', '>', 0);
-        } elseif ($this->stock_filter == 'low_stock') {
-            $query->where('stock_quantity', '>', 0)
-                  ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
-        } elseif ($this->stock_filter == 'out_of_stock') {
-            $query->where('stock_quantity', 0);
-        }
+    // if ($this->request()->filled('stock_filter')) {
+    //     if ($stock_filter == 'in_stock') {
+    //         $query->where('stock_quantity', '>', 0);
+    //     } elseif ($stock_filter == 'low_stock') {
+    //         $query->where('stock_quantity', '>', 0)
+    //               ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
+    //     } elseif ($stock_filter == 'out_of_stock') {
+    //         $query->where('stock_quantity', 0);
+    //     }
+    // }
+
+     // Filter by featured
+     if ($this->request()->filled('featured')) {
+        $query->where('is_online', $featured);
     }
     
     return $query;

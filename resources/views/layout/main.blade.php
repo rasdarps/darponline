@@ -51,6 +51,40 @@
         @yield('styles')
         @stack('styles')
         <style>
+            .filter-summary {
+                background: #f8f9fa;
+                padding: 12px 15px;
+                border-radius: 4px;
+                margin-bottom: 20px;
+                border-left: 4px solid #007bff;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .filter-summary i {
+                color: #007bff;
+                font-size: 16px;
+            }
+
+            .filter-summary .badge {
+                padding: 5px 10px;
+                font-size: 12px;
+                font-weight: 500;
+                border-radius: 3px;
+            }
+
+            .filter-summary .btn-link {
+                padding: 0 5px;
+                font-size: 12px;
+                text-decoration: none;
+                color: #dc3545;
+            }
+
+            .filter-summary .btn-link:hover {
+                text-decoration: underline;
+            }
             /* Uppy Dashboard Style */
             [data-uppy-drag-drop-supported=true] .uppy-Dashboard-AddFiles {
                 border: 1px dashed #0f9cf3 !important;
