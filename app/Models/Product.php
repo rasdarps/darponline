@@ -22,6 +22,23 @@ class Product extends Model
         'created_by',
         'updated_by',
         'deleted_by',
+        'is_featured',
+        'is_on_sale',
+        'is_new',
+        'is_online',
+        'tags',
+        'seo_title',
+        'seo_description',
+        'description',
+        'min_order_quantity',
+        'max_order_quantity',
+        'brand_id',
+        'slug',
+        'video_url',
+        'weight',
+        'lenght',
+        'width',
+        'sku',
     ];
 
 protected $casts = [

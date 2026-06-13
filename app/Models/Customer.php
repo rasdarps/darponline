@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Authenticatable
@@ -20,13 +19,15 @@ class Customer extends Authenticatable
         'name',
         'mobile_no',
         'email',
-        'phone',
         'password',
         'address',
-        'status',
+        'first_name',
+        'last_name',
+        'username',
         'created_by',
         'updated_by',
         'deleted_by',
+        'email_verified_at'
 
     ];
 
