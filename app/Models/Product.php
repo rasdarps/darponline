@@ -6,40 +6,48 @@ use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Product extends Model
+class Product extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes,InteractsWithMedia;
     use Auditable;
     // protected $guarded = [];
     protected $fillable = [
-        'name',
-        'barcode',
-        'unit_id',
-        'category_id',
-        'quantity',
-        'stock_level',
-        'created_by',
-        'updated_by',
-        'deleted_by',
-        'is_featured',
-        'is_on_sale',
-        'is_new',
-        'is_online',
-        'tags',
-        'seo_title',
-        'seo_description',
-        'description',
-        'min_order_quantity',
-        'max_order_quantity',
-        'brand_id',
-        'slug',
-        'video_url',
-        'weight',
-        'lenght',
-        'width',
-        'sku',
-    ];
+    'name',
+    'slug',
+    'unit_id',
+    'category_id',
+    'quantity',
+    'stock_level',
+    'barcode',
+    'created_by',
+    'updated_by',
+    'deleted_by',
+    'description',
+    'video_url',
+    'price',
+    'weight',
+    'length',
+    'width',
+    'height',
+    'brand_id',
+    'unit_id',
+    'min_order_quantity',
+    'max_order_quantity',
+    'is_featured',
+    'is_on_sale',
+    'is_new',
+    'is_online',
+    'tags',
+    'seo_title',
+    'seo_description',
+   
+];
 
 protected $casts = [
     'quantity' => 'double',
@@ -48,18 +56,79 @@ protected $casts = [
     'created_by' => 'integer',
     'updated_by' => 'integer',
     'deleted_by' => 'integer',
+    'cost_price' => 'decimal:2',
+    'weight' => 'decimal:2',
+    'is_featured' => 'boolean',
+    'is_on_sale' => 'boolean',
+    'is_new' => 'boolean',
+    'is_online' => 'boolean',
+    'tags' => 'array',
 ];
 
+
+public function registerMediaConversions(?Media $media = null): void
+{
+        $this->addMediaConversion('thumb')
+        ->format('jpg')
+          ->width(300)
+          ->height(300)
+          ->sharpen(10);
+
+        $this->addMediaConversion('uniform')
+        ->format('jpg')
+        ->width(300)
+        ->height(300)
+        ->sharpen(7)
+        ->fit(Fit::Stretch, 300, 300)
+        ->withResponsiveImages();
+}
     /*public function supplier(){
         return $this->belongsTo(Supplier::class,'supplier_id','id');
     }*/
+
+       // Boot method to auto-generate slug and SKU
+       protected static function boot()
+       {
+           parent::boot();
+           
+           static::creating(function ($product) {
+               if (empty($product->slug)) {
+                   $product->slug = Str::slug($product->name);
+               }
+               if (empty($product->sku)) {
+                   $product->sku = self::generateSKU($product->name);
+               }
+           });
+           
+           static::updating(function ($product) {
+               if ($product->isDirty('name')) {
+                   $product->slug = Str::slug($product->name);
+               }
+           });
+       }
+
+    // unique SKU generator
+    public static function generateSKU($name)
+    {
+        $prefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 3));
+        $random = strtoupper(Str::random(5));
+        $sku = $prefix . '-' . $random;
+        
+        // Ensure uniqueness
+        while (self::where('sku', $sku)->exists()) {
+            $random = strtoupper(Str::random(5));
+            $sku = $prefix . '-' . $random;
+        }
+        
+        return $sku;
+    }
  
      public function unit(){
-        return $this->belongsTo(Unit::class,'unit_id','id');
+        return $this->belongsTo(Unit::class);
     }
 
      public function category(){
-        return $this->belongsTo(Category::class,'category_id','id');
+        return $this->belongsTo(Category::class);
     }
 
 
@@ -68,15 +137,41 @@ protected $casts = [
         return $this->hasMany(PurchaseDetail::class);
     }
 
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    
     public function invoicedetails()
     {
         return $this->hasMany(InvoiceDetail::class);
+    }
+
+    public function scopeNewArrivals($query)
+    {
+        return $query->where('is_new', true);
+    }
+
+    public function scopeInStock($query)
+    {
+        return $query->where('quantity', '>', 0);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_online', true);
     }
 
     // User relationships - NOW PROPERLY LINKED
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function scopeOnSale($query)
+    {
+        return $query->where('is_on_sale', true);
     }
 
     public function updatedBy()

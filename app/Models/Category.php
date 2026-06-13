@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -44,10 +45,18 @@ class Category extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-              ->width(368)
-              ->height(232)
+              ->width(300)
+              ->height(300)
               ->sharpen(10);
+
+        $this->addMediaConversion('uniform')
+        ->width(300)
+        ->height(300)
+        ->fit(Fit::Stretch, 300, 300)
+        ->withResponsiveImages()
+        ->performOnCollections('category_image');
     }
+
 
     // Boot method to auto-generate slug
 

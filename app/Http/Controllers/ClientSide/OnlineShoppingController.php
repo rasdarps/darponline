@@ -14,8 +14,8 @@ class OnlineShoppingController extends Controller
 
         
 
-        
-        return view('client.index');
+        $collections = Category::active()->homepage()->get();
+        return view('client.index', compact('collections'));
     }
 
     public function collection_page(){

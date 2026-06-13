@@ -364,143 +364,25 @@
     
               }'>
 
+                @foreach ($collections as $collection)
+                
+                    <div class="col-12">
+                        <div class="ltn__category-item text-center">
+                            <div class="ltn__category-item-img">
+                                <a href="/collections/best-selling" class="image-position-wrapper">
+                                    {{ $collection->getFirstMedia('category_image')->img('uniform') }}
 
-                <div class="col-12">
-                    <div class="ltn__category-item text-center">
-                        <div class="ltn__category-item-img"><a href="/collections/best-selling"
-                                class="image-position-wrapper" style="padding-bottom: 100.0%;">
-                                <img srcset="//new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_90x.png?v=1667903416 90w,
-                   //new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_118x.png?v=1667903416 118w,
-                   //new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_152x.png?v=1667903416 152w,
-                   //new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_266x.png?v=1667903416 266w,
-                   
-                   
-                   "
-                                    src="//new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_118x.png?v=1667903416"
-                                    sizes="100vw" width="300" height="300" alt="Best Selling"
-                                    loading="lazy" class="image-position-size">
-                            </a>
-                        </div>
-                        <div class="ltn__category-item-name">
-                            <h5><a href="/collections/best-selling">Best Selling</a></h5>
+                                </a>
+                            </div>
+                            <div class="ltn__category-item-name">
+                                <h5><a href="{{route('shop.collections.show', $collection->slug)}}">{{$collection->name}}</a></h5>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endforeach
 
 
-                <div class="col-12">
-                    <div class="ltn__category-item text-center">
-                        <div class="ltn__category-item-img"><a href="/collections/home-decor"
-                                class="image-position-wrapper" style="padding-bottom: 100.0%;">
-                                <img srcset="//new-99.myshopify.com/cdn/shop/collections/bol-removebg-preview_90x.png?v=1667903970 90w,
-                                //new-99.myshopify.com/cdn/shop/collections/bol-removebg-preview_118x.png?v=1667903970 118w,
-                                //new-99.myshopify.com/cdn/shop/collections/bol-removebg-preview_152x.png?v=1667903970 152w,
-                                //new-99.myshopify.com/cdn/shop/collections/bol-removebg-preview_266x.png?v=1667903970 266w,
-                                
-                                
-                                "
-                                    src="//new-99.myshopify.com/cdn/shop/collections/bol-removebg-preview_118x.png?v=1667903970"
-                                    sizes="100vw" width="300" height="300" alt="New Arrivals"
-                                    loading="lazy" class="image-position-size">
-                            </a>
-                        </div>
-                        <div class="ltn__category-item-name">
-                            <h5><a href="/collections/home-decor">Home Decor</a></h5>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col-12">
-                    <div class="ltn__category-item text-center">
-                        <div class="ltn__category-item-img"><a href="/collections/knitting-sewing"
-                                class="image-position-wrapper" style="padding-bottom: 100.0%;">
-                                <img srcset="//new-99.myshopify.com/cdn/shop/collections/dakna-removebg-preview_90x.png?v=1667904156 90w,
-                   //new-99.myshopify.com/cdn/shop/collections/dakna-removebg-preview_118x.png?v=1667904156 118w,
-                   //new-99.myshopify.com/cdn/shop/collections/dakna-removebg-preview_152x.png?v=1667904156 152w,
-                   //new-99.myshopify.com/cdn/shop/collections/dakna-removebg-preview_266x.png?v=1667904156 266w,
-                   
-                   
-                   "
-                                    src="//new-99.myshopify.com/cdn/shop/collections/dakna-removebg-preview_118x.png?v=1667904156"
-                                    sizes="100vw" width="300" height="300" alt="Top Rated"
-                                    loading="lazy" class="image-position-size">
-                            </a>
-                        </div>
-                        <div class="ltn__category-item-name">
-                            <h5><a href="/collections/knitting-sewing">Knitting & Sewing</a></h5>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col-12">
-                    <div class="ltn__category-item text-center">
-                        <div class="ltn__category-item-img"><a href="/collections/special-offers"
-                                class="image-position-wrapper" style="padding-bottom: 100.0%;">
-                                <img srcset="//new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_90x.png?v=1667903416 90w,
-                                //new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_118x.png?v=1667903416 118w,
-                                //new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_152x.png?v=1667903416 152w,
-                                //new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_266x.png?v=1667903416 266w,
-                                
-                                
-                                "
-                                    src="//new-99.myshopify.com/cdn/shop/collections/boll-removebg-preview_118x.png?v=1667903416"
-                                    sizes="100vw" width="300" height="300" alt="Best Selling"
-                                    loading="lazy" class="image-position-size">
-                            </a>
-                        </div>
-                        <div class="ltn__category-item-name">
-                            <h5><a href="/collections/special-offers">Special Offers</a></h5>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col-12">
-                    <div class="ltn__category-item text-center">
-                        <div class="ltn__category-item-img"><a href="/collections/new-arrivals"
-                                class="image-position-wrapper" style="padding-bottom: 100.0%;">
-                                <img srcset="//new-99.myshopify.com/cdn/shop/collections/home-juri-removebg-preview_90x.png?v=1667886871 90w,
-                   //new-99.myshopify.com/cdn/shop/collections/home-juri-removebg-preview_118x.png?v=1667886871 118w,
-                   //new-99.myshopify.com/cdn/shop/collections/home-juri-removebg-preview_152x.png?v=1667886871 152w,
-                   //new-99.myshopify.com/cdn/shop/collections/home-juri-removebg-preview_266x.png?v=1667886871 266w,
-                   
-                   
-                   "
-                                    src="//new-99.myshopify.com/cdn/shop/collections/home-juri-removebg-preview_118x.png?v=1667886871"
-                                    sizes="100vw" width="300" height="300" alt="Home Decor"
-                                    loading="lazy" class="image-position-size">
-                            </a>
-                        </div>
-                        <div class="ltn__category-item-name">
-                            <h5><a href="/collections/new-arrivals">New Arrivals</a></h5>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col-12">
-                    <div class="ltn__category-item text-center">
-                        <div class="ltn__category-item-img"><a href="/collections/top-rated"
-                                class="image-position-wrapper" style="padding-bottom: 100.0%;">
-                                <img srcset="//new-99.myshopify.com/cdn/shop/collections/dhakna-patil_90x.png?v=1667887800 90w,
-                                //new-99.myshopify.com/cdn/shop/collections/dhakna-patil_118x.png?v=1667887800 118w,
-                                //new-99.myshopify.com/cdn/shop/collections/dhakna-patil_152x.png?v=1667887800 152w,
-                                //new-99.myshopify.com/cdn/shop/collections/dhakna-patil_266x.png?v=1667887800 266w,
-                                
-                                
-                                "
-                                    src="//new-99.myshopify.com/cdn/shop/collections/dhakna-patil_118x.png?v=1667887800"
-                                    sizes="100vw" width="300" height="300" alt="Knitting &amp; Sewing"
-                                    loading="lazy" class="image-position-size">
-                            </a>
-                        </div>
-                        <div class="ltn__category-item-name">
-                            <h5><a href="/collections/top-rated">Top Rated</a></h5>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>

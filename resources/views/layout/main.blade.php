@@ -38,6 +38,8 @@
 
         <!-- Bootstrap Css -->
         <link href="{{ asset('backend/assets/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+        <link href="{{ asset('backend/assets/css/bootstrap4.5.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+
         <!-- Icons Css -->
         <link href="{{ asset('backend/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
         <!-- App Css-->
@@ -47,7 +49,7 @@
         <link href="{{ asset('uppy/dist/uppy.min.css') }}" rel="stylesheet">
 
         @yield('styles')
-
+        @stack('styles')
         <style>
             /* Uppy Dashboard Style */
             [data-uppy-drag-drop-supported=true] .uppy-Dashboard-AddFiles {
@@ -162,7 +164,7 @@
     @include('layout.scripts')
 
 @yield('scripts')
-
+@stack('scripts')
 </body>
 
 </html>
