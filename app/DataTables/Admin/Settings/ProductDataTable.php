@@ -220,6 +220,8 @@ class ProductDataTable extends DataTable
         } elseif ($this->stock_filter == 'out_of_stock') {
             $query->where('quantity', 0);
         }
+
+    }
     // if ($this->request()->filled('stock_filter')) {
     //     if ($stock_filter == 'in_stock') {
     //         $query->where('stock_quantity', '>', 0);
