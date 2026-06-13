@@ -193,7 +193,7 @@
                 margin: 0;
                 padding: 0;
                 font-family: "Courier New", monospace; /* classic receipt font */
-                font-size: 11px;
+                font-size: 5px;
                 line-height: 1.2;
             }
 
@@ -221,7 +221,7 @@
 
             h1, h2, h3, h4 {
                 margin: 0;
-                font-size: 12px;
+                font-size: 9px;
                 text-align: center;
             }
 

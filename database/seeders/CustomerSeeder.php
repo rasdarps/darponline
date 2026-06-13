@@ -15,14 +15,14 @@ class CustomerSeeder extends Seeder
         $customers = array(
             array(
                 'id' => 1,
-                'name' => 'cash_customer',
+                'name' => 'cash_sales',
                 'mobile_no' => '0000000000',
                 'email' => 'cash_customer@email.com',
                 'password' => bcrypt('password123'),
                 'address' => 'PMB Accra Ghana',
                 'first_name' => 'Cash',
-                'last_name' => 'Customer',
-                'username' => 'cash_customer',
+                'last_name' => 'Sales',
+                'username' => 'cash_sales',
                 'created_by' => 1,
                 'email_verified_at' => now(),
                 'created_at' => now(),
