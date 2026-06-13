@@ -7,10 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Product extends Model
+class Product extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes,InteractsWithMedia;
     use Auditable;
     // protected $guarded = [];
     protected $fillable = [
@@ -21,6 +25,9 @@ class Product extends Model
     'quantity',
     'stock_level',
     'barcode',
+    'created_by',
+    'updated_by',
+    'deleted_by',
     'description',
     'video_url',
     'price',
@@ -39,9 +46,7 @@ class Product extends Model
     'tags',
     'seo_title',
     'seo_description',
-    'created_by',
-    'updated_by',
-    'deleted_by',
+   
 ];
 
 protected $casts = [
@@ -60,6 +65,23 @@ protected $casts = [
     'tags' => 'array',
 ];
 
+
+public function registerMediaConversions(?Media $media = null): void
+{
+        $this->addMediaConversion('thumb')
+        ->format('jpg')
+          ->width(300)
+          ->height(300)
+          ->sharpen(10);
+
+        $this->addMediaConversion('uniform')
+        ->format('jpg')
+        ->width(300)
+        ->height(300)
+        ->sharpen(7)
+        ->fit(Fit::Stretch, 300, 300)
+        ->withResponsiveImages();
+}
     /*public function supplier(){
         return $this->belongsTo(Supplier::class,'supplier_id','id');
     }*/
@@ -160,6 +182,28 @@ protected $casts = [
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    //for generating barcode automatically for products
+    public static function generateBarcode(string $name, int $id, $createdAt = null): string
+    {
+        $createdAt = $createdAt ?: now();
+        $yearSuffix = $createdAt->format('y');
+
+        $cleanName = trim(preg_replace('/[^A-Za-z0-9\s]/u', '', $name));
+        $parts = preg_split('/\s+/', $cleanName, -1, PREG_SPLIT_NO_EMPTY);
+
+        if (count($parts) >= 2) {
+            $prefix = mb_substr($parts[0], 0, 1) . mb_substr($parts[1], 0, 1);
+        } elseif (count($parts) === 1) {
+            $prefix = mb_substr($parts[0], 0, 2);
+        } else {
+            $prefix = 'PR';
+        }
+
+        $prefix = strtoupper($prefix);
+
+        return $prefix . $id . $yearSuffix;
     }
 
    

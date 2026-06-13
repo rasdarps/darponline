@@ -8,19 +8,24 @@ class uppyFileScript extends Component
 {
 
     public string $name;
-    public string $onlyImages;
-    public string $onlyPdf;
+    public bool $enableWebcam, $enableImageEditor, $multiple, $onlyImages, $onlyPdf;
+    public int $maxFiles;
     /**
      * Create a new component instance.
      *
      * @return void
      */
-    public function __construct(string $name, string $onlyPdf = "false", string $onlyImages = "false")
+    public function __construct(string $name, bool $onlyPdf = false, bool $onlyImages = false, 
+    bool $enableWebcam = false, bool $enableImageEditor = false, bool $multiple = false, int $maxFiles = 1)
     {
         //
         $this->name = $name;
         $this->onlyImages = $onlyImages;
         $this->onlyPdf = $onlyPdf;
+        $this->enableWebcam = $enableWebcam;
+        $this->enableImageEditor = $enableImageEditor;
+        $this->multiple = $multiple;
+        $this->maxFiles = $maxFiles;
     }
 
     /**

@@ -18,7 +18,7 @@ class UploadController extends Controller
     {
 
 
-        $file_categories = ['category_image', 'product', ];
+        $file_categories = ['category_image', 'product','featured_image', 'gallery_images' ];
 
         try{
         
@@ -32,7 +32,6 @@ class UploadController extends Controller
     
                     if($category == "category_image")
                     {
-                        
                         $file = $request->file($category);
                        
                         $filename = $file->getClientOriginalName();
@@ -44,10 +43,25 @@ class UploadController extends Controller
     
                         ]);
                     }
-                  
-                    elseif($category == "products")
-                    {
 
+                    elseif($category == "featured_image")
+                    {
+                        
+                        $file = $request->file($category);
+                       
+                        $filename = $file->getClientOriginalName();
+                        $folder = uniqid() . '-' . now()->timestamp;
+                        $file->storeAs('public/featured_image/tmp/' . $folder, $filename);
+                        TemporaryFile::create([
+                            'folder' => $folder,
+                            'filename' => $filename,
+    
+                        ]);
+                    }
+                  
+                  
+                    elseif($category == "gallery_images")
+                    {
 
                         $code = $this::generateCode();
                         foreach($request->file($category) as $upload)
@@ -55,8 +69,8 @@ class UploadController extends Controller
 
                             $file = $upload;
                             $filename = $file->getClientOriginalName();
-                            $folder =  $request->business_name;
-                            $file->storeAs('public/products/tmp/' . $folder, $filename);
+                            $folder =  $request->uniqueId;
+                            $file->storeAs('public/gallery_images/tmp/' . $folder, $filename);
 
                             TemporaryFile::create([
                                 'folder' => $folder,

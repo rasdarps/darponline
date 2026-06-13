@@ -69,8 +69,20 @@
                                             
                                                 <div class="card-body py-16pt text-center card_content">
                                                   
-                                                 
-                                                    <x-uppy-file-input input-wrapper-class="col-lg-12 col-md-12" label="Upload Category Image" name="category_image"/>
+                                                    <x-uppy-file-input
+                                                    input-wrapper-class="col-lg-12 col-md-12"
+                                                    name="featured_image"
+                                                    label="Featured Image"
+                                                    :multiple="false"
+                                                    :maxFiles="1"
+                                                    :onlyPdf="false"
+                                                    :onlyImages="true"
+                                                    note="1 image file only, up to 4 MB. Recommended size: 600x600px"
+                                                    :enableWebcam="false"
+                                                    :enableImageEditor="true"
+                                                    :compress="true"
+                                                    :required="false"
+                                                />
                                                     <p class="card-subtitle text-70 mb-24pt">you can edit the file by clicking on the pen icon</p>
 
                                                 </div>
@@ -184,7 +196,6 @@
 
 @section('scripts')
 
-<x-uppy-file-script name="category_image" only-pdf="false" only-images="true" />
 
 <script type="text/javascript">
         $(document).ready(function (){

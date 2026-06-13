@@ -156,7 +156,7 @@ Route::prefix('admin')->group(function () {
 
             Route::prefix('products')->name('products.')->group(function () {
                 Route::get('/', [ProductController::class, 'index'])->name('index');
-                // Route::get('/show/{id}', [CategoryController::class, 'show'])->name('show');
+                Route::get('/show/{id}', [ProductController::class, 'show'])->name('show');
                 Route::get('/create', [ProductController::class, 'create'])->name('create');
                 Route::post('/store', [ProductController::class, 'store'])->name('store');
                 Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('edit');
@@ -165,7 +165,12 @@ Route::prefix('admin')->group(function () {
                 
                 // ✅ New route for barcode lookup
                 Route::post('/find-by-barcode', [ProductController::class, 'findByBarcode'])->name('findByBarcode');
-
+                Route::post('/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
+                Route::post('/toggle-online', [ProductController::class, 'toggleOnline'])->name('toggle-online');
+                Route::post('/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('toggle-featured');
+                Route::delete('/bulk-delete', [ProductController::class, 'bulkDelete'])->name('bulk-delete');
+                Route::post('/update-stock', [ProductController::class, 'updateStock'])->name('update-stock');
+                Route::get('/export', [ProductController::class, 'export'])->name('export');
             });
 
 

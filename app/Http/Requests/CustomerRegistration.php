@@ -39,6 +39,10 @@ class CustomerRegistration extends FormRequest
         ];
     }
 
+       /**
+     * Get the validated product data ready for database insertion
+     */
+   
     public function messages()
     {
         return  [

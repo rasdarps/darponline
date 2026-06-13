@@ -45,14 +45,14 @@ class Category extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-              ->width(368)
-              ->height(232)
+              ->width(300)
+              ->height(300)
               ->sharpen(10);
 
         $this->addMediaConversion('uniform')
-        ->width(268)
-        ->height(270)
-        ->fit(Fit::Stretch, 268, 270)
+        ->width(300)
+        ->height(300)
+        ->fit(Fit::Stretch, 300, 300)
         ->withResponsiveImages()
         ->performOnCollections('category_image');
     }
