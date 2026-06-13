@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Crypt;
                                     <div class="form-group">
                                         <label>Category</label>
                                         <select id="filter-category" class="form-control select2">
-                                            <option value="">All Categories</option>
+                                            <option value="">All</option>
                                             @foreach($categories as $category)
                                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                                             @endforeach
@@ -100,7 +100,7 @@ use Illuminate\Support\Facades\Crypt;
                         
                         <!-- Products Table -->
                         <div class="table-responsive">
-                            {{ $dataTable->table(['class' => 'table table-bordered table-striped table-hover w-100'], true) }}
+                            {!! $dataTable->table() !!}
                         </div>
                     </div>
                 </div>
@@ -142,13 +142,22 @@ use Illuminate\Support\Facades\Crypt;
 @section('scripts')
 {{ $dataTable->scripts() }}
     <script>
+    // ============ DEFINE MISSING FUNCTION FIRST ============
+    window.addFilterSummary = function() {
+        console.log('DataTable initialized - setting up filters');
+        // Initialize all toggle functions after DataTable loads
+        if (typeof initializeToggles === 'function') {
+            initializeToggles();
+            initializeFeaturedToggles();
+            initializeDeleteButtons();
+            initializeBulkActions();
+        }
+        updateFilterSummary();
+    };
+    
     $(document).ready(function() {
         // Initialize Select2
-        $('.select2').select2({
-            placeholder: 'Select an option',
-            allowClear: true,
-            width: '100%'
-        });
+       
         
         // Global AJAX setup
         $.ajaxSetup({
@@ -159,9 +168,88 @@ use Illuminate\Support\Facades\Crypt;
         
         // ============ DEFINE ALL FUNCTIONS GLOBALLY ============
         
+        // Update filter summary
+        window.updateFilterSummary = function() {
+            var filters = [];
+            
+            // Get current filter values
+            var categoryId = $('#filter-category').val();
+            var status = $('#filter-status').val();
+            var online = $('#filter-online').val();
+            var stock = $('#filter-stock').val();
+            var featured = $('#filter-featured').val();
+            
+            // Get selected text for display
+            var categoryName = $('#filter-category option:selected').text();
+            var statusText = $('#filter-status option:selected').text();
+            var onlineText = $('#filter-online option:selected').text();
+            var stockText = $('#filter-stock option:selected').text();
+            var featuredText = $('#filter-featured option:selected').text();
+            
+            // Build filter badges
+            if (categoryId && categoryId !== '') {
+                filters.push('<span class="badge badge-primary mr-1 mb-1">Category: ' + categoryName + '</span>');
+            }
+            if (status && status !== '') {
+                var statusClass = status == '1' ? 'badge-success' : 'badge-danger';
+                filters.push('<span class="badge ' + statusClass + ' mr-1 mb-1">Status: ' + statusText + '</span>');
+            }
+            if (online && online !== '') {
+                var onlineClass = online == '1' ? 'badge-success' : 'badge-secondary';
+                filters.push('<span class="badge ' + onlineClass + ' mr-1 mb-1">Online: ' + onlineText + '</span>');
+            }
+            if (stock && stock !== '') {
+                var stockClass = '';
+                if (stock == 'in_stock') stockClass = 'badge-success';
+                else if (stock == 'low_stock') stockClass = 'badge-warning';
+                else if (stock == 'out_of_stock') stockClass = 'badge-danger';
+                filters.push('<span class="badge ' + stockClass + ' mr-1 mb-1">Stock: ' + stockText + '</span>');
+            }
+            if (featured && featured !== '') {
+                var featuredClass = featured == '1' ? 'badge-info' : 'badge-secondary';
+                filters.push('<span class="badge ' + featuredClass + ' mr-1 mb-1">Featured: ' + featuredText + '</span>');
+            }
+            
+            // Update the summary display
+            if (filters.length > 0) {
+                $('#filter-summary-text').html(filters.join(' '));
+                $('#filter-summary').show();
+            } else {
+                $('#filter-summary').hide();
+            }
+        };
+        
+        // Apply filters
+        window.applyFilters = function() {
+
+                var table = $('#product-table');
+                if (!table) {
+                console.error('DataTable not initialized yet');
+                return;
+            }
+
+            table.on('preXhr.dt', function(e,settings,data){
+                data.category_id = $('#filter-category').val() || '';
+                data.status = $('#filter-status').val() || '';
+                data.online_status = $('#filter-online').val() || '';
+                data.stock_filter = $('#filter-stock').val() || '';
+                data.featured = $('#filter-featured').val() || '';
+            
+            });
+            
+          
+          console.log("Sdf");
+          
+            
+            // Reload table with new URL
+            table.DataTable().ajax.reload();
+            
+            // Update filter summary
+            updateFilterSummary();
+        };
+        
         // Initialize status toggles
         window.initializeToggles = function() {
-            // Status toggle (active/inactive)
             $('.toggle-status').off('change').on('change', function() {
                 var checkbox = $(this);
                 var id = checkbox.data('id');
@@ -181,8 +269,6 @@ use Illuminate\Support\Facades\Crypt;
                         Notiflix.Loading.remove();
                         if (response.status === 'success') {
                             Notiflix.Notify.success('Product status updated');
-                            var statusText = isChecked ? 'Active' : 'Inactive';
-                            checkbox.closest('.custom-control').find('.status-text').text(statusText);
                         } else {
                             checkbox.prop('checked', !isChecked);
                             Notiflix.Notify.failure(response.message || 'Failed to update');
@@ -379,35 +465,40 @@ use Illuminate\Support\Facades\Crypt;
             }
         };
         
-        // Update filter summary
-        window.updateFilterSummary = function(category, status, online, stock, featured) {
-            var filters = [];
-            var categoryName = $('#filter-category option:selected').text();
-            var statusText = $('#filter-status option:selected').text();
-            var onlineText = $('#filter-online option:selected').text();
-            var stockText = $('#filter-stock option:selected').text();
-            var featuredText = $('#filter-featured option:selected').text();
-            
-            if (category) filters.push('<span class="badge badge-primary">Category: ' + categoryName + '</span>');
-            if (status) filters.push('<span class="badge badge-info">Status: ' + statusText + '</span>');
-            if (online) filters.push('<span class="badge badge-success">Online: ' + onlineText + '</span>');
-            if (stock) filters.push('<span class="badge badge-warning">Stock: ' + stockText + '</span>');
-            if (featured) filters.push('<span class="badge badge-danger">Featured: ' + featuredText + '</span>');
-            
-            if (filters.length > 0) {
-                $('#filter-summary-text').html(filters.join(' '));
-                $('#filter-summary').show();
-            } else {
-                $('#filter-summary').hide();
-            }
-        };
+        // Add CSS for filter badges
+        $('<style>')
+            .prop('type', 'text/css')
+            .html(`
+                .filter-summary {
+                    background: #f8f9fa;
+                    padding: 10px 15px;
+                    border-radius: 4px;
+                    margin-bottom: 20px;
+                    border-left: 3px solid #007bff;
+                    display: flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+                .filter-summary .badge {
+                    padding: 5px 8px;
+                    font-size: 12px;
+                    margin-right: 5px;
+                }
+                .filter-summary .btn-link {
+                    padding: 0;
+                    margin-left: 10px;
+                }
+                .badge-primary { background-color: #007bff; color: white; }
+                .badge-success { background-color: #28a745; color: white; }
+                .badge-danger { background-color: #dc3545; color: white; }
+                .badge-warning { background-color: #ffc107; color: #212529; }
+                .badge-info { background-color: #17a2b8; color: white; }
+                .badge-secondary { background-color: #6c757d; color: white; }
+            `)
+            .appendTo('head');
         
-        // Add filter summary
-        window.addFilterSummary = function() {
-            // This function is called by DataTable initComplete
-            console.log('DataTable initialized');
-        };
-        
+        // View product details
         $(document).on('click', '.view-product', function(e) {
             e.stopPropagation();
             var productId = $(this).data('id');
@@ -425,7 +516,6 @@ use Illuminate\Support\Facades\Crypt;
             
             Notiflix.Loading.pulse('Loading product details...');
             
-            // Use absolute URL to avoid route issues
             var url = "{{ route('products.show', ':id') }}";
             url = url.replace(':id', id);
             
@@ -458,26 +548,6 @@ use Illuminate\Support\Facades\Crypt;
                 }
             });
         };
-
-        
-        // Apply filters
-        window.applyFilters = function() {
-            var table = window.LaravelDataTables['products-table'];
-            
-            var category = $('#filter-category').val();
-            var status = $('#filter-status').val();
-            var online = $('#filter-online').val();
-            var stock = $('#filter-stock').val();
-            var featured = $('#filter-featured').val();
-            
-            table.ajax.url('{{ route("products.index") }}?category_id=' + category + 
-                           '&status=' + status + 
-                           '&online_status=' + online + 
-                           '&stock_filter=' + stock +
-                           '&featured=' + featured).load();
-            
-            updateFilterSummary(category, status, online, stock, featured);
-        };
         
         // ============ EVENT HANDLERS ============
         
@@ -494,10 +564,9 @@ use Illuminate\Support\Facades\Crypt;
             $('#filter-stock').val('');
             $('#filter-featured').val('');
             applyFilters();
-            $('#filter-summary').hide();
         });
         
-        // Make product row clickable for quick view - Improved version
+        // Make product row clickable for quick view
         $(document).on('click', '#products-table tbody tr', function(e) {
             // Don't trigger if clicking on buttons, checkboxes, or switches
             if ($(e.target).is('button') || 
@@ -508,11 +577,9 @@ use Illuminate\Support\Facades\Crypt;
                 return;
             }
             
-            // Try to find product ID from various data attributes
             var productId = $(this).find('.delete-product').data('id');
             
             if (!productId) {
-                // Try alternative selectors
                 productId = $(this).find('[data-id]').first().data('id');
             }
             
@@ -538,12 +605,24 @@ use Illuminate\Support\Facades\Crypt;
             }
         });
         
-        // Initialize all functions after DataTable is ready
+        // Initialize DataTable event handlers after table is loaded
+        if (window.LaravelDataTables && window.LaravelDataTables['products-table']) {
+            window.LaravelDataTables['products-table'].on('draw.dt', function() {
+                initializeToggles();
+                initializeFeaturedToggles();
+                initializeDeleteButtons();
+                initializeBulkActions();
+                updateFilterSummary();
+            });
+        }
+        
+        // Initial setup
         setTimeout(function() {
             initializeToggles();
             initializeFeaturedToggles();
             initializeDeleteButtons();
             initializeBulkActions();
+            updateFilterSummary();
         }, 500);
     });
     </script>
