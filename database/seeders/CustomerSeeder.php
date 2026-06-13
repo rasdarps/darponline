@@ -17,7 +17,7 @@ class CustomerSeeder extends Seeder
                 'id' => 1,
                 'name' => 'cash_sales',
                 'mobile_no' => '0000000000',
-                'email' => 'cash_customer@email.com',
+                'email' => 'cash_sales@email.com',
                 'password' => bcrypt('password123'),
                 'address' => 'PMB Accra Ghana',
                 'first_name' => 'Cash',

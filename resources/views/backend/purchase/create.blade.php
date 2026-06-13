@@ -136,12 +136,15 @@
                                         </div>
                                         <div class="form-group col-md-9">
                                             <label><strong>Supplier Name <span class="text-danger">*</span></strong></label>
-                                            <select name="supplier_id" id="supplier_id" class="form-control">
-                                                <option value="">Select Supplier</option>
+                                            <select name="supplier_id" id="supplier_id" class="form-control" readonly>
+                                                <option value="" disabled>Select Supplier</option>
                                                 @foreach($suppliers as $supplier)
-                                                    <option value="{{ $supplier->id }}">{{ $supplier->name }} - {{ $supplier->mobile_no }}</option>
+                                                    <option value="{{ $supplier->id }}" 
+                                                        {{ $supplier->name === 'cash_purchase' ? 'selected' : '' }}>
+                                                        {{ $supplier->name }}
+                                                    </option>
                                                 @endforeach
-                                                <option value="0">New Supplier</option>
+                                                <option value="0" disabled>New Supplier</option>
                                             </select>
                                         </div>
                                     </div>

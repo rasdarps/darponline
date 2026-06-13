@@ -131,12 +131,15 @@
                                         </div>
                                         <div class="form-group col-md-9">
                                             <label><strong>Account Name <span class="text-danger">*</span></strong></label>
-                                            <select name="customer_id" id="customer_id" class="form-control">
-                                                <option value="">Select Customer</option>
+                                            <select name="customer_id" id="customer_id" class="form-control" readonly>
+                                                <option value="" disabled>Select Customer</option>
                                                 @foreach($costomer as $cust)
-                                                    <option value="{{ $cust->id }}">{{ $cust->name }} </option>
+                                                    <option value="{{ $cust->id }}" 
+                                                        {{ $cust->name === 'cash_sales' ? 'selected' : '' }}>
+                                                        {{ $cust->name }}
+                                                    </option>
                                                 @endforeach
-                                                <option value="0">New Customer</option>
+                                                <option value="0" disabled>New Customer</option>
                                             </select>
                                         </div>
                                     </div>

@@ -16,9 +16,9 @@ class SupplierSeeder extends Seeder
         $suppliers = [
             [
                 'id' => 1,
-                'name' => 'cash_supplier',
+                'name' => 'cash_purchase',
                 'mobile_no' => '0000000000',
-                'email' => 'cash_supplier@email.com',
+                'email' => 'cash_purchase@email.com',
                 'address' => 'PMB Accra Ghana',
                 'city' => 'Accra',
                 'type' => 'Manufacturer',
