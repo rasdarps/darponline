@@ -109,9 +109,9 @@
         @foreach($allData as $key => $item)
 
 @php
-$buying_total = App\Models\PurchaseDetail::where('category_id',$item->category_id)->where('product_id',$item->id)->where('status','1')->sum('buying_qty');
+$buying_total = App\Models\PurchaseDetail::where('category_id',$item->category_id)->where('product_id',$item->id)->sum('buying_qty');
 
-$selling_total = App\Models\InvoiceDetail::where('category_id',$item->category_id)->where('product_id',$item->id)->where('status','1')->sum('selling_qty');
+$selling_total = App\Models\InvoiceDetail::where('category_id',$item->category_id)->where('product_id',$item->id)->sum('selling_qty');
 @endphp
 
 

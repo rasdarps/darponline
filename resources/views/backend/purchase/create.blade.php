@@ -91,10 +91,10 @@
                                                     <tr style="background-color:#034141; text-align:center;" class="text-white">
                                                         <th width="10%">Category</th>
                                                         <th width="12%">Barcode</th>
-                                                        <th width="10%">Product Name</th>
-                                                        <th width="15%">PSC/KG</th>
-                                                        <th width="10%">Unit Price</th>
-                                                        <th width="15%">Per</th>
+                                                        <th width="15%">Product Name</th>
+                                                        <th width="10%">PSC/KG</th>
+                                                        <th width="15%">Unit Price</th>
+                                                        <th width="10%">Per</th>
                                                         <th width="15%">Total Price(Ghc)</th>
                                                         <th width="7%">Action</th>
                                                     </tr>

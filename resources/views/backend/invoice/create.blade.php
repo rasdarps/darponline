@@ -84,12 +84,12 @@
                                             <table class="table-sm table-bordered" width="100%" style="border-color: #ddd;">
                                                 <thead>
                                                     <tr style="background-color:#034141; text-align:center;" class="text-white">  
-                                                        <th width="15%">Category</th>
+                                                        <th width="10%">Category</th>
                                                         <th width="12%">Barcode</th>
                                                         <th width="15%">Product Name</th>
-                                                        <th width="15%">PSC/KG</th>
-                                                        <th width="10%">Unit Price</th>
-                                                        <th width="15%">Per</th>
+                                                        <th width="10%">PSC/KG</th>
+                                                        <th width="15%">Unit Price</th>
+                                                        <th width="10%">Per</th>
                                                         <th width="15%">Total Price(Ghc)</th>
                                                         <th width="7%">Action</th>
                                                     </tr>
@@ -121,11 +121,11 @@
                                     <div class="row mt-3">
                                         <div class="form-group col-md-3">
                                             <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
-                                            <select name="paid_status" id="paid_status" class="form-control">
-                                                <option value="">Select Payment Status</option>
+                                            <select name="paid_status" id="paid_status" class="form-control" readonly>
+                                                {{-- <option value="">Select Payment Status</option> --}}
                                                 <option value="full_paid">Full Paid</option>
-                                                <option value="full_due">Full Due</option>
-                                                <option value="partial_paid">Partial Paid</option>
+                                                <option value="full_due" disabled>Credit</option>
+                                                <option value="partial_paid" disabled>Partial Paid</option>
                                             </select>
                                             <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">
                                         </div>
