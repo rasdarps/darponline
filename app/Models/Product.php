@@ -158,6 +158,17 @@ public function registerMediaConversions(?Media $media = null): void
         return $query->where('quantity', '>', 0);
     }
 
+    public function scopeLowStock($query)
+    {
+        return $query->whereColumn('quantity', '<=', 'stock_level')
+            ->where('quantity', '>', 0);
+    }
+    
+    public function scopeOutOfStock($query)
+    {
+        return $query->where('quantity', '<=', 0);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_online', true);
@@ -206,9 +217,54 @@ public function registerMediaConversions(?Media $media = null): void
         return $prefix . $id . $yearSuffix;
     }
 
-   
+    /**
+     * Check if product is in stock
+     */
+    public function isInStock()
+    {
+        return $this->quantity > 0;
+    }
 
 
+      /**
+     * Check if product is low on stock
+     */
+    public function isLowStock()
+    {
+        return $this->quantity <= $this->stock_level && $this->quantity > 0;
+    }
+    /**
+     * Check if product is out of stock
+     */
+    public function isOutOfStock()
+    {
+        return $this->quantity <= 0;
+    }
 
+/**
+     * Get stock status label
+     */
+    public function getStockStatusAttribute()
+    {
+        if ($this->isOutOfStock()) {
+            return 'Out of Stock';
+        } elseif ($this->isLowStock()) {
+            return 'Low Stock';
+        }
+        return 'In Stock';
+    }
+    
 
+    /**
+     * Get stock status badge class
+     */
+    public function getStockBadgeClassAttribute()
+    {
+        if ($this->isOutOfStock()) {
+            return 'danger';
+        } elseif ($this->isLowStock()) {
+            return 'warning';
+        }
+        return 'success';
+    }
 }

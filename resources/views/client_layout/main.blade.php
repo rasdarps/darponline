@@ -877,7 +877,10 @@
       </div>
     </div>
   </div>
-  <div class="modal fade productModal ltn__sp-modal" id="quickViewModal" tabindex="-1" role="dialog" aria-hidden="true">
+
+  @include('client.partials.quick-view-modal')
+
+  {{-- <div class="modal fade productModal ltn__sp-modal" id="quickViewModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-body">
@@ -929,17 +932,17 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> --}}
 
-    <div class="quickViewModal_info" style="display: none;">
+    {{-- <div class="quickViewModal_info" style="display: none;">
         <div class="button">Add to cart</div>
         <div class="button_added">Added</div>
         <div class="button_error">Limit Products</div>
         <div class="button_wait">Wait..</div>
-    </div>
+    </div> --}}
     @include('client_layout.includes.scripts')
 
-    <script async="async">  
+    {{-- <script async="async">  
         var mainImage = '';
         jQuery(function ($) {
       
@@ -1074,10 +1077,10 @@
                     if(inv_qua > 0) {
                       $(_parent+' .product-availability').text(inv_qua + " In Stock");
                                                                }
-                                                               else {
-                                                               out_of_stock = true;
-                                                               $(_parent+' .product-availability').text("In Stock");
-                                                                                                        }
+                    else {
+                    out_of_stock = true;
+                    $(_parent+' .product-availability').text("In Stock");
+                                                            }
                                                                                                         }
                                                                                                         else {
                                                                                                         $(_parent+' .product-availability').text("Many in stock");
@@ -1251,7 +1254,7 @@
                               }
                             };
       </script>
-      
+       --}}
       <!-- END QUICKVIEW PRODUCT -->
     <script>
         $(window).on('load', function() {

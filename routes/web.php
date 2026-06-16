@@ -307,53 +307,79 @@ Route::prefix('shop')->name('shop.')->group(function () {
     });
 
 
-    Route::middleware('auth:customer')->group(function () {
+            Route::middleware('auth:customer')->group(function () {
 
-        Route::post('logout', [ShopAuthController::class, 'logout'])->name('logout');
-        // Profile Management
-        Route::get('/profile', [ShopProfileController::class, 'index'])->name('profile');
-        Route::put('/profile/update', [ShopProfileController::class, 'update'])->name('profile.update');
-        Route::post('/profile/change-password', [ShopProfileController::class, 'changePassword'])->name('profile.change-password');
-
-
-         // Orders
-         Route::get('/orders', [ShopOrderController::class, 'index'])->name('orders');
-         Route::get('/orders/{id}', [ShopOrderController::class, 'show'])->name('orders.show');
-         Route::post('/orders/{id}/cancel', [ShopOrderController::class, 'cancel'])->name('orders.cancel');
+                Route::post('logout', [ShopAuthController::class, 'logout'])->name('logout');
+                // Profile Management
+                Route::get('/profile', [ShopProfileController::class, 'index'])->name('profile');
+                Route::put('/profile/update', [ShopProfileController::class, 'update'])->name('profile.update');
+                Route::post('/profile/change-password', [ShopProfileController::class, 'changePassword'])->name('profile.change-password');
 
 
-           // Wishlist
-        Route::get('/wishlist', [ShopProductController::class, 'wishlist'])->name('wishlist');
-        Route::post('/wishlist/add/{id}', [ShopProductController::class, 'addToWishlist'])->name('wishlist.add');
-        Route::delete('/wishlist/remove/{id}', [ShopProductController::class, 'removeFromWishlist'])->name('wishlist.remove');
+                // Orders
+                Route::get('/orders', [ShopOrderController::class, 'index'])->name('orders');
+                Route::get('/orders/{id}', [ShopOrderController::class, 'show'])->name('orders.show');
+                Route::post('/orders/{id}/cancel', [ShopOrderController::class, 'cancel'])->name('orders.cancel');
 
-        Route::get('/collections', [OnlineShoppingController::class, 'collection_page'])->name('collection_page');
-        Route::get('/product', [OnlineShoppingController::class, 'product_page'])->name('product_page');
-        Route::get('/whislist', [OnlineShoppingController::class, 'wishlist_page'])->name('wishlist_page');
-            // Cart (session-based, works without login)
-            Route::get('/cart', [ShopCartController::class, 'index'])->name('cart');
-            Route::post('/cart/add/{id}', [ShopCartController::class, 'add'])->name('cart.add');
-            Route::put('/cart/update/{id}', [ShopCartController::class, 'update'])->name('cart.update');
-            Route::delete('/cart/remove/{id}', [ShopCartController::class, 'remove'])->name('cart.remove');
-            Route::post('/cart/coupon/apply', [ShopCartController::class, 'applyCoupon'])->name('cart.coupon.apply');
-            Route::delete('/cart/coupon/remove', [ShopCartController::class, 'removeCoupon'])->name('cart.coupon.remove');
- 
-    });
+                // // Checkout
+                // Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+                // Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+                        
+                // // Profile
+                // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+                // Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+                //  // Addresses
+                // Route::get('/addresses', [AddressController::class, 'index'])->name('addresses');
+                // Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+                // Route::put('/addresses/{id}', [AddressController::class, 'update'])->name('addresses.update');
+                // Route::delete('/addresses/{id}', [AddressController::class, 'destroy'])->name('addresses.destroy');
+
+                Route::get('/whislist', [OnlineShoppingController::class, 'wishlist_page'])->name('wishlist_page');
+                
+        
+            });
+
+                // Wishlist (Public - Session Based)
+                Route::get('/wishlist', [ShopProductController::class, 'wishlist'])->name('wishlist');
+             Route::post('/wishlist/add/{id}', [ShopProductController::class, 'addToWishlist'])->name('wishlist.add');
+             Route::delete('/wishlist/remove/{id}', [ShopProductController::class, 'removeFromWishlist'])->name('wishlist.remove');
+
+             // Compare (Public - Session Based)
+            // Route::prefix('compare')->name('compare.')->group(function () {
+            //     Route::get('/', [CompareController::class, 'index'])->name('index');
+            //     Route::post('/add', [CompareController::class, 'add'])->name('add');
+            //     Route::delete('/remove', [CompareController::class, 'remove'])->name('remove');
+            // });
+
+            // Shop/Product Routes (Public - No Login Required)
+
+            Route::get('/product/{slug}/quick-view', [OnlineShoppingController::class, 'quickView'])->name('product.quick-view');
+            Route::get('/product/{slug}', [OnlineShoppingController::class, 'productDetails'])->name('product.details');
+            Route::get('/products', [OnlineShoppingController::class, 'products'])->name('products');
+            Route::get('/product', [OnlineShoppingController::class, 'product_page'])->name('product_page');
+
+            
           // Cart (session-based, works without login)
-          Route::get('/cart', [ShopCartController::class, 'index'])->name('cart');
-          Route::post('/cart/add/{id}', [ShopCartController::class, 'add'])->name('cart.add');
-          Route::put('/cart/update/{id}', [ShopCartController::class, 'update'])->name('cart.update');
-          Route::delete('/cart/remove/{id}', [ShopCartController::class, 'remove'])->name('cart.remove');
-          Route::post('/cart/coupon/apply', [ShopCartController::class, 'applyCoupon'])->name('cart.coupon.apply');
-          Route::delete('/cart/coupon/remove', [ShopCartController::class, 'removeCoupon'])->name('cart.coupon.remove');
-
+          Route::prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', [ShopCartController::class, 'index'])->name('index');
+            Route::post('/add', [ShopCartController::class, 'add'])->name('add');
+            Route::put('/update', [ShopCartController::class, 'update'])->name('update');
+            Route::delete('/remove', [ShopCartController::class, 'remove'])->name('remove');
+            Route::post('/coupon/apply', [ShopCartController::class, 'applyCoupon'])->name('coupon.apply');
+            Route::delete('/coupon/remove', [ShopCartController::class, 'removeCoupon'])->name('coupon.remove');
+            Route::get('/count', [ShopCartController::class, 'count'])->name('count');
+            Route::get('/items', [ShopCartController::class, 'getItems'])->name('items');
+            Route::post('/clear', [ShopCartController::class, 'clear'])->name('clear');
+        });
         // Public routes (both guest and authenticated can access)
         Route::get('/', [OnlineShoppingController::class, 'index'])->name('home');
         Route::get('/about', [ShopHomeController::class, 'about'])->name('about');
         Route::get('/contact', [ShopHomeController::class, 'contact'])->name('contact');
         Route::post('/contact', [ShopHomeController::class, 'submitContact'])->name('contact.submit');
 
-        // collections
+        // Collections/Categories (Public)
+
+        Route::get('/collections', [OnlineShoppingController::class, 'collection_page'])->name('collection_page');
         Route::get('/collections{slug}', [ShopCategoryController::class, 'show'])->name('collections.show');
         Route::get('/collections/all', [ShopCategoryController::class, 'getAllCategories'])->name('collections.all');
 });
