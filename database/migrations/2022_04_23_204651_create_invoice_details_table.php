@@ -36,7 +36,7 @@ return new class extends Migration
             ->onDelete('cascade');
 
             $table->double('selling_qty');
-            $table->double('unit_price');
+            $table->double('unit_selling_price');
 
             $table->foreignId('unit_id')
             ->constrained('units')

@@ -198,3 +198,20 @@
         pdf.save("invoice.pdf");
     }
 </script>
+
+<script type="text/javascript">
+// Disable right-click
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Disable common DevTools shortcuts
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey && (
+        e.key.toLowerCase() === 'u' || // View source
+        e.key.toLowerCase() === 's' || // Save
+        e.key.toLowerCase() === 'i' || // DevTools
+        e.key.toLowerCase() === 'j'    // Console
+    )) {
+        e.preventDefault();
+    }
+});
+</script>

@@ -14,8 +14,6 @@ use App\Http\Controllers\Backend\StockController;
 use App\Http\Controllers\Backend\SupplierController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Backend\UserController;
-use App\Http\Controllers\ClientSide\Auth\ClientLoginController;
-use App\Http\Controllers\ClientSide\Auth\ClientRegistrationController;
 use App\Http\Controllers\ClientSide\OnlineShoppingController;
 use App\Http\Controllers\ClientSide\ShopAuthController;
 use App\Http\Controllers\ClientSide\ShopCartController;
@@ -184,9 +182,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/edit/{id}', [PurchaseController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [PurchaseController::class, 'update'])->name('update');
                 Route::delete('/destroy/{id}', [PurchaseController::class, 'destroy'])->name('destroy');
-                // Route to get the next purchase number
-                Route::get('/next-number', [PurchaseController::class, 'nextNumber'])->name('nextNumber');
-
+            
             });
 
             Route::controller(PurchaseController::class)->group(function () {
@@ -221,8 +217,6 @@ Route::prefix('admin')->group(function () {
                 Route::get('/edit/{id}', [InvoiceController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [InvoiceController::class, 'update'])->name('update');
                 Route::delete('/destroy/{id}', [InvoiceController::class, 'destroy'])->name('destroy');
-                // Route to get the next invoice number
-                Route::get('/next-number', [InvoiceController::class, 'nextNumber'])->name('nextNumber');
 
             });
 

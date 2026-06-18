@@ -2,23 +2,26 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Models\Unit;
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Purchase;
-use App\Models\Supplier;
-use Illuminate\Http\Request;
-use App\Models\PurchaseDetail;
-use Illuminate\Support\Carbon;
-use App\Models\PurchasePayment;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
+use App\DataTables\Admin\Report\Purchase\AllPurchasesDataTable;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Category;
+use App\Models\Company;
+use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\PurchaseDetail;
+use App\Models\PurchasePayment;
 use App\Models\PurchasePaymentDetail;
+use App\Models\Supplier;
+use App\Models\Unit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
   
 class PurchaseController extends Controller
+
 {
     function __construct()
     {
@@ -29,78 +32,93 @@ class PurchaseController extends Controller
     }
 
     // RESTful Methods
-    public function index(){
-        $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->where('status','1')->get();
-        return view('backend.purchase.index',compact('allData'));
+    // public function index(){
+    //     $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->get();
+    //     return view('backend.purchase.index',compact('allData'));
+    // } // End Method
+    public function index(AllPurchasesDataTable $dataTable){
+        $suppliers = Supplier::orderBy('name')->get();
+        $purchase_invoices = Purchase::orderBy('purchase_no')->get();
+        return $dataTable->render('backend.purchase.index', compact('suppliers', 'purchase_invoices'));
     } // End Method
 
     public function create(){ 
         $unit = Unit::all();
         $category = Category::all();
         $suppliers = Supplier::all();
-        $purchase_data = Purchase::orderBy('id','desc')->first();
-        
-        if ($purchase_data == null) {
-           $firstReg = '0';
-           $purchase_no = '0' . $firstReg+1;
-        }else{
-            $purchase_data = Purchase::orderBy('id','desc')->first()->purchase_no;
-            $purchase_no = '0' . $purchase_data+1;
+
+        // Get the maximum numeric purchase_no
+        $maxPurchaseNo = Purchase::max(DB::raw('CAST(purchase_no AS UNSIGNED)'));
+        if ($maxPurchaseNo) {
+            $purchase_no = str_pad($maxPurchaseNo + 1, 2, '0', STR_PAD_LEFT);
+        } else {
+            $purchase_no = '01';
         }
-        $date = date('Y-m-d');
-        return view('backend.purchase.create',compact('purchase_no','category','date','suppliers','unit'));
+
+        $date = Carbon::now()->format('Y-m-d');        
+       
+       return view('backend.purchase.create',compact('purchase_no','category','date','suppliers','unit'));
     } // End Method
 
     public function store(Request $request){
-        if ($request->category_id == null) {
-            $notification = array(
-                'message' => 'Sorry You do not select any item', 
-                'alert-type' => 'error'
-            );
-            return redirect()->back()->with($notification);
+        // Backend validation
+        $rules = [
+            'date' => ['required', 'date'],
+            'purchase_no' => ['required'],
+            // 'barcode' => ['nullable', 'string'],
+            'category_id' => ['required', 'array', 'min:1'],
+            'category_id.*' => ['required'],
+            'product_id' => ['required', 'array', 'min:1'],
+            'product_id.*' => ['required'],
+            'unit_id' => ['required', 'array', 'min:1'],
+            'unit_id.*' => ['required'],
+            'paid_status' => ['required', Rule::in(['full_paid', 'full_due', 'partial_paid'])],
+        ];
+
+        // paid_amount required if partial_paid
+        if ($request->paid_status === 'partial_paid') {
+            $rules['paid_amount'] = ['required', 'numeric', 'min:1', 'max:' . $request->estimated_amount];
         }
-        else{
-            if ($request->paid_amount > $request->estimated_amount) {
-               $notification = array(
-                'message' => 'Sorry Paid Amount is Maximum the total price', 
-                'alert-type' => 'error'
-                );
-                return redirect()->back()->with($notification);
-            } 
-        else {
+
+        // New supplier fields required if supplier_id == 0
+        if ($request->supplier_id == '0') {
+            $rules['name'] = ['required', 'string', 'max:255'];
+            $rules['mobile_no'] = ['required', 'digits:10'];
+            $rules['email'] = ['required', 'email', 'max:255'];
+        }
+
+        $validated = $request->validate($rules);
 
         // Use Model's fillable attributes
-        DB::transaction(function() use($request){
+        DB::transaction(function() use($request) {
+
+        // Create purchase record
             $purchase = Purchase::create([
                 'purchase_no' => $request->purchase_no,
                 'date' => $request->date,
                 'description' => $request->description,
-                'status' => 1,
                 'created_by' => Auth::id(),
             ]);
-            
-           $count_category = count($request->category_id);
-   
-           for ($i=0; $i < $count_category ; $i++) { 
 
-              $purchase_details = new PurchaseDetail();
-              $purchase_details->date = date('Y-m-d',strtotime($request->date));
-              $purchase_details->purchase_id = $purchase->id;
-              $purchase_details->category_id = $request->category_id[$i];
-              $purchase_details->product_id = $request->product_id[$i];
-              $purchase_details->buying_qty = $request->buying_qty[$i];
-              $purchase_details->unit_price = $request->unit_price[$i];
-              $purchase_details->buying_price = $request->buying_price[$i];
-              $purchase_details->unit_id = $request->unit_id[$i];
-              $purchase_details->status = '1'; 
-              $purchase_details->save(); 
+            $count_category = count($request->category_id);
+            for ($i = 0; $i < $count_category; $i++) {
+                $purchase_details = new PurchaseDetail();
+                $purchase_details->date = date('Y-m-d', strtotime($request->date));
+                $purchase_details->purchase_id = $purchase->id;
+                $purchase_details->category_id = $request->category_id[$i];
+                $purchase_details->product_id = $request->product_id[$i];
+                $purchase_details->buying_qty = $request->buying_qty[$i];
+                $purchase_details->unit_cost_price = $request->unit_cost_price[$i];
+                $purchase_details->buying_price = $request->buying_price[$i];
+                $purchase_details->unit_id = $request->unit_id[$i];
+                $purchase_details->save();
 
-              //stock addition control
-              $product = Product::where('id',$request->product_id[$i])->first();
-              $purchase_qty = ((float)($purchase_details->buying_qty))+((float)($product->quantity));
-              $product->quantity = $purchase_qty;
-              $product->save();
-           }           
+                // stock addition control
+                $product = Product::where('id', $request->product_id[$i])->first();
+                $purchase_qty = ((float)($purchase_details->buying_qty)) + ((float)($product->quantity));
+                $product->quantity = $purchase_qty;
+                $product->save();
+            }
 
             // Handle supplier creation/selection
             if ($request->supplier_id == '0') {
@@ -111,9 +129,9 @@ class PurchaseController extends Controller
                     'created_by' => Auth::id(),
                 ]);
                 $supplier_id = $supplier->id;
-            } else{
+            } else {
                 $supplier_id = $request->supplier_id;
-            } 
+            }
 
             $purchase_payment = new PurchasePayment();
             $purchase_payment_details = new PurchasePaymentDetail();
@@ -132,26 +150,46 @@ class PurchaseController extends Controller
                 $purchase_payment->paid_amount = '0';
                 $purchase_payment->due_amount = $request->estimated_amount;
                 $purchase_payment_details->current_paid_amount = '0';
-            }elseif ($request->paid_status == 'partial_paid') {
+            } elseif ($request->paid_status == 'partial_paid') {
                 $purchase_payment->paid_amount = $request->paid_amount;
                 $purchase_payment->due_amount = $request->estimated_amount - $request->paid_amount;
                 $purchase_payment_details->current_paid_amount = $request->paid_amount;
             }
             $purchase_payment->save();
 
-            $purchase_payment_details->purchase_id = $purchase->id; 
-            $purchase_payment_details->date = date('Y-m-d',strtotime($request->date));
-            $purchase_payment_details->save(); 
-        }); 
-        } // end else 
+            $purchase_payment_details->purchase_id = $purchase->id;
+            $purchase_payment_details->date = date('Y-m-d', strtotime($request->date));
+            $purchase_payment_details->save();
+        });
+
+        // Return JSON for AJAX, redirect for normal
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 200,
+                'message' => 'Purchase Data Inserted Successfully',
+            ]);
+        } else {
+            $notification = array(
+                'message' => 'Purchase Data Inserted Successfully',
+                'alert-type' => 'success'
+            );
+            return redirect()->route('purchases.create')->with($notification);
+        }
     }
 
-     $notification = array(
-        'message' => 'Purchase Data Inserted Successfully', 
-        'alert-type' => 'success'
-    );
-    return redirect()->route('purchases.index')->with($notification);  
-    } // End Method
+       /**
+     * Return the next available purchase number as JSON (for AJAX).
+     */
+    public function nextNumber()
+    {
+        $maxPurchaseNo = Purchase::max(DB::raw('CAST(purchase_no AS UNSIGNED)'));
+        if ($maxPurchaseNo) {
+            $purchase_no = str_pad($maxPurchaseNo + 1, 2, '0', STR_PAD_LEFT);
+        } else {
+            $purchase_no = '01';
+        }
+        return response()->json(['purchase_no' => $purchase_no]);
+    }
 
     public function destroy($encryptedId){
         try {
@@ -183,14 +221,19 @@ class PurchaseController extends Controller
 
     public function PrintPurchaseList(){
 
-    $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->where('status','1')->get();
+    $allData = Purchase::orderBy('date','desc')->orderBy('id','desc')->get();
        return view('backend.purchase.print_purchase_list',compact('allData'));
     } // End Method
 
 
-    public function PrintPurchase($id){
+    //detail purchase print
+    public function PrintPurchase($encryptedId){
+        
+        $id = Crypt::decrypt($encryptedId);
         $purchase = Purchase::with('purchase_details')->findOrFail($id);
-        return view('backend.pdf.purchase_pdf',compact('purchase'));
+        $companyInfo = Company::first();
+
+        return view('backend.purchase.purchase_receipt',compact('purchase','companyInfo'));
 
     } // End Method
 
@@ -204,7 +247,7 @@ class PurchaseController extends Controller
 
         $sdate = date('Y-m-d',strtotime($request->start_date));
         $edate = date('Y-m-d',strtotime($request->end_date));
-        $allData = Purchase::whereBetween('date',[$sdate,$edate])->where('status','1')->get();
+        $allData = Purchase::whereBetween('date',[$sdate,$edate])->get();
 
 
         $start_date = date('Y-m-d',strtotime($request->start_date));
