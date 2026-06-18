@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Product;
+use App\Models\ProductPrice;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
 use App\Models\PurchasePayment;
@@ -60,12 +61,154 @@ class PurchaseController extends Controller
        return view('backend.purchase.create',compact('purchase_no','category','date','suppliers','unit'));
     } // End Method
 
-    public function store(Request $request){
+    // public function store(Request $request)
+    // {
+    //     // Backend validation
+    //     $rules = [
+    //         'date' => ['required', 'date'],
+    //         'purchase_no' => ['required'],
+    //         'category_id' => ['required', 'array', 'min:1'],
+    //         'category_id.*' => ['required'],
+    //         'product_id' => ['required', 'array', 'min:1'],
+    //         'product_id.*' => ['required'],
+    //         'unit_id' => ['required', 'array', 'min:1'],
+    //         'unit_id.*' => ['required'],
+    //         'paid_status' => ['required', Rule::in(['full_paid', 'full_due', 'partial_paid'])],
+    //     ];
+
+    //     // paid_amount required if partial_paid
+    //     if ($request->paid_status === 'partial_paid') {
+    //         $rules['paid_amount'] = ['required', 'numeric', 'min:1', 'max:' . $request->estimated_amount];
+    //     }
+
+    //     // New supplier fields required if supplier_id == 0
+    //     if ($request->supplier_id == '0') {
+    //         $rules['name'] = ['required', 'string', 'max:255'];
+    //         $rules['mobile_no'] = ['required', 'digits:10'];
+    //         $rules['email'] = ['required', 'email', 'max:255'];
+    //     }
+
+    //     $validated = $request->validate($rules);
+
+    //     DB::transaction(function () use ($request) {
+
+    //         // Create purchase record
+    //         $purchase = Purchase::create([
+    //             'purchase_no' => $request->purchase_no,
+    //             'date' => $request->date,
+    //             'description' => $request->description,
+    //             'created_by' => Auth::id(),
+    //         ]);
+
+    //         $count_category = count($request->category_id);
+    //         for ($i = 0; $i < $count_category; $i++) {
+    //             $purchase_details = new PurchaseDetail();
+    //             $purchase_details->date = date('Y-m-d', strtotime($request->date));
+    //             $purchase_details->purchase_id = $purchase->id;
+    //             $purchase_details->category_id = $request->category_id[$i];
+    //             $purchase_details->product_id = $request->product_id[$i];
+    //             $purchase_details->buying_qty = $request->buying_qty[$i];
+    //             $purchase_details->unit_cost_price = $request->unit_cost_price[$i];
+    //             $purchase_details->buying_price = $request->buying_price[$i];
+    //             $purchase_details->unit_id = $request->unit_id[$i];
+    //             $purchase_details->save();
+
+    //             // Update product stock and prices
+    //             $product = Product::find($request->product_id[$i]);
+    //             $product->quantity = ((float)$purchase_details->buying_qty) + ((float)$product->quantity);
+
+    //             $priceChanged = false;
+
+    //             // Update cost_price if changed or missing
+    //             if (empty($product->cost_price) || $product->cost_price != $purchase_details->unit_cost_price) {
+    //                 $product->cost_price = $purchase_details->unit_cost_price;
+    //                 $priceChanged = true;
+    //             }
+
+    //             // Update selling_price if provided in request
+    //             if (!empty($request->unit_selling_price[$i])) {
+    //                 if (empty($product->selling_price) || $product->selling_price != $request->unit_selling_price[$i]) {
+    //                     $product->selling_price = $request->unit_selling_price[$i];
+    //                     $priceChanged = true;
+    //                 }
+    //             }
+
+    //             // Always save product after possible changes
+    //             $product->save();
+
+    //             // Save history if either cost or selling price changed
+    //             if ($priceChanged) {
+    //                 ProductPrice::create([
+    //                     'product_id'    => $product->id,
+    //                     'cost_price'    => $product->cost_price,
+    //                     'selling_price' => $product->selling_price,
+    //                     'created_by'    => Auth::id(),
+    //                 ]);
+    //             }
+    //         }
+
+    //         // Handle supplier creation/selection
+    //         if ($request->supplier_id == '0') {
+    //             $supplier = Supplier::create([
+    //                 'name' => $request->name,
+    //                 'mobile_no' => $request->mobile_no,
+    //                 'email' => $request->email,
+    //                 'created_by' => Auth::id(),
+    //             ]);
+    //             $supplier_id = $supplier->id;
+    //         } else {
+    //             $supplier_id = $request->supplier_id;
+    //         }
+
+    //         $purchase_payment = new PurchasePayment();
+    //         $purchase_payment_details = new PurchasePaymentDetail();
+
+    //         $purchase_payment->purchase_id = $purchase->id;
+    //         $purchase_payment->supplier_id = $supplier_id;
+    //         $purchase_payment->paid_status = $request->paid_status;
+    //         $purchase_payment->discount_amount = $request->discount_amount;
+    //         $purchase_payment->total_amount = $request->estimated_amount;
+
+    //         if ($request->paid_status == 'full_paid') {
+    //             $purchase_payment->paid_amount = $request->estimated_amount;
+    //             $purchase_payment->due_amount = 0;
+    //             $purchase_payment_details->current_paid_amount = $request->estimated_amount;
+    //         } elseif ($request->paid_status == 'full_due') {
+    //             $purchase_payment->paid_amount = 0;
+    //             $purchase_payment->due_amount = $request->estimated_amount;
+    //             $purchase_payment_details->current_paid_amount = 0;
+    //         } elseif ($request->paid_status == 'partial_paid') {
+    //             $purchase_payment->paid_amount = $request->paid_amount;
+    //             $purchase_payment->due_amount = $request->estimated_amount - $request->paid_amount;
+    //             $purchase_payment_details->current_paid_amount = $request->paid_amount;
+    //         }
+    //         $purchase_payment->save();
+
+    //         $purchase_payment_details->purchase_id = $purchase->id;
+    //         $purchase_payment_details->date = date('Y-m-d', strtotime($request->date));
+    //         $purchase_payment_details->save();
+    //     });
+
+    //     // Return JSON for AJAX, redirect for normal
+    //     if ($request->ajax()) {
+    //         return response()->json([
+    //             'status' => 200,
+    //             'message' => 'Purchase Data Inserted Successfully',
+    //         ]);
+    //     } else {
+    //         $notification = [
+    //             'message' => 'Purchase Data Inserted Successfully',
+    //             'alert-type' => 'success'
+    //         ];
+    //         return redirect()->route('purchases.create')->with($notification);
+    //     }
+    // }
+
+        public function store(Request $request)
+    {
         // Backend validation
         $rules = [
             'date' => ['required', 'date'],
-            'purchase_no' => ['required'],
-            // 'barcode' => ['nullable', 'string'],
             'category_id' => ['required', 'array', 'min:1'],
             'category_id.*' => ['required'],
             'product_id' => ['required', 'array', 'min:1'],
@@ -89,12 +232,15 @@ class PurchaseController extends Controller
 
         $validated = $request->validate($rules);
 
-        // Use Model's fillable attributes
-        DB::transaction(function() use($request) {
+        DB::transaction(function () use ($request) {
 
-        // Create purchase record
+            // Generate next purchase number here
+            $lastPurchase = Purchase::orderBy('id', 'desc')->first();
+            $nextNo = $lastPurchase ? str_pad(((int)$lastPurchase->purchase_no + 1), 2, '0', STR_PAD_LEFT) : '01';
+
+            // Create purchase record with backend-generated number
             $purchase = Purchase::create([
-                'purchase_no' => $request->purchase_no,
+                'purchase_no' => $nextNo,
                 'date' => $request->date,
                 'description' => $request->description,
                 'created_by' => Auth::id(),
@@ -108,16 +254,43 @@ class PurchaseController extends Controller
                 $purchase_details->category_id = $request->category_id[$i];
                 $purchase_details->product_id = $request->product_id[$i];
                 $purchase_details->buying_qty = $request->buying_qty[$i];
-                $purchase_details->unit_price = $request->unit_price[$i];
+                $purchase_details->unit_cost_price = $request->unit_cost_price[$i];
                 $purchase_details->buying_price = $request->buying_price[$i];
                 $purchase_details->unit_id = $request->unit_id[$i];
                 $purchase_details->save();
 
-                // stock addition control
-                $product = Product::where('id', $request->product_id[$i])->first();
-                $purchase_qty = ((float)($purchase_details->buying_qty)) + ((float)($product->quantity));
-                $product->quantity = $purchase_qty;
+                // Update product stock and prices
+                $product = Product::find($request->product_id[$i]);
+                $product->quantity = ((float)$purchase_details->buying_qty) + ((float)$product->quantity);
+
+                $priceChanged = false;
+
+                // Update cost_price if changed or missing
+                if (empty($product->cost_price) || $product->cost_price != $purchase_details->unit_cost_price) {
+                    $product->cost_price = $purchase_details->unit_cost_price;
+                    $priceChanged = true;
+                }
+
+                // Update selling_price if provided in request
+                if (!empty($request->unit_selling_price[$i])) {
+                    if (empty($product->selling_price) || $product->selling_price != $request->unit_selling_price[$i]) {
+                        $product->selling_price = $request->unit_selling_price[$i];
+                        $priceChanged = true;
+                    }
+                }
+
+                // Always save product after possible changes
                 $product->save();
+
+                // Save history if either cost or selling price changed
+                if ($priceChanged) {
+                    ProductPrice::create([
+                        'product_id'    => $product->id,
+                        'cost_price'    => $product->cost_price,
+                        'selling_price' => $product->selling_price,
+                        'created_by'    => Auth::id(),
+                    ]);
+                }
             }
 
             // Handle supplier creation/selection
@@ -144,12 +317,12 @@ class PurchaseController extends Controller
 
             if ($request->paid_status == 'full_paid') {
                 $purchase_payment->paid_amount = $request->estimated_amount;
-                $purchase_payment->due_amount = '0';
+                $purchase_payment->due_amount = 0;
                 $purchase_payment_details->current_paid_amount = $request->estimated_amount;
             } elseif ($request->paid_status == 'full_due') {
-                $purchase_payment->paid_amount = '0';
+                $purchase_payment->paid_amount = 0;
                 $purchase_payment->due_amount = $request->estimated_amount;
-                $purchase_payment_details->current_paid_amount = '0';
+                $purchase_payment_details->current_paid_amount = 0;
             } elseif ($request->paid_status == 'partial_paid') {
                 $purchase_payment->paid_amount = $request->paid_amount;
                 $purchase_payment->due_amount = $request->estimated_amount - $request->paid_amount;
@@ -164,32 +337,24 @@ class PurchaseController extends Controller
 
         // Return JSON for AJAX, redirect for normal
         if ($request->ajax()) {
+            // Calculate next number after commit
+            $lastPurchase = Purchase::orderBy('id', 'desc')->first();
+            $nextNo = $lastPurchase ? str_pad(((int)$lastPurchase->purchase_no + 1), 2, '0', STR_PAD_LEFT) : '01';
+
             return response()->json([
                 'status' => 200,
                 'message' => 'Purchase Data Inserted Successfully',
+                'next_no' => $nextNo, // send next number to frontend
             ]);
         } else {
-            $notification = array(
+            $notification = [
                 'message' => 'Purchase Data Inserted Successfully',
                 'alert-type' => 'success'
-            );
+            ];
             return redirect()->route('purchases.create')->with($notification);
         }
     }
 
-       /**
-     * Return the next available purchase number as JSON (for AJAX).
-     */
-    public function nextNumber()
-    {
-        $maxPurchaseNo = Purchase::max(DB::raw('CAST(purchase_no AS UNSIGNED)'));
-        if ($maxPurchaseNo) {
-            $purchase_no = str_pad($maxPurchaseNo + 1, 2, '0', STR_PAD_LEFT);
-        } else {
-            $purchase_no = '01';
-        }
-        return response()->json(['purchase_no' => $purchase_no]);
-    }
 
     public function destroy($encryptedId){
         try {

@@ -57,6 +57,7 @@ protected $casts = [
     'updated_by' => 'integer',
     'deleted_by' => 'integer',
     'cost_price' => 'decimal:2',
+    'selling_price' => 'decimal:2',
     'weight' => 'decimal:2',
     'is_featured' => 'boolean',
     'is_on_sale' => 'boolean',

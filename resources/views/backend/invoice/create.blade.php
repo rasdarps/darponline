@@ -57,7 +57,15 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
+                                            {{-- <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
+                                                <option disabled selected value="">Select Product</option>
+                                                @foreach($products as $product)
+                                                    <option value="{{ $product->id }}" data-price="{{ $product->selling_price }}">
+                                                        {{ $product->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select> --}}
+                                             <div class="col-md-4">
                                                 <div class="form-group mb-1 d-flex align-items-center">
                                                     <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
                                                         <option disabled selected value="">Select Product</option>
@@ -87,8 +95,8 @@
                                                         <th width="10%">Category</th>
                                                         <th width="12%">Barcode</th>
                                                         <th width="15%">Product Name</th>
-                                                        <th width="10%">PSC/KG</th>
-                                                        <th width="15%">Unit Price</th>
+                                                        <th width="10%">Qty</th>
+                                                        <th width="15%">Selling Price</th>
                                                         <th width="10%">Per</th>
                                                         <th width="15%">Total Price(Ghc)</th>
                                                         <th width="7%">Action</th>
@@ -105,7 +113,7 @@
                                                     <tr>
                                                         <td colspan="6">Grand Total</td>
                                                         <td>
-                                                            <input type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
+                                                            <input style="text-align: right;" type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
                                                         </td>
                                                         <td></td>
                                                     </tr>
@@ -119,7 +127,7 @@
                                         </div>
                                     </div>
                                     <div class="row mt-3">
-                                        <div class="form-group col-md-3">
+                                        <div class="form-group col-md-3 block_div">
                                             <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
                                             <select name="paid_status" id="paid_status" class="form-control" readonly>
                                                 {{-- <option value="">Select Payment Status</option> --}}
@@ -129,7 +137,7 @@
                                             </select>
                                             <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">
                                         </div>
-                                        <div class="form-group col-md-9">
+                                        <div class="form-group col-md-9 block_div">
                                             <label><strong>Account Name <span class="text-danger">*</span></strong></label>
                                             <select name="customer_id" id="customer_id" class="form-control" readonly>
                                                 <option value="" disabled>Select Customer</option>
@@ -145,7 +153,7 @@
                                     </div>
 
                                     <!-- Hidden Add Customer Form -->
-                                    <div class="row new_customer mt-3" style="display:none;">
+                                    <div class="row new_customer mt-3 block_div">
                                         <div class="form-group col-md-4">
                                             <input type="text" name="name" id="name" class="form-control" placeholder="Customer Name">
                                         </div>
@@ -176,6 +184,10 @@
 
 @section('styles')
     <style>
+        .block_div {
+            display: none;
+           
+        }
         .card {
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease-in-out;
@@ -280,18 +292,18 @@
                     return;
                 }
 
-                // Validate invoice item fields (selling_qty, unit_price > 0)
+                // Validate invoice item fields (selling_qty, unit_selling_price > 0)
                 var validItems = true;
                 $('#addRow tr').each(function() {
                     var qty = $(this).find('input.selling_qty').val();
-                    var price = $(this).find('input.unit_price').val();
+                    var price = $(this).find('input.unit_selling_price').val();
                     if (!qty || isNaN(qty) || parseFloat(qty) <= 0) {
                         notify('Each item must have a valid quantity greater than 0.');
                         validItems = false;
                         return false;
                     }
                     if (!price || isNaN(price) || parseFloat(price) <= 0) {
-                        notify('Each item must have a valid unit price greater than 0.');
+                        notify('Each item must have a valid unit selling price greater than 0.');
                         validItems = false;
                         return false;
                     }
@@ -376,12 +388,11 @@
                             if ($('.select2').length) {
                                 $('.select2').val('').trigger('change');
                             }
-                            // Fetch and set the next invoice number
-                            $.get("/invoices/next-number", function(res) {
-                                if (res.invoice_no) {
-                                    $('#invoice_no').val(res.invoice_no);
-                                }
-                            });
+                            
+                            // Directly set next purchase number from backend response
+                        if (data.next_no) {
+                            $('#invoice_no').val(data.next_no);
+                        }
                         } else {
                             if (typeof Notiflix !== 'undefined') {
                                 Notiflix.Notify.failure(data.message);
@@ -467,7 +478,13 @@
             </td>
 
             <td>
-                <input type="number" class="form-control unit_price text-right" id="unit_price" name="unit_price[]" value="{{ old('unit_price') }}" onchange="checkQuantity()"> 
+                <!-- 🔹 Unit selling price auto-filled from products.selling_price -->
+                <input type="number" 
+                    class="form-control unit_selling_price text-right" 
+                    name="unit_selling_price[]"
+                    value="@{{unit_selling_price}}" 
+                    readonly 
+                    style="background-color:#ddd;">
             </td>
 
             <td>
@@ -526,6 +543,7 @@
                                 product_name: product.name,
                                 unit_id: product.unit_id,
                                 unit_name: product.unit.name,
+                                unit_selling_price: product.selling_price // 🔹 add this
                             };
                             var html = template(data);
                             $("#addRow").append(html);
@@ -555,6 +573,7 @@
                 var category_name = $('#category_id').find('option:selected').text();
                 var product_id = $('#product_id').val();
                 var product_name = $('#product_id').find('option:selected').text();
+                var selling_price = $('#product_id').find('option:selected').data('price'); // 🔹 new
                 var unit_id  = $('#unit_id').val();
                 var unit_name = $('#unit_id').find('option:selected').text();
 
@@ -594,7 +613,8 @@
                     product_name:product_name,
                     unit_id:unit_id,
                     unit_name:unit_name,
-                    barcode: '' // 🔹 empty if added manually
+                    barcode: '', // 🔹 empty if added manually
+                    unit_selling_price: selling_price // 🔹 add this
                 };
                 var html = tamplate(data);
                 $("#addRow").append(html);
@@ -605,10 +625,10 @@
                 totalAmountPrice();
             });
 
-            $(document).on('keyup click','.unit_price,.selling_qty', function(){
-                var unit_price = $(this).closest("tr").find("input.unit_price").val();
+            $(document).on('keyup click','.unit_selling_price,.selling_qty', function(){
+                var unit_selling_price = $(this).closest("tr").find("input.unit_selling_price").val();
                 var qty = $(this).closest("tr").find("input.selling_qty").val();
-                var total = unit_price * qty;
+                var total = unit_selling_price * qty;
                 $(this).closest("tr").find("input.selling_price").val(total);
                 $('#discount_amount').trigger('keyup');
             });
@@ -655,7 +675,7 @@
                     success:function(data){
                         var html = '<option value="">Select Product</option>';
                         $.each(data,function(key,v){
-                            html += '<option value=" '+v.id+' "> '+v.name+'</option>';
+                            html += '<option value=" '+v.id+' " data-price="'+v.selling_price+'"> '+v.name+'</option>';
                         });
                         $('#product_id').html(html);
                     }
@@ -707,11 +727,11 @@
     {{-- check quantity script --}}
     <script>
         function checkQuantity() {
-            var unit_prices = document.getElementsByName('unit_price[]');
+            var unit_selling_prices = document.getElementsByName('unit_selling_price[]');
             var current_stock_qtys = document.getElementsByName('current_stock_qty');
             var selling_qtys = document.getElementsByName('selling_qty[]');
-            for (var i = 0; i < unit_prices.length; i++) {
-                var unit_price = unit_prices[i];
+            for (var i = 0; i < unit_selling_prices.length; i++) {
+                var unit_selling_price = unit_selling_prices[i];
                 // var current_stock_qty = current_stock_qtys[i];
                 var selling_qty = selling_qtys[i];
                 var current_stock_qty = document.getElementById('current_stock_qty');
@@ -723,9 +743,9 @@
                     } else {
                         alert('Selling quantity cannot be more than current stock quantity!');
                     }
-                    unit_price.disabled = true;
+                    unit_selling_price.disabled = true;
                 } else {
-                    unit_price.disabled = false;
+                    unit_selling_price.disabled = false;
                 }
             }
         }

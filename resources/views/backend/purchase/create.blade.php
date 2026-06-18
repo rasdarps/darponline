@@ -92,8 +92,9 @@
                                                         <th width="10%">Category</th>
                                                         <th width="12%">Barcode</th>
                                                         <th width="15%">Product Name</th>
-                                                        <th width="10%">PSC/KG</th>
-                                                        <th width="15%">Unit Price</th>
+                                                        <th width="10%">Qty</th>
+                                                        <th width="15%">Cost Price</th>
+                                                        <th width="10%">Sell Price</th>
                                                         <th width="10%">Per</th>
                                                         <th width="15%">Total Price(Ghc)</th>
                                                         <th width="7%">Action</th>
@@ -102,13 +103,13 @@
                                                 <tbody id="addRow" class="addRow"></tbody>
                                                 <tbody>
                                                     <tr>
-                                                        <td colspan="6">Discount</td>
+                                                        <td colspan="7">Discount</td>
                                                         <td>
                                                             <input type="text" name="discount_amount" id="discount_amount" class="form-control estimated_amount" placeholder="Discount Amount">
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <td colspan="6">Grand Total</td>
+                                                        <td colspan="7">Grand Total</td>
                                                         <td>
                                                             <input type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
                                                         </td>
@@ -124,7 +125,7 @@
                                         </div>
                                     </div>
                                     <div class="row mt-3">
-                                        <div class="form-group col-md-3">
+                                        <div class="form-group col-md-3 block_div">
                                             <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
                                             <select name="paid_status" id="paid_status" class="form-control" readonly>
                                                 {{-- <option value="">Select Payment Status</option> --}}
@@ -134,7 +135,7 @@
                                             </select>
                                             <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">
                                         </div>
-                                        <div class="form-group col-md-9">
+                                        <div class="form-group col-md-9 block_div">
                                             <label><strong>Supplier Name <span class="text-danger">*</span></strong></label>
                                             <select name="supplier_id" id="supplier_id" class="form-control" readonly>
                                                 <option value="" disabled>Select Supplier</option>
@@ -150,7 +151,7 @@
                                     </div>
 
                                     <!-- Hidden Add Supplier Form -->
-                                    <div class="row new_supplier mt-3" style="display:none;">
+                                    <div class="row new_supplier mt-3 block_div">
                                         <div class="form-group col-md-4">
                                             <input type="text" name="name" id="name" class="form-control" placeholder="Supplier Name">
                                         </div>
@@ -179,6 +180,9 @@
 
 @section('styles')
     <style>
+        .block_div {
+            display: none;
+        }
         /* Ensure main content is not hidden under sidebar */
         /* Remove custom margin, let theme handle sidebar spacing */
         .card {
@@ -244,7 +248,7 @@
 @endsection
 
 @section('scripts')
-    <script type="text/javascript">
+    {{-- <script type="text/javascript">
         $(document).ready(function (){
             // Handle form submission
             $('#purchaseForm').on('submit', function(e) {
@@ -287,18 +291,24 @@
                     return;
                 }
 
-                // Validate purchase item fields (buying_qty, unit_price > 0)
+                // Validate purchase item fields (buying_qty, unit_cost_price > 0)
                 var validItems = true;
                 $('#addRow tr').each(function() {
                     var qty = $(this).find('input.buying_qty').val();
-                    var price = $(this).find('input.unit_price').val();
+                    var price = $(this).find('input.unit_cost_price').val();
+                    var sellingPrice = $(this).find('input.unit_selling_price').val();
                     if (!qty || isNaN(qty) || parseFloat(qty) <= 0) {
                         notify('Each item must have a valid quantity greater than 0.');
                         validItems = false;
                         return false;
                     }
                     if (!price || isNaN(price) || parseFloat(price) <= 0) {
-                        notify('Each item must have a valid unit price greater than 0.');
+                        notify('Each item must have a valid unit cost price greater than 0.');
+                        validItems = false;
+                        return false;
+                    }
+                    if (!sellingPrice || isNaN(sellingPrice) || parseFloat(sellingPrice) <= 0) {
+                        notify('Each item must have a valid selling price greater than 0.');
                         validItems = false;
                         return false;
                     }
@@ -377,11 +387,13 @@
                                 $('.select2').val('').trigger('change');
                             }
                             // Fetch and set the next purchase number
-                            $.get("/purchases/next-number", function(res) {
-                                if (res.purchase_no) {
-                                    $('#purchase_no').val(res.purchase_no);
-                                }
-                            });
+                            setTimeout(function() {
+                                $.get("/purchases/next-number", function(res) {
+                                    if (res.purchase_no) {
+                                        $('#purchase_no').val(res.purchase_no);
+                                    }
+                                });
+                            }, 300); // wait 300ms
                         } else {
                             if (typeof Notiflix !== 'undefined') {
                                 Notiflix.Notify.failure(data.message);
@@ -437,7 +449,150 @@
                 });
             });
         });
-    </script>
+    </script> --}}
+    <script type="text/javascript">
+    $(document).ready(function (){
+        // Handle form submission
+        $('#purchaseForm').on('submit', function(e) {
+            e.preventDefault();
+
+            function notify(msg) {
+                if (typeof Notiflix !== 'undefined') {
+                    Notiflix.Notify.failure(msg, {
+                        timeout: 3000,
+                        showOnlyTheLastOne: true,
+                        position: 'right-top',
+                    });
+                } else {
+                    alert(msg);
+                }
+            }
+
+            // --- client-side validation (unchanged) ---
+            if(!$('#date').val().trim()) { notify('Please enter a date'); return; }
+            if(!$('#category_id').val()) { notify('Please select a category'); return; }
+            if(!$('#product_id').val()) { notify('Please select a product'); return; }
+            if(!$('#unit_id').val()) { notify('Please select a unit'); return; }
+            if($('#addRow').children('tr').length === 0) { notify('Please add at least one purchase item.'); return; }
+            var validItems = true;
+            $('#addRow tr').each(function() {
+                var qty = $(this).find('input.buying_qty').val();
+                var price = $(this).find('input.unit_cost_price').val();
+                var sellingPrice = $(this).find('input.unit_selling_price').val();
+                if (!qty || isNaN(qty) || parseFloat(qty) <= 0) { notify('Each item must have a valid quantity greater than 0.'); validItems = false; return false; }
+                if (!price || isNaN(price) || parseFloat(price) <= 0) { notify('Each item must have a valid unit cost price greater than 0.'); validItems = false; return false; }
+                if (!sellingPrice || isNaN(sellingPrice) || parseFloat(sellingPrice) <= 0) { notify('Each item must have a valid selling price greater than 0.'); validItems = false; return false; }
+            });
+            if (!validItems) return;
+            if(!$('#paid_status').val()) { notify('Please select a paid status'); return; }
+            if(!$('#supplier_id').val()) { notify('Please select a supplier'); return; }
+            if($('#paid_status').val() === 'partial_paid') {
+                var paidAmount = $('input.paid_amount').val();
+                if(!paidAmount || isNaN(paidAmount) || parseFloat(paidAmount) <= 0) {
+                    notify('Please enter a valid paid amount greater than 0 for partial payment.');
+                    return;
+                }
+            }
+            if($('#supplier_id').val() === '0') {
+                var name = $('#name').val();
+                var mobile = $('#mobile_no').val();
+                var email = $('#email').val();
+                if(!name || !name.trim()) { notify('Supplier name is required.'); return; }
+                if(!mobile || !/^\d{10}$/.test(mobile)) { notify('Supplier mobile number must be 10 digits.'); return; }
+                if(!email || !/^\S+@\S+\.\S+$/.test(email)) { notify('Please enter a valid supplier email.'); return; }
+            }
+
+            // Show loading
+            if (typeof Notiflix !== 'undefined') {
+                Notiflix.Loading.standard('Creating purchase, please wait...');
+            } else {
+                console.log('Creating purchase...');
+            }
+
+            var form = this;
+            $.ajax({
+                url: $(form).attr('action'),
+                type: $(form).attr('method'),
+                data: new FormData(form),
+                contentType: false,
+                processData: false,
+                success: function(data) {
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Loading.remove();
+                    }
+                    if (data.status === 200) {
+                        if (typeof Notiflix !== 'undefined') {
+                            Notiflix.Notify.success(data.message);
+                        } else {
+                            alert(data.message);
+                        }
+                        // Clear form fields
+                        $('#purchaseForm')[0].reset();
+                        $('#addRow').empty();
+                        $('#errorAlert').hide();
+                        $('#errors').empty();
+                        if ($('.select2').length) {
+                            $('.select2').val('').trigger('change');
+                        }
+                        // Directly set next purchase number from backend response
+                        if (data.next_no) {
+                            $('#purchase_no').val(data.next_no);
+                        }
+                    } else {
+                        if (typeof Notiflix !== 'undefined') {
+                            Notiflix.Notify.failure(data.message);
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Loading.remove();
+                    }
+                    $('#errors').empty();
+                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        $('#errorAlert').show();
+                        $.each(xhr.responseJSON.errors, function(field, messages) {
+                            $('#errors').append('<li>' + messages[0] + '</li>');
+                            if (typeof Notiflix !== 'undefined') {
+                                Notiflix.Notify.failure(messages[0]);
+                            } else {
+                                alert('Validation Error: ' + messages[0]);
+                            }
+                        });
+                        $('html, body').animate({
+                            scrollTop: $('#errorAlert').offset().top - 100
+                        }, 500);
+                    } else {
+                        let duplicate = false;
+                        if (xhr.responseText && xhr.status === 500) {
+                            if (xhr.responseText.includes('1062') && xhr.responseText.includes('purchase_no')) {
+                                duplicate = true;
+                            }
+                        }
+                        $('#errorAlert').show();
+                        if (duplicate) {
+                            $('#errors').append('<li>Duplicate purchase number. Please refresh the page and try again.</li>');
+                            if (typeof Notiflix !== 'undefined') {
+                                Notiflix.Notify.failure('Duplicate purchase number. Please refresh the page and try again.');
+                            } else {
+                                alert('Duplicate purchase number. Please refresh the page and try again.');
+                            }
+                        } else {
+                            $('#errors').append('<li>An error occurred. Please try again later.</li>');
+                            if (typeof Notiflix !== 'undefined') {
+                                Notiflix.Notify.failure('An error occurred. Please try again later.');
+                            } else {
+                                alert('An error occurred. Please try again later.');
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    });
+</script>
 
     {{-- Handles delete and add item --}}
        <script id="document-template" type="text/x-handlebars-template">
@@ -463,11 +618,15 @@
 
 
             <td>
-                <input type="number" min="1" class="form-control buying_qty text-right" name="buying_qty[]" value="0"> 
+                <input type="number" min="1" class="form-control buying_qty text-right" name="buying_qty[]" value=""> 
             </td>
 
             <td>
-                <input type="number" class="form-control unit_price text-right" name="unit_price[]" value=""> 
+                <input type="number" class="form-control unit_cost_price text-right" name="unit_cost_price[]" value=""> 
+            </td>
+
+            <td>
+                <input type="number" class="form-control unit_selling_price text-right" name="unit_selling_price[]" value=""> 
             </td>
 
             <td>
@@ -607,10 +766,10 @@
             });
 
             // Calculate row total
-            $(document).on('keyup click','.unit_price,.buying_qty', function(){
-                var unit_price = $(this).closest("tr").find("input.unit_price").val();
+            $(document).on('keyup click','.unit_cost_price,.buying_qty', function(){
+                var unit_cost_price = $(this).closest("tr").find("input.unit_cost_price").val();
                 var qty = $(this).closest("tr").find("input.buying_qty").val();
-                var total = unit_price * qty;
+                var total = unit_cost_price * qty;
                 $(this).closest("tr").find("input.buying_price").val(total);
                 $('#discount_amount').trigger('keyup');
             });

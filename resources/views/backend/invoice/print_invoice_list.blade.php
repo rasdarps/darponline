@@ -24,7 +24,7 @@
             <div class="card">
                 <div class="card-body">
 
-    <a href="{{ route('invoices.index') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;"><i class="fas fa-plus-circle"> Add Inovice </i></a> <br>  <br>               
+    <a href="{{ route('invoices.index') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;"><i class="fas fa-plus-circle"> New Sales </i></a> <br>  <br>               
 
                     <h4 class="card-title">Inovice | Data </h4>
                     

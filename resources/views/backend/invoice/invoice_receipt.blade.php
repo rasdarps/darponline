@@ -100,7 +100,7 @@
                                                         <td class="text-center">{{ $details['category']['name'] }}</td>
                                                         <td class="text-center">{{ $details['product']['name'] }}</td>  
                                                         <td class="text-center">{{ $details->selling_qty }}</td>
-                                                        <td class="text-center">{{ $details->unit_price }}</td>
+                                                        <td class="text-center">{{ $details->unit_selling_price }}</td>
                                                         <td class="text-end">{{ number_format($details->selling_price, 2) }}</td>
                                                         
                                                     </tr>
@@ -166,9 +166,12 @@
                                 <div class="d-print-none">
                                     <div class="float-end">
                                         <a href="javascript:window.print()" class="btn btn-success waves-effect waves-light"><i class="fa fa-print"></i></a>
-                                        <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
+                                        {{-- <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
                                             <i class="fa fa-download"></i> Download
-                                        </a>                        
+                                        </a> --}}
+                                        <a href="{{ route('invoices.create') }}" class="btn btn-primary waves-effect waves-light ms-2">
+                                            <i class="fa fa-note"></i> New Sales
+                                        </a>   
                                     </div>
                                 </div>
                             </div>

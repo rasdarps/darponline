@@ -38,48 +38,58 @@
                                                 <input class="form-control" value="{{ $date }}" name="date" type="date" id="date">
                                             </div>
                                         </div>
-                                    <div class="row align-items-end mb-2">
-                                        <div class="col-md-4">
-                                            <div class="form-group mb-1 d-flex align-items-center">
-                                                <select name="category_id" id="category_id" class="form-control select2" aria-label="Select category">
-                                                    <option disabled selected value="">Select Category</option>
-                                                    @foreach($category as $cat)
-                                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                                    @endforeach
-                                                </select>
+
+                                        <div class="row align-items-end mb-2">
+                                            {{-- //barcode field for product lookup --}}
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-1 d-flex align-items-center">
+                                                    <input type="text" id="barcode" class="form-control" placeholder="Scan Barcode" autofocus>
+                                                    {{-- <small class="form-text text-muted">Scan product barcode here</small> --}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-1 d-flex align-items-center">
+                                                    <select name="category_id" id="category_id" class="form-control select2" aria-label="Select category">
+                                                        <option disabled selected value="">Select Category</option>
+                                                        @foreach($category as $cat)
+                                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-1 d-flex align-items-center">
+                                                    <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
+                                                        <option disabled selected value="">Select Product</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-1 d-flex align-items-center">
+                                                    <select name="unit_id" id="unit_id" class="form-control select2" aria-label="Select unit">
+                                                        <option disabled selected value="">Select Unit</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group mb-1 d-flex align-items-center">
-                                                <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
-                                                    <option disabled selected value="">Select Product</option>
-                                                </select>
+
+                                        <div class="row mb-2">
+                                            <div class="col-12 text-center">
+                                                <button style="background-color:#034141" type="button" class="btn btn-secondary waves-effect waves-light fas fa-plus-circle addeventmore" style="margin-top: 10px;"> Add</button>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group mb-1 d-flex align-items-center">
-                                                <select name="unit_id" id="unit_id" class="form-control select2" aria-label="Select unit">
-                                                    <option disabled selected value="">Select Unit</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-12 text-center">
-                                            <button style="background-color:#034141" type="button" class="btn btn-secondary waves-effect waves-light fas fa-plus-circle addeventmore" style="margin-top: 10px;"> Add</button>
-                                        </div>
-                                    </div>
                                     {{-- <hr> --}}
                                     <div class="row">
                                         <div class="col-12">
                                             <table class="table-sm table-bordered" width="100%" style="border-color: #ddd;">
                                                 <thead>
-                                                    <tr style="background-color:#034141; text-align:center;" class="text-white">
-                                                        <th width="15%">Category</th>
+                                                    <tr style="background-color:#034141; text-align:center;" class="text-white">  
+                                                        <th width="10%">Category</th>
+                                                        <th width="12%">Barcode</th>
                                                         <th width="15%">Product Name</th>
-                                                        <th width="15%">PSC/KG</th>
-                                                        <th width="10%">Unit Price</th>
-                                                        <th width="15%">Per</th>
+                                                        <th width="10%">Qty</th>
+                                                        <th width="15%">Selling Price</th>
+                                                        <th width="10%">Per</th>
                                                         <th width="15%">Total Price(Ghc)</th>
                                                         <th width="7%">Action</th>
                                                     </tr>
@@ -87,13 +97,13 @@
                                                 <tbody id="addRow" class="addRow"></tbody>
                                                 <tbody>
                                                     <tr>
-                                                        <td colspan="5">Discount</td>
+                                                        <td colspan="6">Discount</td>
                                                         <td>
                                                             <input type="text" name="discount_amount" id="discount_amount" class="form-control estimated_amount" placeholder="Discount Amount">
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <td colspan="5">Grand Total</td>
+                                                        <td colspan="6">Grand Total</td>
                                                         <td>
                                                             <input type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
                                                         </td>
@@ -111,22 +121,25 @@
                                     <div class="row mt-3">
                                         <div class="form-group col-md-3">
                                             <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
-                                            <select name="paid_status" id="paid_status" class="form-control">
-                                                <option value="">Select Payment Status</option>
+                                            <select name="paid_status" id="paid_status" class="form-control" readonly>
+                                                {{-- <option value="">Select Payment Status</option> --}}
                                                 <option value="full_paid">Full Paid</option>
-                                                <option value="full_due">Full Due</option>
-                                                <option value="partial_paid">Partial Paid</option>
+                                                <option value="full_due" disabled>Credit</option>
+                                                <option value="partial_paid" disabled>Partial Paid</option>
                                             </select>
                                             <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">
                                         </div>
                                         <div class="form-group col-md-9">
                                             <label><strong>Account Name <span class="text-danger">*</span></strong></label>
-                                            <select name="customer_id" id="customer_id" class="form-control">
-                                                <option value="">Select Customer</option>
+                                            <select name="customer_id" id="customer_id" class="form-control" readonly>
+                                                <option value="" disabled>Select Customer</option>
                                                 @foreach($costomer as $cust)
-                                                    <option value="{{ $cust->id }}">{{ $cust->name }} </option>
+                                                    <option value="{{ $cust->id }}" 
+                                                        {{ $cust->name === 'cash_sales' ? 'selected' : '' }}>
+                                                        {{ $cust->name }}
+                                                    </option>
                                                 @endforeach
-                                                <option value="0">New Customer</option>
+                                                <option value="0" disabled>New Customer</option>
                                             </select>
                                         </div>
                                     </div>
@@ -267,18 +280,18 @@
                     return;
                 }
 
-                // Validate invoice item fields (selling_qty, unit_price > 0)
+                // Validate invoice item fields (selling_qty, unit_selling_price > 0)
                 var validItems = true;
                 $('#addRow tr').each(function() {
                     var qty = $(this).find('input.selling_qty').val();
-                    var price = $(this).find('input.unit_price').val();
+                    var price = $(this).find('input.unit_selling_price').val();
                     if (!qty || isNaN(qty) || parseFloat(qty) <= 0) {
                         notify('Each item must have a valid quantity greater than 0.');
                         validItems = false;
                         return false;
                     }
                     if (!price || isNaN(price) || parseFloat(price) <= 0) {
-                        notify('Each item must have a valid unit price greater than 0.');
+                        notify('Each item must have a valid unit selling price greater than 0.');
                         validItems = false;
                         return false;
                     }
@@ -345,6 +358,13 @@
                             } else {
                                 alert(data.message);
                             }
+
+
+                            // 🚀 Open the receipt page
+                            if (data.print_url) {
+                                window.location.href = data.print_url;
+                            }
+                            
                             // Clear form fields
                             $('#invoiceForm')[0].reset();
                             // Remove all dynamic invoice items
@@ -356,12 +376,11 @@
                             if ($('.select2').length) {
                                 $('.select2').val('').trigger('change');
                             }
-                            // Fetch and set the next invoice number
-                            $.get("/invoices/next-number", function(res) {
-                                if (res.invoice_no) {
-                                    $('#invoice_no').val(res.invoice_no);
-                                }
-                            });
+                            
+                            // Directly set next purchase number from backend response
+                        if (data.next_no) {
+                            $('#invoice_no').val(data.next_no);
+                        }
                         } else {
                             if (typeof Notiflix !== 'undefined') {
                                 Notiflix.Notify.failure(data.message);
@@ -432,6 +451,11 @@
             </td>
 
             <td>
+                <input type="hidden" name="barcode[]" value="@{{barcode}}">
+                @{{ barcode }}
+            </td>
+
+            <td>
                 <input type="hidden" name="product_id[]" value="@{{product_id}}">
                 @{{ product_name }}
             </td>
@@ -442,7 +466,7 @@
             </td>
 
             <td>
-                <input type="number" class="form-control unit_price text-right" id="unit_price" name="unit_price[]" value="{{ old('unit_price') }}" onchange="checkQuantity()"> 
+                <input type="number" class="form-control unit_selling_price text-right" id="unit_selling_price" name="unit_selling_price[]" value="{{ old('unit_selling_price') }}" onchange="checkQuantity()"> 
             </td>
 
             <td>
@@ -464,9 +488,65 @@
 
     </script>
 
-
+    {{-- handles add more item in purchase --}}
     <script type="text/javascript">
         $(document).ready(function(){
+
+             // 🔹 Handle barcode scan/entry
+            $(document).on("change", "#barcode", function(){
+                var barcode = $(this).val();
+                if(!barcode) return;
+
+                $.ajax({
+                    url: "{{ route('products.findByBarcode') }}", // lookup route
+                    type: "GET",
+                    data: { barcode: barcode },
+                    success: function(product){
+                        if(product && product.id){
+                            var date = $('#date').val();
+                            var invoice_no = $('#invoice_no').val();
+
+                            // 🔹 Update dropdowns and stock field so barcode flow matches manual flow
+                        $('#category_id').val(product.category_id).trigger('change');
+                        $('#product_id').html('<option value="'+product.id+'" selected>'+product.name+'</option>');
+                        $('#unit_id').html('<option value="'+product.unit_id+'" selected>'+product.unit.name+'</option>');
+                        $('#current_stock_qty').val(product.quantity);
+
+                            // Prepare data for Handlebars row
+                            var source = $("#document-template").html();
+                            var template = Handlebars.compile(source);
+                            var data = {
+                                date: date,
+                                invoice_no: invoice_no,
+                                barcode: product.barcode,          // 🔹 added
+                                category_id: product.category_id,
+                                category_name: product.category.name,
+                                product_id: product.id,
+                                product_name: product.name,
+                                unit_id: product.unit_id,
+                                unit_name: product.unit.name,
+                            };
+                            var html = template(data);
+                            $("#addRow").append(html);
+
+                            // Clear barcode field after scan
+                            $('#barcode').val('');
+
+                            // 🔹 Optional: show stock quantity
+                            // $('#current_stock_qty').val(product.quantity);
+
+                            Notiflix.Notify.success('Product added via barcode');
+                        } else {
+                            Notiflix.Notify.failure('Product not found for this barcode. Please select manually.');
+                        }
+                    },
+                    error: function(){
+                        Notiflix.Notify.failure('Error looking up barcode. Try again.');
+                    }
+                });
+            });
+
+            // Existing add button flow (manual selection)
             $(document).on("click", ".addeventmore", function(){
                 var date = $('#date').val();
                 var invoice_no = $('#invoice_no').val(); 
@@ -513,6 +593,7 @@
                     product_name:product_name,
                     unit_id:unit_id,
                     unit_name:unit_name,
+                    barcode: '' // 🔹 empty if added manually
                 };
                 var html = tamplate(data);
                 $("#addRow").append(html);
@@ -523,10 +604,10 @@
                 totalAmountPrice();
             });
 
-            $(document).on('keyup click','.unit_price,.selling_qty', function(){
-                var unit_price = $(this).closest("tr").find("input.unit_price").val();
+            $(document).on('keyup click','.unit_selling_price,.selling_qty', function(){
+                var unit_selling_price = $(this).closest("tr").find("input.unit_selling_price").val();
                 var qty = $(this).closest("tr").find("input.selling_qty").val();
-                var total = unit_price * qty;
+                var total = unit_selling_price * qty;
                 $(this).closest("tr").find("input.selling_price").val(total);
                 $('#discount_amount').trigger('keyup');
             });
@@ -625,11 +706,11 @@
     {{-- check quantity script --}}
     <script>
         function checkQuantity() {
-            var unit_prices = document.getElementsByName('unit_price[]');
+            var unit_selling_prices = document.getElementsByName('unit_selling_price[]');
             var current_stock_qtys = document.getElementsByName('current_stock_qty');
             var selling_qtys = document.getElementsByName('selling_qty[]');
-            for (var i = 0; i < unit_prices.length; i++) {
-                var unit_price = unit_prices[i];
+            for (var i = 0; i < unit_selling_prices.length; i++) {
+                var unit_selling_price = unit_selling_prices[i];
                 // var current_stock_qty = current_stock_qtys[i];
                 var selling_qty = selling_qtys[i];
                 var current_stock_qty = document.getElementById('current_stock_qty');
@@ -641,9 +722,9 @@
                     } else {
                         alert('Selling quantity cannot be more than current stock quantity!');
                     }
-                    unit_price.disabled = true;
+                    unit_selling_price.disabled = true;
                 } else {
-                    unit_price.disabled = false;
+                    unit_selling_price.disabled = false;
                 }
             }
         }
