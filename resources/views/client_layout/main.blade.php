@@ -1276,12 +1276,12 @@
         })
     </script>
 
-    <script>
+    {{-- <script>
         jQuery('.addtocartqv').click(function(e) {
             e.preventDefault();
             Shopify.addItemFromFormStart('add-item-qv', jQuery(this).attr('id'));
         });
-    </script>
+    </script> --}}
 
 <script>
     $(".theme-default-pagination .disabled a").removeAttr("href");

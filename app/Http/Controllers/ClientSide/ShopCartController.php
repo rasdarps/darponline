@@ -46,11 +46,8 @@ class ShopCartController extends Controller
      */
     public function add(Request $request)
     {
-
-        $id = Crypt::decrypt($request->id);
         try {
             $validated = $request->validate([
-                // 'product_id' => 'required|exists:products,'.$id.'',
                 'quantity' => 'required|integer|min:1|max:999'
             ]);
 
@@ -58,6 +55,7 @@ class ShopCartController extends Controller
             
             $product = Product::findOrFail(Crypt::decrypt($request->product_id));
             
+            dd($product);
             // Check if product is available
             if (!$product->is_online || !$product->is_active) {
                 return response()->json([

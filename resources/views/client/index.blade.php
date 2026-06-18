@@ -674,6 +674,8 @@
                 $('#quickViewQuantity').attr('max', product.quantity);
                 $('#quickViewQuantity').val(1);
                 $('.addtocartqv').prop('disabled', false).css('opacity', '1');
+                $('.addtocartqv').html('<i class="fas fa-shopping-cart"></i> Add to cart');
+
             } else {
                 $('#quickViewQuantity').attr('max', 0);
                 $('.addtocartqv').prop('disabled', true).css('opacity', '0.5');
