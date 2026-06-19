@@ -222,16 +222,6 @@ class ProductDataTable extends DataTable
         }
 
     }
-    // if ($this->request()->filled('stock_filter')) {
-    //     if ($stock_filter == 'in_stock') {
-    //         $query->where('stock_quantity', '>', 0);
-    //     } elseif ($stock_filter == 'low_stock') {
-    //         $query->where('stock_quantity', '>', 0)
-    //               ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
-    //     } elseif ($stock_filter == 'out_of_stock') {
-    //         $query->where('stock_quantity', 0);
-    //     }
-    // }
 
      // Filter by featured
      if ($this->request()->filled('featured')) {

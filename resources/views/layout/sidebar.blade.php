@@ -90,9 +90,7 @@
                                     </a>
                                     <ul class="sub-menu" aria-expanded="false">
                                         <li><a href="{{ route('suppliers.create') }}">Create</a></li>
-                                        <li><a href="{{ route('suppliers.index') }}">All Supplier</a></li>
-                                        
-                                        
+                                        <li><a href="{{ route('suppliers.index') }}">All Supplier</a></li>   
                                         
                                     </ul>
                                 </li>
@@ -145,6 +143,17 @@
                                     <ul class="sub-menu" aria-expanded="false">
                                         <li><a href="{{ route('products.create') }}">Create</a></li>
                                         <li><a href="{{ route('products.index') }}">All Product</a></li>
+                                    
+                                    </ul>
+                                </li>
+
+                                 <li>
+                                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                        <i class="fa fa-truck"></i>
+                                        <span>Product Price</span>
+                                    </a>
+                                    <ul class="sub-menu" aria-expanded="false">
+                                        <li><a href="{{ route('product-prices.index') }}">All Product Prices</a></li>
                                     
                                     </ul>
                                 </li>

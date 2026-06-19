@@ -175,16 +175,16 @@ class ProductController extends Controller
     /**
      * Generate a unique barcode for the product.
      */
-    private function generateUniqueBarcode()
-    {
-        $barcode = '6' . str_pad(random_int(10000000000, 99999999999), 11, '0', STR_PAD_LEFT);
+    // private function generateUniqueBarcode()
+    // {
+    //     $barcode = '6' . str_pad(random_int(10000000000, 99999999999), 11, '0', STR_PAD_LEFT);
         
-        while (Product::where('barcode', $barcode)->exists()) {
-            $barcode = '6' . str_pad(random_int(10000000000, 99999999999), 11, '0', STR_PAD_LEFT);
-        }
+    //     while (Product::where('barcode', $barcode)->exists()) {
+    //         $barcode = '6' . str_pad(random_int(10000000000, 99999999999), 11, '0', STR_PAD_LEFT);
+    //     }
         
-        return $barcode;
-    }
+    //     return $barcode;
+    // }
     
     /**
      * Display the specified resource.
@@ -211,13 +211,13 @@ class ProductController extends Controller
      /**
      * Show product details (for quick view modal)
      */
-    public function show($id)
+    public function show(string $id)
     {
         try {
             $product = Product::findOrFail($id);
             
             // Return HTML for modal
-            $html = view('backend.product.partials.product-details-modal', compact('product'))->render();
+            $html = view('backend.product.partials.product-details-modal', compact('product','id'))->render();
             
             return response()->json([
                 'status' => 'success',
@@ -232,7 +232,7 @@ class ProductController extends Controller
         }
     }
 
-    public function edit($encryptedId){
+    public function edit(string $encryptedId){
         try {
             $id = Crypt::decrypt($encryptedId);
             $product = Product::with(['unit', 'category'])->find($id);
@@ -245,13 +245,13 @@ class ProductController extends Controller
             $categories = Category::orderBy('name', 'asc')->get();
             $brands = Brand::where('is_active', true)->orderBy('name', 'asc')->get();
             $colors = ProductColor::orderBy('color_name', 'asc')->get();
-            return view('backend.product.edit', compact('product', 'units', 'categories', 'brands', 'colors'));
+            return view('backend.product.edit', compact('product', 'units', 'categories', 'brands', 'colors', 'encryptedId'));
         } catch (\Exception $e) {
             return redirect()->route('products.index')->with('error', 'Invalid product ID.');
         }
     }// End Method 
 
-    public function update(Request $request, $encryptedId){ 
+    public function update(Request $request, string $encryptedId){ 
         try {
             $id = Crypt::decrypt($encryptedId);
             $product = Product::find($id);
@@ -259,7 +259,7 @@ class ProductController extends Controller
             if (!$product) {
                 return response()->json([
                     'status' => 404,
-                    'message' => 'Product not found.',Œ
+                    'message' => 'Product not found.',
                 ]);
             }
 
@@ -413,29 +413,5 @@ class ProductController extends Controller
         }
     } // End Method 
 
-    // Legacy methods for backward compatibility (if needed)
-    public function ProductAll(){
-        return $this->index();
-    }
-
-    public function ProductAdd(){
-        return $this->create();
-    }
-
-    public function ProductStore(Request $request){
-        return $this->store($request);
-    }
-
-    public function ProductEdit($id){
-        return $this->edit(Crypt::encrypt($id));
-    }
-
-    public function ProductUpdate(Request $request){
-        $encryptedId = Crypt::encrypt($request->id);
-        return $this->update($request, $encryptedId);
-    }
-
-    public function ProductDelete($id){
-        return $this->destroy(Crypt::encrypt($id));
-    }
 }
+

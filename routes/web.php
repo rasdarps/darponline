@@ -8,6 +8,7 @@ use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DefaultController;
 use App\Http\Controllers\Backend\InvoiceController;
 use App\Http\Controllers\Backend\ProductController;
+use App\Http\Controllers\Backend\ProductPriceController;
 use App\Http\Controllers\Backend\PurchaseController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\StockController;
@@ -157,9 +158,9 @@ Route::prefix('admin')->group(function () {
                 Route::get('/show/{id}', [ProductController::class, 'show'])->name('show');
                 Route::get('/create', [ProductController::class, 'create'])->name('create');
                 Route::post('/store', [ProductController::class, 'store'])->name('store');
-                Route::get('/edit/{id}', [ProductController::class, 'edit'])->name('edit');
-                Route::patch('/update/{id}', [ProductController::class, 'update'])->name('update');
-                Route::delete('/destroy/{id}', [ProductController::class, 'destroy'])->name('destroy');
+                Route::get('/edit/{encryptedId}', [ProductController::class, 'edit'])->name('edit');
+                Route::patch('/update/{encryptedId}', [ProductController::class, 'update'])->name('update');
+                Route::delete('/destroy/{encryptedId}', [ProductController::class, 'destroy'])->name('destroy');
                 
                 // ✅ New route for barcode lookup
                 Route::post('/find-by-barcode', [ProductController::class, 'findByBarcode'])->name('findByBarcode');
@@ -169,6 +170,16 @@ Route::prefix('admin')->group(function () {
                 Route::delete('/bulk-delete', [ProductController::class, 'bulkDelete'])->name('bulk-delete');
                 Route::post('/update-stock', [ProductController::class, 'updateStock'])->name('update-stock');
                 Route::get('/export', [ProductController::class, 'export'])->name('export');
+
+            });
+
+            //Product Price routes
+            Route::prefix('product-prices')->name('product-prices.')->group(function () {
+                Route::get('/', [ProductPriceController::class, 'index'])->name('index');
+                Route::get('/edit/{encryptedId}', [ProductPriceController::class, 'edit'])->name('edit');
+                Route::patch('/update/{encryptedId}', [ProductPriceController::class, 'update'])->name('update');
+                Route::delete('/destroy/{encryptedId}', [ProductPriceController::class, 'destroy'])->name('destroy');
+
             });
 
 
@@ -249,7 +260,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/product/wise/pdf', 'ProductWisePdf')->name('product.wise.pdf');
                 Route::get('/stock/category/wise', 'StockCategoryWise')->name('stock.category.wise');
                 Route::get('/category/wise/pdf', 'CategoryWisePdf')->name('category.wise.pdf');
-
+                
             
             });
 

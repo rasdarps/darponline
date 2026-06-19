@@ -196,6 +196,11 @@ public function registerMediaConversions(?Media $media = null): void
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
+     public function productPrice()
+    {
+        return $this->hasMany(ProductPrice::class, 'product_id', 'id');
+    }
+
     //for generating barcode automatically for products
     public static function generateBarcode(string $name, int $id, $createdAt = null): string
     {
