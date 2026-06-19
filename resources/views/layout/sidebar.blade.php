@@ -203,7 +203,7 @@
                                     <li><a href="{{ route('reports.profit') }}">Profit Report</a></li>
                                     <li><a href="{{ route('stock.report') }}">Stock Report</a></li>
                                     <li><a href="{{ route('stock.detailed_stock_report') }}">Detailed Stock Report</a></li>
-                                    <li><a href="{{ route('stock.stock_value') }}">Stock Value</a></li>
+                                    <li><a href="{{ route('stock.stock_value') }}">Stock Value Report</a></li>
 
                                     <li><a href="#">Backup</a></li>
                                 </ul>
