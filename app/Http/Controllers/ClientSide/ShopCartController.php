@@ -1,7 +1,8 @@
 <?php
-
 namespace App\Http\Controllers\ClientSide;
+
 use App\Http\Controllers\Controller;
+use Gloudemans\Shoppingcart\Facades\Cart;
 use App\Models\Coupon;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -15,19 +16,22 @@ class ShopCartController extends Controller
      */
     public function index()
     {
-        $cart = Session::get('cart', []);
+        $cartItems = Cart::content();
+        $subtotal = Cart::subtotal();
+        $total = Cart::total();
+        $cartCount = Cart::count();
         $cartItems = [];
         $subtotal = 0;
         
-        foreach ($cart as $item) {
-            $product = Product::find($item['product_id']);
-            if ($product) {
-                $item['product'] = $product;
-                $item['total'] = $item['price'] * $item['quantity'];
-                $cartItems[] = $item;
-                $subtotal += $item['total'];
-            }
-        }
+        // foreach ($cart as $item) {
+        //     $product = Product::find($item['product_id']);
+        //     if ($product) {
+        //         $item['product'] = $product;
+        //         $item['total'] = $item['price'] * $item['quantity'];
+        //         $cartItems[] = $item;
+        //         $subtotal += $item['total'];
+        //     }
+        // }
         
         $coupon = Session::get('coupon', null);
         $discount = 0;
@@ -48,14 +52,14 @@ class ShopCartController extends Controller
     {
         try {
             $validated = $request->validate([
+                'product_id' => 'required|string',
                 'quantity' => 'required|integer|min:1|max:999'
             ]);
 
-
+            // Decrypt product ID
+            $productId = Crypt::decrypt($validated['product_id']);
+            $product = Product::findOrFail($productId);
             
-            $product = Product::findOrFail(Crypt::decrypt($request->product_id));
-            
-            dd($product);
             // Check if product is available
             if (!$product->is_online || !$product->is_active) {
                 return response()->json([
@@ -73,10 +77,10 @@ class ShopCartController extends Controller
             }
             
             // Check if requested quantity is available
-            if ($product->stock_quantity < $validated['quantity']) {
+            if ($product->quantity < $validated['quantity']) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Only ' . $product->stock_quantity . ' units available in stock'
+                    'message' => 'Only ' . $product->quantity . ' units available in stock'
                 ], 400);
             }
             
@@ -95,45 +99,52 @@ class ShopCartController extends Controller
                 ], 400);
             }
             
-            $cart = Session::get('cart', []);
-            
             // Check if product already exists in cart
-            $existingIndex = $this->findProductInCart($cart, $validated['product_id']);
+            $existingCartItem = Cart::search(function ($cartItem, $rowId) use ($product) {
+                return $cartItem->id === $product->id;
+            });
             
-            if ($existingIndex !== false) {
-                $newQuantity = $cart[$existingIndex]['quantity'] + $validated['quantity'];
+            if ($existingCartItem->isNotEmpty()) {
+                $rowId = $existingCartItem->first()->rowId;
+                $currentQuantity = Cart::get($rowId)->qty;
+                $newQuantity = $currentQuantity + $validated['quantity'];
                 
                 // Check if total quantity exceeds stock
-                if ($product->stock_quantity < $newQuantity) {
+                if ($product->quantity < $newQuantity) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Only ' . $product->stock_quantity . ' units available in stock'
+                        'message' => 'Maximum reahed. We only have' . $product->quantity . ' units available in stock.'
                     ], 400);
                 }
                 
-                $cart[$existingIndex]['quantity'] = $newQuantity;
+                // Update quantity
+                Cart::update($rowId, $newQuantity);
             } else {
                 // Add new product to cart
-                $cart[] = [
-                    'product_id' => $product->id,
-                    'product_slug' => $product->slug,
-                    'name' => $product->name,
-                    'price' => $product->price ?? 0,
-                    'quantity' => $validated['quantity'],
-                    'image' => $product->featured_image_url,
-                    'sku' => $product->sku,
-                    'max_quantity' => $product->stock_quantity,
-                ];
+                Cart::add(
+                    $product->id,
+                    $product->name,
+                    $validated['quantity'],
+                    $product->selling_price ?? 0,
+                    [
+                        'product_slug' => $product->slug,
+                        'sku' => $product->sku,
+                        'image' => $product->getFirstMedia('featured_image')->getUrl('thumb'),
+                        'max_quantity' => $product->quantity,
+                        'weight' => $product->weight ?? 0,
+                    ]
+                );
             }
             
-            Session::put('cart', $cart);
+            // Remove coupon if cart changed
             Session::forget('coupon');
             
             return response()->json([
                 'status' => 'success',
                 'message' => 'Product added to cart successfully',
-                'cart_count' => $this->getCartCount(),
-                'cart_total' => number_format($this->getCartTotalAfterDiscount(), 2)
+                'cart_count' => Cart::count(),
+                'cart_total' => $this->getCartTotalAfterDiscount(),
+                'cart_subtotal' => Cart::total(),
             ]);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -142,6 +153,11 @@ class ShopCartController extends Controller
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid product ID'
+            ], 400);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -157,35 +173,50 @@ class ShopCartController extends Controller
     {
         try {
             $validated = $request->validate([
-                'product_id' => 'required|exists:products,id',
+                'product_id' => 'required|string',
                 'quantity' => 'required|integer|min:1|max:999'
             ]);
+
+            // Decrypt product ID
+            $productId = Crypt::decrypt($validated['product_id']);
+            $product = Product::findOrFail($productId);
             
-            $cart = Session::get('cart', []);
-            $index = $this->findProductInCart($cart, $validated['product_id']);
+            // Check if product exists in cart
+            $existingCartItem = Cart::search(function ($cartItem, $rowId) use ($product) {
+                return $cartItem->id === $product->id;
+            });
             
-            if ($index === false) {
+            if ($existingCartItem->isEmpty()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Product not found in cart'
                 ], 404);
             }
             
-            // Update quantity
-            $cart[$index]['quantity'] = $validated['quantity'];
-            Session::put('cart', $cart);
+            $rowId = $existingCartItem->first()->rowId;
             
-            // Recalculate totals
-            $itemTotal = $cart[$index]['price'] * $cart[$index]['quantity'];
-            $subtotal = $this->getCartTotal();
-            $cartCount = $this->getCartCount();
+            // Check if requested quantity exceeds stock
+            if ($product->quantity < $validated['quantity']) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Only ' . $product->quantity . ' units available in stock'
+                ], 400);
+            }
+            
+            // Update quantity
+            Cart::update($rowId, $validated['quantity']);
+            
+            // Get updated cart info
+            $item = Cart::get($rowId);
+            $itemTotal = $item->selling_price * $item->qty;
+            $subtotal = Cart::total();
             
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cart updated successfully',
                 'item_total' => number_format($itemTotal, 2),
                 'subtotal' => number_format($subtotal, 2),
-                'cart_count' => $cartCount,
+                'cart_count' => Cart::count(),
                 'cart_total' => number_format($this->getCartTotalAfterDiscount(), 2)
             ]);
             
@@ -196,7 +227,6 @@ class ShopCartController extends Controller
             ], 500);
         }
     }
-    
     /**
      * Remove item from cart
      */
@@ -206,27 +236,31 @@ class ShopCartController extends Controller
             $validated = $request->validate([
                 'product_id' => 'required|exists:products,id'
             ]);
+
+            // Decrypt product ID
+            $product = Product::findOrFail($validated['product_id']);
             
-            $cart = Session::get('cart', []);
-            $index = $this->findProductInCart($cart, $validated['product_id']);
+            // Find product in cart
+            $existingCartItem = Cart::search(function ($cartItem, $rowId) use ($product) {
+                return $cartItem->id === $product->id;
+            });
             
-            if ($index === false) {
+            if ($existingCartItem->isEmpty()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Product not found in cart'
                 ], 404);
             }
             
-            // Remove item
-            unset($cart[$index]);
-            $cart = array_values($cart); // Reindex array
+            $rowId = $existingCartItem->first()->rowId;
             
-            Session::put('cart', $cart);
+            // Remove item from cart
+            Cart::remove($rowId);
             
             return response()->json([
                 'status' => 'success',
                 'message' => 'Product removed from cart',
-                'cart_count' => $this->getCartCount(),
+                'cart_count' => Cart::count(),
                 'cart_total' => number_format($this->getCartTotalAfterDiscount(), 2)
             ]);
             
@@ -237,6 +271,7 @@ class ShopCartController extends Controller
             ], 500);
         }
     }
+    
     
     /**
      * Apply coupon to cart
@@ -265,7 +300,7 @@ class ShopCartController extends Controller
             }
             
             // Check minimum order amount
-            $subtotal = $this->getCartTotal();
+            $subtotal = Cart::total();
             if ($coupon->minimum_amount && $subtotal < $coupon->minimum_amount) {
                 return response()->json([
                     'status' => 'error',
@@ -330,7 +365,7 @@ class ShopCartController extends Controller
     public function clear()
     {
         try {
-            Session::forget('cart');
+            Cart::destroy();
             Session::forget('coupon');
             
             return response()->json([
@@ -351,9 +386,22 @@ class ShopCartController extends Controller
      */
     public function count()
     {
-        return response()->json([
-            'count' => $this->getCartCount()
-        ]);
+        try {
+            $count = Cart::count();
+            
+            return response()->json([
+                'status' => 'success',
+                'count' => $count
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Cart count error: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get cart count'
+            ], 500);
+        }
     }
     
     /**
@@ -361,23 +409,78 @@ class ShopCartController extends Controller
      */
     public function getItems()
     {
-        $cart = Session::get('cart', []);
-        $items = [];
+        $items = Cart::content();
+        $itemsArray = [];
         
-        foreach ($cart as $item) {
-            $product = Product::find($item['product_id']);
-            if ($product) {
-                $item['product'] = $product;
-                $items[] = $item;
-            }
+        foreach ($items as $item) {
+            $itemsArray[] = [
+                'rowId' => $item->rowId,
+                'id' => $item->id,
+                'name' => $item->name,
+                'qty' => $item->qty,
+                'price' => $item->price,
+                'options' => $item->options,
+                'subtotal' => $item->price * $item->qty,
+            ];
         }
         
         return response()->json([
             'status' => 'success',
-            'items' => $items,
-            'count' => $this->getCartCount(),
-            'total' => number_format($this->getCartTotalAfterDiscount(), 2)
+            'items' => $itemsArray,
+            'count' => Cart::count(),
+            'total' => $this->getCartTotalAfterDiscount(),
+            'subtotal' => Cart::total()
         ]);
+    }
+    
+
+              /**
+     * Get cart summary (all in one)
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function summary()
+    {
+        try {
+            $items = Cart::content();
+            $itemsArray = [];
+            
+            foreach ($items as $item) {
+                $product = Product::find($item->id);
+                $imageUrl = $product ? $product->featured_image_url : asset('images/default-product.jpg');
+                
+                $itemsArray[] = [
+                    'rowId' => $item->rowId,
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'qty' => $item->qty,
+                    'price' => $item->selling_price,
+                    'subtotal' => $item->selling_price * $item->qty,
+                    'product_slug' => $item->options->product_slug ?? null,
+                    'image' => $imageUrl,
+                    'variant' => $item->options->variant ?? null,
+                    'max_quantity' => $item->options->max_quantity ?? 999,
+                ];
+            }
+            
+            return response()->json([
+                'status' => 'success',
+                'items' => $itemsArray,
+                'count' => Cart::count(),
+                'subtotal' => Cart::total(),
+                'total' => $this->getCartTotalAfterDiscount(),
+                'has_coupon' => Session::has('coupon'),
+                'coupon' => Session::get('coupon', null),
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Cart summary error: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get cart summary'
+            ], 500);
+        }
     }
     
     /**
@@ -422,9 +525,8 @@ class ShopCartController extends Controller
      */
     private function getCartTotalAfterDiscount()
     {
-        $subtotal = $this->getCartTotal();
+        $subtotal = Cart::total();
         $coupon = Session::get('coupon', null);
-        
         if ($coupon) {
             $discount = $this->calculateDiscount($subtotal, $coupon);
             return $subtotal - $discount;
@@ -432,6 +534,7 @@ class ShopCartController extends Controller
         
         return $subtotal;
     }
+
     
     /**
      * Helper: Calculate discount based on coupon type
@@ -450,4 +553,18 @@ class ShopCartController extends Controller
         
         return 0;
     }
+        /**
+         * Get cart total (for AJAX)
+         */
+        public function getTotal()
+        {
+            return response()->json([
+                'total' => $this->getCartTotalAfterDiscount()
+            ]);
+        }
+
+                    /**
+             * Get cart items for mini cart (for AJAX)
+             */
+           
 }

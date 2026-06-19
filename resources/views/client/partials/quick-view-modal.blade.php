@@ -1,7 +1,7 @@
-<div class="modal fade productModal ltn__sp-modal" id="quickViewModal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade productModal  ltn__sp-modal" id="quickViewModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
+        <div class="modal-content quick_view_content">
+            <div class="modal-body ">
                 <div class="row">
                     <div class="col-lg-6 col-md-6 col-12">
                         <div class="qwick-view-left">

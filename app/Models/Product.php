@@ -11,8 +11,9 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Gloudemans\Shoppingcart\Contracts\Buyable;
 
-class Product extends Model implements HasMedia
+class Product extends Model implements HasMedia, Buyable
 {
     use HasFactory, SoftDeletes,InteractsWithMedia;
     use Auditable;
@@ -123,7 +124,17 @@ public function registerMediaConversions(?Media $media = null): void
         
         return $sku;
     }
- 
+    public function getBuyableIdentifier($options = null) {
+        return $this->id;
+    }
+
+    public function getBuyableDescription($options = null) {
+        return $this->name;
+    }
+
+    public function getBuyablePrice($options = null) {
+        return $this->cost_price;
+    }
      public function unit(){
         return $this->belongsTo(Unit::class);
     }

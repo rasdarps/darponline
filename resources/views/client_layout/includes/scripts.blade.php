@@ -427,3 +427,351 @@
         
         });
 </script>
+
+
+<script>
+   // ==================== MINI CART FUNCTIONS ====================
+
+
+
+// Add to cart from anywhere (with mini cart update)
+function addToCart(productId, quantity = 1) {
+    Notiflix.Loading.pulse('Adding to cart...');
+    
+    $.ajax({
+        url: '{{ route("shop.cart.add") }}',
+        type: 'POST',
+        data: {
+            product_id: productId,
+            quantity: quantity,
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            Notiflix.Loading.remove();
+            if (response.status === 'success') {
+                Notiflix.Notify.success(response.message || 'Product added to cart!');
+                // Update mini cart
+                refreshMiniCart();
+                updateCartCount();
+            } else {
+                Notiflix.Notify.warning(response.message || 'Failed to add to cart');
+            }
+        },
+        error: function(xhr) {
+            Notiflix.Loading.remove();
+            if (xhr.status === 422) {
+                var errors = xhr.responseJSON.errors;
+                var firstError = Object.values(errors)[0];
+                Notiflix.Notify.warning(firstError[0] || 'Validation error');
+            } else if (xhr.status === 400) {
+                Notiflix.Notify.warning(xhr.responseJSON.message || 'Product is not available');
+            } else {
+                Notiflix.Notify.failure('An error occurred while adding to cart');
+            }
+        }
+    });
+}
+
+// Remove from cart (mini cart version)
+function removeFromCartMini(productId, rowId) {
+  
+    showLoadingNotiflix('ltn__utilize-cart-menu', 'Removing item from cart...');            
+            $.ajax({
+                url: '{{ route("shop.cart.remove") }}',
+                type: 'DELETE',
+                data: {
+                    product_id: productId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Notiflix.Loading.remove();
+                    if (response.status === 'success') {
+                        Notiflix.Notify.success('Item removed from cart');
+                        // Remove item from mini cart UI
+                        $('#mini-cart-item-' + rowId).fadeOut(300, function() {
+                            $(this).remove();
+                            // Check if cart is empty
+                            checkMiniCartEmpty();
+                        });
+                        updateCartCount();
+                        // Update subtotal
+                        updateMiniCartTotal();
+                        hideLoadingNotiflix('ltn__utilize-cart-menu');
+
+                    } else {
+                        Notiflix.Notify.warning(response.message || 'Failed to remove item');
+                    }
+                },
+                error: function() {
+                    hideLoadingNotiflix('ltn__utilize-cart-menu');
+                    Notiflix.Notify.failure('An error occurred');
+                }
+            });
+}
+
+// Remove from cart (full page version)
+function removeFromCart(productId) {
+    Notiflix.Confirm.show(
+        'Remove Item',
+        'Are you sure you want to remove this item from cart?',
+        'Yes',
+        'Cancel',
+        function() {
+            Notiflix.Loading.pulse('Removing item...');
+            
+            $.ajax({
+                url: '{{ route("shop.cart.remove") }}',
+                type: 'DELETE',
+                data: {
+                    product_id: productId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Notiflix.Loading.remove();
+                    if (response.status === 'success') {
+                        Notiflix.Notify.success('Item removed from cart');
+                        // Reload page to update cart display
+                        location.reload();
+                    } else {
+                        Notiflix.Notify.warning(response.message || 'Failed to remove item');
+                    }
+                },
+                error: function() {
+                    Notiflix.Loading.remove();
+                    Notiflix.Notify.failure('An error occurred');
+                }
+            });
+        }
+    );
+}
+
+// Refresh mini cart content
+function refreshMiniCart() {
+    $.ajax({
+        url: '{{ route("shop.cart.items") }}',
+        type: 'GET',
+        success: function(response) {
+            if (response.status === 'success' && response.items) {
+                // Clear existing items
+                $('#miniCartItems .mini-cart-item').remove();
+                
+                // Add new items
+                var itemsHtml = '';
+                $.each(response.items, function(index, item) {
+                    itemsHtml += `
+                        <div class="mini-cart-item clearfix" id="mini-cart-item-${item.rowId}">
+                            <div class="mini-cart-img">
+                                <a href="${item.options.product_slug ? '/shop/product/' + item.options.product_slug : '#'}">
+                                    <img src="${item.options.image || '/images/default-product.jpg'}" alt="${item.name}">
+                                </a>
+                                <span onclick="removeFromCartMini('${item.id}', '${item.rowId}')" class="mini-cart-item-delete">
+                                    <i class="icon-cancel"></i>
+                                </span>
+                            </div>
+                            <div class="mini-cart-info">
+                                <h6>
+                                    <a href="${item.options.product_slug ? '/shop/product/' + item.options.product_slug : '#'}">
+                                        ${item.name}
+                                        ${item.options.variant ? ' - ' + item.options.variant : ''}
+                                    </a>
+                                </h6>
+                                <span class="mini-cart-quantity">
+                                    ${item.qty} x GH₵${parseFloat(item.price).toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#miniCartItems').append(itemsHtml);
+                
+                // Update totals
+                $('#miniCartSubtotal').text('GH₵' + response.subtotal);
+                
+                // Check if cart is empty
+                checkMiniCartEmpty();
+            }
+        }
+    });
+}
+
+// Check if mini cart is empty
+function checkMiniCartEmpty() {
+    var itemCount = $('#miniCartItems .mini-cart-item').length;
+    
+    if (itemCount === 0) {
+        $('#miniCartItems').hide();
+        $('#miniCartFooter').hide();
+        $('#miniCartEmpty').show();
+    } else {
+        $('#miniCartItems').show();
+        $('#miniCartFooter').show();
+        $('#miniCartEmpty').hide();
+    }
+}
+
+// Update mini cart total
+function updateMiniCartTotal() {
+    $.ajax({
+        url: '{{ route("shop.cart.total") }}',
+        type: 'GET',
+        success: function(response) {
+            if (response.total !== undefined) {
+                $('#miniCartSubtotal').text('GH₵' + parseFloat(response.total).toFixed(2));
+            }
+        }
+    });
+}
+
+// Update cart count in header
+function updateCartCount() {
+    $.ajax({
+        url: '{{ route("shop.cart.count") }}',
+        type: 'GET',
+        success: function(response) {
+            if (response.count !== undefined) {
+
+                
+                document.querySelectorAll('[data-cart="count"]').forEach(element => {
+                    element.textContent = response.count;
+                });
+               
+            }
+        }
+    });
+}
+
+// Add to cart from quick view
+function addToCartFromQuickView() {
+    var productId = $('#add-item-qv').data('product-id');
+    var quantity = parseInt($('#quickViewQuantity').val()) || 1;
+    
+    if (!productId) {
+        Notiflix.Notify.warning('Product not found');
+        return;
+    }
+    
+    addToCart(productId, quantity);
+    
+    setTimeout(function() {
+        $('#quickViewModal').modal('hide');
+    }, 1000);
+}
+
+// Apply coupon (for mini cart or full page)
+function applyCoupon() {
+    var couponCode = $('#coupon_code').val();
+    
+    if (!couponCode) {
+        Notiflix.Notify.warning('Please enter a coupon code');
+        return;
+    }
+    
+    Notiflix.Loading.pulse('Applying coupon...');
+    
+    $.ajax({
+        url: '{{ route("shop.cart.coupon.apply") }}',
+        type: 'POST',
+        data: {
+            code: couponCode,
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            Notiflix.Loading.remove();
+            if (response.status === 'success') {
+                Notiflix.Notify.success('Coupon applied successfully!');
+                location.reload();
+            } else {
+                Notiflix.Notify.warning(response.message || 'Failed to apply coupon');
+            }
+        },
+        error: function(xhr) {
+            Notiflix.Loading.remove();
+            if (xhr.status === 404) {
+                Notiflix.Notify.warning(xhr.responseJSON?.message || 'Invalid coupon code');
+            } else {
+                Notiflix.Notify.failure('An error occurred');
+            }
+        }
+    });
+}
+
+// Remove coupon
+function removeCoupon() {
+    Notiflix.Confirm.show(
+        'Remove Coupon',
+        'Are you sure you want to remove this coupon?',
+        'Yes',
+        'Cancel',
+        function() {
+            Notiflix.Loading.pulse('Removing coupon...');
+            
+            $.ajax({
+                url: '{{ route("shop.cart.coupon.remove") }}',
+                type: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Notiflix.Loading.remove();
+                    if (response.status === 'success') {
+                        Notiflix.Notify.success('Coupon removed');
+                        location.reload();
+                    } else {
+                        Notiflix.Notify.warning(response.message || 'Failed to remove coupon');
+                    }
+                },
+                error: function() {
+                    Notiflix.Loading.remove();
+                    Notiflix.Notify.failure('An error occurred');
+                }
+            });
+        }
+    );
+}
+
+// ==================== MINI CART TOGGLE ====================
+
+// Initialize mini cart toggle
+$(document).ready(function() {
+    // Toggle mini cart
+    $('.ltn__utilize-toggle').on('click', function(e) {
+        e.preventDefault();
+        var target = $(this).attr('href');
+        $(target).toggleClass('ltn__utilize-open');
+        $('body').toggleClass('ltn__utilize-open');
+    });
+    
+    // Close mini cart
+    $('.ltn__utilize-close').on('click', function() {
+        var target = $(this).closest('.ltn__utilize');
+        target.removeClass('ltn__utilize-open');
+        $('body').removeClass('ltn__utilize-open');
+    });
+    
+    // Close mini cart on overlay click
+    $(document).on('click', function(e) {
+        if ($('.ltn__utilize-open').length > 0) {
+            if (!$(e.target).closest('.ltn__utilize').length && !$(e.target).closest('.ltn__utilize-toggle').length) {
+                $('.ltn__utilize').removeClass('ltn__utilize-open');
+                $('body').removeClass('ltn__utilize-open');
+            }
+        }
+    });
+});
+
+// ==================== ADDITIONAL CART ROUTES ====================
+
+// Add this to your routes if not already present
+// Route::get('/cart/total', [ShopCartController::class, 'getTotal'])->name('cart.total');
+
+// Add this method to ShopCartController:
+/*
+public function getTotal()
+{
+    return response()->json([
+        'total' => $this->getCartTotalAfterDiscount()
+    ]);
+}
+*/ 
+</script>

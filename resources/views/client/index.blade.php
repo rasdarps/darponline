@@ -434,14 +434,20 @@
                                     <a href="{{ route('shop.product.details', $product->slug) }}"
                                         class="image-position-wrapper primary_img" style="padding-bottom: 100.0%;">
 
-                                        {{ $product->getFirstMedia('featured_image')->img('uniform')->attributes([
+                                    
+                                       @if($product->hasMedia('featured_image'));
+
+                                            {{ $product->getFirstMedia('featured_image')->img('uniform')->attributes([
                                                 'class' => 'image-position-size popup_cart_image',
                                                 'width' => '600',
                                                 'height' => '600',
                                                 'alt' => $product->name,
                                                 'loading' => 'lazy',
                                             ]) }}
-
+                                        @else
+                                            <img class="image-position-size popup_cart_image" width="600" height="600" alt="{{$product->name}}" loading="lazy"sizes="18vw"
+                                            src="{{asset('client/shop/files/default_product_image.png')}}">
+                                        @endif
 
                                     </a>
 
@@ -458,6 +464,8 @@
                                                 ]) !!}
 
                                         </a>
+
+                                    
                                     @endif
 
                                     <div class="product-badge">
@@ -537,8 +545,8 @@
                                     </h3>
                                     <div class="product-price">
                                         {{-- Add pricing logic when you integrate pricing module --}}
-                                        {{-- ${{ number_format($product->price ?? 0, 2) }} --}}
-                                        <span>Ghc100</span>
+                                        ${{ number_format($product->selling_price ?? 0, 2) }}
+                                        {{-- <span>Ghc100</span> --}}
                                     </div>
 
                                     @if($product->quantity > 0)
@@ -737,7 +745,7 @@
             }
             
             // Call your existing addToCart function
-            addToCart(productId, quantity);
+            addToCartQuickView(productId, quantity);
             
             // Close modal after adding to cart
             setTimeout(function() {
@@ -767,7 +775,7 @@
         });
     // Add to Cart Function
     function addToCart(productId, quantity) {
-        Notiflix.Loading.pulse('Adding to cart...');
+        Notiflix.Loading.circle('Adding to cart...');
         
         $.ajax({
             url: '{{ route("shop.cart.add") }}',
@@ -780,16 +788,51 @@
             success: function(response) {
                 Notiflix.Loading.remove();
                 if (response.status === 'success') {
-                    Notiflix.Notify.success(response.message || 'Product added to cart!');
+                    // Notiflix.Notify.success(response.message || 'Product added to cart!');
                     // Update cart count
                     updateCartCount();
+                    console.log("SF");
+                    
                 } else {
                     Notiflix.Notify.warning(response.message || 'Failed to add to cart');
                 }
             },
             error: function(xhr) {
                 Notiflix.Loading.remove();
-                if (xhr.status === 422) {
+                if (xhr.status === 400) {
+                    Notiflix.Notify.warning(xhr.responseJSON.message || 'Product is out of stock');
+                } else {
+                    Notiflix.Notify.failure('An error occurred');
+                }
+            }
+        });
+    }
+
+    function addToCartQuickView(productId, quantity) {
+        showLoadingNotiflix('quick_view_content','Adding to cart...');
+        
+        $.ajax({
+            url: '{{ route("shop.cart.add") }}',
+            type: 'POST',
+            data: {
+                product_id: productId,
+                quantity: quantity,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                hideLoadingNotiflix('quick_view_content');
+                if (response.status === 'success') {
+                    // Notiflix.Notify.success(response.message || 'Product added to cart!');
+                    // Update cart count
+                    updateCartCount();
+                } else {
+                    Notiflix.Notify.warning(response.message || 'Failed to add to cart');
+                }
+
+            },
+            error: function(xhr) {
+                hideLoadingNotiflix('quick_view_content');
+                if (xhr.status === 400) {
                     Notiflix.Notify.warning(xhr.responseJSON.message || 'Product is out of stock');
                 } else {
                     Notiflix.Notify.failure('An error occurred');
@@ -800,7 +843,7 @@
 
     // Add to Wishlist Function
     function addToWishlist(productId) {
-        Notiflix.Loading.pulse('Adding to wishlist...');
+        Notiflix.Loading.circle('Adding to wishlist...');
         
         $.ajax({
             url: '#',
@@ -828,7 +871,7 @@
 
     // Add to Compare Function
     function addToCompare(productId) {
-        Notiflix.Loading.pulse('Adding to compare...');
+        Notiflix.Loading.circle('Adding to compare...');
         
         $.ajax({
             url: '#',
@@ -852,18 +895,7 @@
         });
     }
 
-    // Update Cart Count
-    function updateCartCount() {
-        $.ajax({
-            url: '{{ route("shop.cart.count") }}',
-            type: 'GET',
-            success: function(response) {
-                if (response.count !== undefined) {
-                    $('.cart-count').text(response.count);
-                }
-            }
-        });
-    }
+    
 
     // Initialize Slick Slider
     $(document).ready(function() {
