@@ -373,6 +373,7 @@ Route::prefix('shop')->name('shop.')->group(function () {
             Route::post('/coupon/apply', [ShopCartController::class, 'applyCoupon'])->name('coupon.apply');
             Route::delete('/coupon/remove', [ShopCartController::class, 'removeCoupon'])->name('coupon.remove');
             Route::get('/count', [ShopCartController::class, 'count'])->name('count');
+            Route::get('/total', [ShopCartController::class, 'getTotal'])->name('total');
             Route::get('/items', [ShopCartController::class, 'getItems'])->name('items');
             Route::post('/clear', [ShopCartController::class, 'clear'])->name('clear');
         });

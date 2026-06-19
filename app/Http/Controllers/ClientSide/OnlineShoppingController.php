@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 
 class OnlineShoppingController extends Controller
 {
@@ -83,7 +84,7 @@ class OnlineShoppingController extends Controller
             
             // Prepare product data for response
             $productData = [
-                'id' => $product->id,
+                'id' => Crypt::encrypt($product->id),
                 'name' => $product->name,
                 'slug' => $product->slug,
                 'sku' => $product->sku,

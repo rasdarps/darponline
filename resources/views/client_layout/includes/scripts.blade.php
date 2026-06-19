@@ -172,12 +172,12 @@
   window.__TREKKIE_SHIM_QUEUE = window.__TREKKIE_SHIM_QUEUE || [];
 </script>
 
-<script>
+ {{-- <script>
     jQuery('.addtocartqv').click(function(e) {
       e.preventDefault();
       Shopify.addItemFromFormStart('add-item-qv', jQuery(this).attr('id'));
     });
-  </script> 
+  </script>  --}}
 {{-- <script
   id="web-pixels-manager-setup">(function () { var wpmLoader = function () { "use strict"; return function (e, d, r, n) { var o = arguments.length > 4 && void 0 !== arguments[4] ? arguments[4] : {}; if (!Boolean(null == (i = null == (a = window.Shopify) ? void 0 : a.analytics) ? void 0 : i.replayQueue)) { var a, i; window.Shopify = window.Shopify || {}; var t = window.Shopify; t.analytics = t.analytics || {}; var s = t.analytics; s.replayQueue = [], s.publish = function (e, d, r) { return s.replayQueue.push([e, d, r]), !0 }; try { self.performance.mark("wpm:start") } catch (e) { } var l, u, c, m, p, f, h, g, y, w, v, b, S, P = (u = (l = { modern: /Edge?\/(1{2}[4-9]|1[2-9]\d|[2-9]\d{2}|\d{4,})\.\d+(\.\d+|)|Firefox\/(1{2}[4-9]|1[2-9]\d|[2-9]\d{2}|\d{4,})\.\d+(\.\d+|)|Chrom(ium|e)\/(9{2}|\d{3,})\.\d+(\.\d+|)|(Maci|X1{2}).+ Version\/(15\.\d+|(1[6-9]|[2-9]\d|\d{3,})\.\d+)([,.]\d+|)( \(\w+\)|)( Mobile\/\w+|) Safari\/|Chrome.+OPR\/(9{2}|\d{3,})\.\d+\.\d+|(CPU[ +]OS|iPhone[ +]OS|CPU[ +]iPhone|CPU IPhone OS|CPU iPad OS)[ +]+(15[._]\d+|(1[6-9]|[2-9]\d|\d{3,})[._]\d+)([._]\d+|)|Android:?[ /-](13[3-9]|1[4-9]\d|[2-9]\d{2}|\d{4,})(\.\d+|)(\.\d+|)|Android.+Firefox\/(13[5-9]|1[4-9]\d|[2-9]\d{2}|\d{4,})\.\d+(\.\d+|)|Android.+Chrom(ium|e)\/(13[3-9]|1[4-9]\d|[2-9]\d{2}|\d{4,})\.\d+(\.\d+|)|SamsungBrowser\/([2-9]\d|\d{3,})\.\d+/, legacy: /Edge?\/(1[6-9]|[2-9]\d|\d{3,})\.\d+(\.\d+|)|Firefox\/(5[4-9]|[6-9]\d|\d{3,})\.\d+(\.\d+|)|Chrom(ium|e)\/(5[1-9]|[6-9]\d|\d{3,})\.\d+(\.\d+|)([\d.]+$|.*Safari\/(?![\d.]+ Edge\/[\d.]+$))|(Maci|X1{2}).+ Version\/(10\.\d+|(1[1-9]|[2-9]\d|\d{3,})\.\d+)([,.]\d+|)( \(\w+\)|)( Mobile\/\w+|) Safari\/|Chrome.+OPR\/(3[89]|[4-9]\d|\d{3,})\.\d+\.\d+|(CPU[ +]OS|iPhone[ +]OS|CPU[ +]iPhone|CPU IPhone OS|CPU iPad OS)[ +]+(10[._]\d+|(1[1-9]|[2-9]\d|\d{3,})[._]\d+)([._]\d+|)|Android:?[ /-](13[3-9]|1[4-9]\d|[2-9]\d{2}|\d{4,})(\.\d+|)(\.\d+|)|Mobile Safari.+OPR\/([89]\d|\d{3,})\.\d+\.\d+|Android.+Firefox\/(13[5-9]|1[4-9]\d|[2-9]\d{2}|\d{4,})\.\d+(\.\d+|)|Android.+Chrom(ium|e)\/(13[3-9]|1[4-9]\d|[2-9]\d{2}|\d{4,})\.\d+(\.\d+|)|Android.+(UC? ?Browser|UCWEB|U3)[ /]?(15\.([5-9]|\d{2,})|(1[6-9]|[2-9]\d|\d{3,})\.\d+)\.\d+|SamsungBrowser\/(5\.\d+|([6-9]|\d{2,})\.\d+)|Android.+MQ{2}Browser\/(14(\.(9|\d{2,})|)|(1[5-9]|[2-9]\d|\d{3,})(\.\d+|))(\.\d+|)|K[Aa][Ii]OS\/(3\.\d+|([4-9]|\d{2,})\.\d+)(\.\d+|)/ }).modern, c = l.legacy, (m = navigator.userAgent).match(u) ? "modern" : m.match(c) ? "legacy" : "unknown"), C = "modern" === P ? "modern" : "legacy", _ = (null != n ? n : { modern: "", legacy: "" })[C], O = [(p = { baseUrl: d, hashVersion: r, buildTarget: C }).baseUrl, "/wpm", "/b", p.hashVersion, "modern" === p.buildTarget ? "m" : "l", ".js"].join(""), U = (f = { version: r, bundleTarget: P, surface: e.surface, pageUrl: self.location.href, monorailEndpoint: e.monorailEndpoint }, h = f.version, g = f.bundleTarget, y = f.surface, w = f.pageUrl, v = f.monorailEndpoint, { emit: function (e) { var d = e.status, r = e.errorMsg, n = (new Date).getTime(), o = JSON.stringify({ metadata: { event_sent_at_ms: n }, events: [{ schema_id: "web_pixels_manager_load/3.1", payload: { version: h, bundle_target: g, page_url: w, status: d, surface: y, error_msg: r }, metadata: { event_created_at_ms: n } }] }); if (!v) return console && console.warn && console.warn("[Web Pixels Manager] No Monorail endpoint provided, skipping logging."), !1; try { return self.navigator.sendBeacon.bind(self.navigator)(v, o) } catch (e) { } var a = new XMLHttpRequest; try { return a.open("POST", v, !0), a.setRequestHeader("Content-Type", "text/plain"), a.send(o), !0 } catch (e) { return console && console.warn && console.warn("[Web Pixels Manager] Got an unhandled error while logging to Monorail."), !1 } } }); try { o.browserTarget = P, function (e) { var d = e.src, r = e.async, n = void 0 === r || r, o = e.onload, a = e.onerror, i = e.sri, t = e.scriptDataAttributes, s = void 0 === t ? {} : t, l = document.createElement("script"), u = document.querySelector("head"), c = document.querySelector("body"); if (l.async = n, l.src = d, i && (l.integrity = i, l.crossOrigin = "anonymous"), s) for (var m in s) if (Object.prototype.hasOwnProperty.call(s, m)) try { l.dataset[m] = s[m] } catch (e) { } if (o && l.addEventListener("load", o), a && l.addEventListener("error", a), u) u.appendChild(l); else { if (!c) throw new Error("Did not find a head or body element to append the script"); c.appendChild(l) } }({ src: O, async: !0, onload: function () { if (!function () { var e, d; return Boolean(null == (d = null == (e = window.Shopify) ? void 0 : e.analytics) ? void 0 : d.initialized) }()) { var d = window.webPixelsManager.init(e) || void 0; if (d) { var r = window.Shopify.analytics; r.replayQueue.forEach(function (e) { var r = e[0], n = e[1], o = e[2]; d.publishCustomEvent(r, n, o) }), r.replayQueue = [], r.publish = d.publishCustomEvent, r.visitor = d.visitor, r.initialized = !0 } } }, onerror: function () { return U.emit({ status: "failed", errorMsg: "".concat(O, " has failed to load") }) }, sri: (b = _, S = /^sha384-[A-Za-z0-9+/=]+$/, "string" == typeof b && S.test(b) ? _ : ""), scriptDataAttributes: o }), U.emit({ status: "loading" }) } catch (e) { U.emit({ status: "failed", errorMsg: (null == e ? void 0 : e.message) || "Unknown error" }) } } } }(); wpmLoader({ shopId: 2709520502, storefrontBaseUrl: "https://new-99.myshopify.com", extensionsBaseUrl: "https://extensions.shopifycdn.com/cdn/shopifycloud/web-pixels-manager", monorailEndpoint: "https://monorail-edge.shopifysvc.com/unstable/produce_batch", surface: "storefront-renderer", enabledBetaFlags: ["2dca8a86", "d5bdd5d0", "5acaffe6", "3b3c7daf", "6faea013"], webPixelsConfigList: [{ "id": "974815350", "configuration": "{\"webPixelName\":\"Judge.me\"}", "eventPayloadVersion": "v1", "runtimeContext": "STRICT", "scriptVersion": "34ad157958823915625854214640f0bf", "type": "APP", "apiClientId": 683015, "privacyPurposes": ["ANALYTICS"], "dataSharingAdjustments": { "protectedCustomerApprovalScopes": ["read_customer_email", "read_customer_name", "read_customer_personal_data", "read_customer_phone"], "dataSharingControls": ["share_all_events"] }, "dataSharingState": "unrestricted" }, { "id": "shopify-app-pixel", "configuration": "{}", "eventPayloadVersion": "v1", "runtimeContext": "STRICT", "scriptVersion": "0460", "apiClientId": "shopify-pixel", "type": "APP", "privacyPurposes": ["ANALYTICS", "MARKETING"] }, { "id": "shopify-custom-pixel", "eventPayloadVersion": "v1", "runtimeContext": "LAX", "scriptVersion": "0460", "apiClientId": "shopify-pixel", "type": "CUSTOM", "privacyPurposes": ["ANALYTICS", "MARKETING"] }], isMerchantRequest: true, initData: { "shop": { "name": "New99", "paymentSettings": { "currencyCode": "USD" }, "myshopifyDomain": "new-99.myshopify.com", "countryCode": "FR", "storefrontUrl": "https:\/\/new-99.myshopify.com" }, "customer": null, "cart": { "cost": { "totalAmount": { "amount": 822.0, "currencyCode": "WST" } }, "lines": [{ "cost": { "totalAmount": { "amount": 822.0, "currencyCode": "WST" } }, "merchandise": { "price": { "amount": 274.0, "currencyCode": "WST" }, "product": { "title": "L. u c e product", "vendor": "Vendor L", "id": "6690243313782", "untranslatedTitle": "L. u c e product", "url": "\/products\/12-unique-content-for-each-product-on-the-product-tab", "type": "Type L" }, "id": "39637215084662", "image": { "src": "\/\/new-99.myshopify.com\/cdn\/shop\/products\/handmade-product_21.png?v=1669049656" }, "sku": "111", "title": "red", "untranslatedTitle": "red" }, "quantity": 3 }], "totalQuantity": 3, "attributes": [], "id": "hWNBnngRQvUKU3dSO8RnoCqQ" }, "checkout": null, "productVariants": [], "products": null, "purchasingCompany": null, "page": null }, }, "https://new-99.myshopify.com/cdn", "b2423595wb67a1977p8b578d23m1ed5a501", { "modern": "", "legacy": "" }, { "trekkieShim": true, "pageType": "home", "shopId": "2709520502", "storefrontBaseUrl": "https:\/\/new-99.myshopify.com", "extensionBaseUrl": "https:\/\/extensions.shopifycdn.com\/cdn\/shopifycloud\/web-pixels-manager", "surface": "storefront-renderer", "enabledBetaFlags": "[\"2dca8a86\", \"d5bdd5d0\", \"5acaffe6\", \"3b3c7daf\", \"6faea013\"]", "isMerchantRequest": "true", "hashVersion": "b2423595wb67a1977p8b578d23m1ed5a501", "publish": "custom", "events": "[[\"page_viewed\",{}]]" }); })();</script> --}}
 {{-- <script>
@@ -426,4 +426,354 @@
             svgColor: '#f8796c',
         
         });
+</script>
+
+
+<script>
+   // ==================== MINI CART FUNCTIONS ====================
+
+
+
+// Add to cart from anywhere (with mini cart update)
+function addToCart(productId, quantity = 1) {
+    Notiflix.Loading.pulse('Adding to cart...');
+    
+    $.ajax({
+        url: '{{ route("shop.cart.add") }}',
+        type: 'POST',
+        data: {
+            product_id: productId,
+            quantity: quantity,
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            Notiflix.Loading.remove();
+            if (response.status === 'success') {
+                Notiflix.Notify.success(response.message || 'Product added to cart!');
+                // Update mini cart
+                refreshMiniCart();
+                updateCartCount();
+            } else {
+                Notiflix.Notify.warning(response.message || 'Failed to add to cart');
+            }
+        },
+        error: function(xhr) {
+            Notiflix.Loading.remove();
+            if (xhr.status === 422) {
+                var errors = xhr.responseJSON.errors;
+                var firstError = Object.values(errors)[0];
+                Notiflix.Notify.warning(firstError[0] || 'Validation error');
+            } else if (xhr.status === 400) {
+                Notiflix.Notify.warning(xhr.responseJSON.message || 'Product is not available');
+            } else {
+                Notiflix.Notify.failure('An error occurred while adding to cart');
+            }
+        }
+    });
+}
+
+// Remove from cart (mini cart version)
+function removeFromCartMini(productId, rowId) {
+  
+    showLoadingNotiflix('ltn__utilize-cart-menu', 'Removing item from cart...');            
+            $.ajax({
+                url: '{{ route("shop.cart.remove") }}',
+                type: 'DELETE',
+                data: {
+                    product_id: productId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Notiflix.Loading.remove();
+                    if (response.status === 'success') {
+                        Notiflix.Notify.success('Item removed from cart');
+                        // Remove item from mini cart UI
+                        $('#mini-cart-item-' + rowId).fadeOut(300, function() {
+                            $(this).remove();
+                            // Check if cart is empty
+                            checkMiniCartEmpty();
+                        });
+                        updateCartCount();
+                        // Update subtotal
+                        updateMiniCartTotal();
+                        hideLoadingNotiflix('ltn__utilize-cart-menu');
+
+                    } else {
+                        Notiflix.Notify.warning(response.message || 'Failed to remove item');
+                    }
+                },
+                error: function() {
+                    hideLoadingNotiflix('ltn__utilize-cart-menu');
+                    Notiflix.Notify.failure('An error occurred');
+                }
+            });
+}
+
+// Remove from cart (full page version)
+function removeFromCart(productId) {
+    Notiflix.Confirm.show(
+        'Remove Item',
+        'Are you sure you want to remove this item from cart?',
+        'Yes',
+        'Cancel',
+        function() {
+            Notiflix.Loading.pulse('Removing item...');
+            
+            $.ajax({
+                url: '{{ route("shop.cart.remove") }}',
+                type: 'DELETE',
+                data: {
+                    product_id: productId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Notiflix.Loading.remove();
+                    if (response.status === 'success') {
+                        Notiflix.Notify.success('Item removed from cart');
+                        // Reload page to update cart display
+                        location.reload();
+                    } else {
+                        Notiflix.Notify.warning(response.message || 'Failed to remove item');
+                    }
+                },
+                error: function() {
+                    Notiflix.Loading.remove();
+                    Notiflix.Notify.failure('An error occurred');
+                }
+            });
+        }
+    );
+}
+
+// Refresh mini cart content
+function refreshMiniCart() {
+    $.ajax({
+        url: '{{ route("shop.cart.items") }}',
+        type: 'GET',
+        success: function(response) {
+            if (response.status === 'success' && response.items) {
+
+                
+                // Clear existing items
+                $('#miniCartItems .mini-cart-item').remove();
+                
+                // Add new items
+                var itemsHtml = '';
+                $.each(response.items, function(index, item) {
+                    itemsHtml += `
+                        <div class="mini-cart-item clearfix" id="mini-cart-item-${item.rowId}">
+                            <div class="mini-cart-img">
+                                <a href="${item.product_slug ? '/shop/product/' + item.product_slug : '#'}">
+                                    <img src="${item.image || '/images/default-product.jpg'}" alt="${item.name}">
+                                </a>
+                                <span onclick="removeFromCartMini('${item.id}', '${item.rowId}')" class="mini-cart-item-delete">
+                                    <i class="icon-cancel"></i>
+                                </span>
+                            </div>
+                            <div class="mini-cart-info">
+                                <h6>
+                                    <a href="${item.product_slug ? '/shop/product/' + item.product_slug : '#'}">
+                                        ${item.name}
+                                        ${item.variant ? ' - ' + item.variant : ''}
+                                    </a>
+                                </h6>
+                                <span class="mini-cart-quantity">
+                                    ${item.qty} x GH₵${item.price}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#miniCartItems').append(itemsHtml);
+                
+                // Update totals
+                $('#miniCartSubtotal').text('GH₵' + response.subtotal);
+                
+                // Check if cart is empty
+                checkMiniCartEmpty();
+            }
+        }
+    });
+}
+
+// Check if mini cart is empty
+function checkMiniCartEmpty() {
+    var itemCount = $('#miniCartItems .mini-cart-item').length;
+    
+    if (itemCount === 0) {
+        $('#miniCartItems').hide();
+        $('#miniCartFooter').hide();
+        $('#miniCartEmpty').show();
+    } else {
+        $('#miniCartItems').show();
+        $('#miniCartFooter').show();
+        $('#miniCartEmpty').hide();
+    }
+}
+
+// Update mini cart total
+function updateMiniCartTotal() {
+    $.ajax({
+        url: '{{ route("shop.cart.total") }}',
+        type: 'GET',
+        success: function(response) {
+            if (response.total !== undefined) {
+                $('#miniCartSubtotal').text('GH₵' + parseFloat(response.total).toFixed(2));
+            }
+        }
+    });
+}
+
+// Update cart count in header
+function updateCartCount() {
+    $.ajax({
+        url: '{{ route("shop.cart.count") }}',
+        type: 'GET',
+        success: function(response) {
+            if (response.count !== undefined) {
+
+                
+                document.querySelectorAll('[data-cart="count"]').forEach(element => {
+                    element.textContent = response.count;
+                });
+               
+            }
+        }
+    });
+}
+
+// Add to cart from quick view
+function addToCartFromQuickView() {
+    var productId = $('#add-item-qv').data('product-id');
+    var quantity = parseInt($('#quickViewQuantity').val()) || 1;
+    
+    if (!productId) {
+        Notiflix.Notify.warning('Product not found');
+        return;
+    }
+    
+    addToCart(productId, quantity);
+    
+    setTimeout(function() {
+        $('#quickViewModal').modal('hide');
+    }, 1000);
+}
+
+// Apply coupon (for mini cart or full page)
+function applyCoupon() {
+    var couponCode = $('#coupon_code').val();
+    
+    if (!couponCode) {
+        Notiflix.Notify.warning('Please enter a coupon code');
+        return;
+    }
+    
+    Notiflix.Loading.pulse('Applying coupon...');
+    
+    $.ajax({
+        url: '{{ route("shop.cart.coupon.apply") }}',
+        type: 'POST',
+        data: {
+            code: couponCode,
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            Notiflix.Loading.remove();
+            if (response.status === 'success') {
+                Notiflix.Notify.success('Coupon applied successfully!');
+                location.reload();
+            } else {
+                Notiflix.Notify.warning(response.message || 'Failed to apply coupon');
+            }
+        },
+        error: function(xhr) {
+            Notiflix.Loading.remove();
+            if (xhr.status === 404) {
+                Notiflix.Notify.warning(xhr.responseJSON?.message || 'Invalid coupon code');
+            } else {
+                Notiflix.Notify.failure('An error occurred');
+            }
+        }
+    });
+}
+
+// Remove coupon
+function removeCoupon() {
+    Notiflix.Confirm.show(
+        'Remove Coupon',
+        'Are you sure you want to remove this coupon?',
+        'Yes',
+        'Cancel',
+        function() {
+            Notiflix.Loading.pulse('Removing coupon...');
+            
+            $.ajax({
+                url: '{{ route("shop.cart.coupon.remove") }}',
+                type: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Notiflix.Loading.remove();
+                    if (response.status === 'success') {
+                        Notiflix.Notify.success('Coupon removed');
+                        location.reload();
+                    } else {
+                        Notiflix.Notify.warning(response.message || 'Failed to remove coupon');
+                    }
+                },
+                error: function() {
+                    Notiflix.Loading.remove();
+                    Notiflix.Notify.failure('An error occurred');
+                }
+            });
+        }
+    );
+}
+
+// ==================== MINI CART TOGGLE ====================
+
+// Initialize mini cart toggle
+$(document).ready(function() {
+    // Toggle mini cart
+    $('.ltn__utilize-toggle').on('click', function(e) {
+        e.preventDefault();
+        var target = $(this).attr('href');
+        $(target).toggleClass('ltn__utilize-open');
+        $('body').toggleClass('ltn__utilize-open');
+    });
+    
+    // Close mini cart
+    $('.ltn__utilize-close').on('click', function() {
+        var target = $(this).closest('.ltn__utilize');
+        target.removeClass('ltn__utilize-open');
+        $('body').removeClass('ltn__utilize-open');
+    });
+    
+    // Close mini cart on overlay click
+    $(document).on('click', function(e) {
+        if ($('.ltn__utilize-open').length > 0) {
+            if (!$(e.target).closest('.ltn__utilize').length && !$(e.target).closest('.ltn__utilize-toggle').length) {
+                $('.ltn__utilize').removeClass('ltn__utilize-open');
+                $('body').removeClass('ltn__utilize-open');
+            }
+        }
+    });
+});
+
+// ==================== ADDITIONAL CART ROUTES ====================
+
+// Add this to your routes if not already present
+// Route::get('/cart/total', [ShopCartController::class, 'getTotal'])->name('cart.total');
+
+// Add this method to ShopCartController:
+/*
+public function getTotal()
+{
+    return response()->json([
+        'total' => $this->getCartTotalAfterDiscount()
+    ]);
+}
+*/ 
 </script>

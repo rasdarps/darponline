@@ -302,9 +302,9 @@
                                 </ul>
                             </div><!-- mini-cart -->
                             <div class="mini-cart-icon">
-                                <a href="#ltn__utilize-cart-menu" class="ltn__utilize-toggle">
+                                <a href="#ltn__utilize-cart-menu" onclick="refreshMiniCart()" class="ltn__utilize-toggle">
                                     <i class="icon-shopping-cart"></i>
-                                    <sup><span class="bigcounter">5</span></sup>
+                                    <sup><span class="bigcounter" data-cart="count" id="cart-count">{{Cart::count()}}</span></sup>
                                 </a>
                             </div>
                             <!-- Mobile Menu Button -->
@@ -335,9 +335,9 @@
 
 
 
-
+    @include('client.partials.mini-cart')
     <!-- Utilize Cart Menu Start -->
-    <div id="ltn__utilize-cart-menu" class="ltn__utilize ltn__utilize-cart-menu">
+    {{-- <div id="ltn__utilize-cart-menu" class="ltn__utilize ltn__utilize-cart-menu">
         <div class="ltn__utilize-menu-inner ltn__scrollbar">
             <div class="ltn__utilize-menu-head">
                 <span class="ltn__utilize-menu-title">Cart</span>
@@ -376,13 +376,13 @@
                     <h5>Subtotal: <span class="shopping-cart__total">WS$ 375.00 WST</span></h5>
                 </div>
                 <div class="btn-wrapper">
-                    <a href="/cart" class="theme-btn-1 btn btn-effect-1">View Cart</a>
+                    <a href="{{route("shop.cart.index")}}" class="theme-btn-1 btn btn-effect-1">View Cart</a>
                     <a href="/checkout" class="theme-btn-1 btn btn-effect-1">Checkout</a>
                 </div>
                 <p>Free shipping on orders over&nbsp;<strong>$99</strong></p>
             </div>
         </div>
-    </div>
+    </div> --}}
     <!-- Utilize Cart Menu End -->
 
 
@@ -433,9 +433,9 @@
                             </ul>
                         </div><!-- mini-cart -->
                         <div class="mini-cart-icon">
-                            <a href="#ltn__utilize-cart-menu" class="ltn__utilize-toggle">
+                            <a href="#ltn__utilize-cart-menu" onclick="refreshMiniCart()" class="ltn__utilize-toggle">
                                 <i class="icon-shopping-cart"></i>
-                                <sup><span class="bigcounter">5</span></sup>
+                                <sup><span class="bigcounter" data-cart="count" id="cart-count">{{Cart::count()}}</span></sup>
                             </a>
                         </div>
                         <!-- Mobile Menu Button -->
@@ -539,7 +539,7 @@
                         <a href="/cart" title="Shoping Cart">
                             <span class="utilize-btn-icon">
                                 <i class="fas fa-shopping-cart"></i>
-                                <sup><span class="bigcounter">5</span></sup>
+                                <sup><span class="bigcounter" data-cart="count">{{Cart::count()}}</span></sup>
                             </span>
                             Shopping Cart
                         </a>
@@ -1276,12 +1276,12 @@
         })
     </script>
 
-    <script>
+    {{-- <script>
         jQuery('.addtocartqv').click(function(e) {
             e.preventDefault();
             Shopify.addItemFromFormStart('add-item-qv', jQuery(this).attr('id'));
         });
-    </script>
+    </script> --}}
 
 <script>
     $(".theme-default-pagination .disabled a").removeAttr("href");
