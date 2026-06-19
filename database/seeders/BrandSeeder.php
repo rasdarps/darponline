@@ -16,14 +16,14 @@ class BrandSeeder extends Seeder
          $brands = [
             [
                 'id' => 1,
-                'name' => 'HP',
-                'slug' => 'hp',
+                'name' => 'Silver Crest',
+                'slug' => 'silver-crest',
                 'created_at' => now(),
             ],
             [
                 'id' => 2,
-                'name' => 'Iphone',
-                'slug' => 'iphone',
+                'name' => 'Stanley',
+                'slug' => 'stanley',
                 'created_at' => now(),
             ],
             [

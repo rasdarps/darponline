@@ -94,7 +94,7 @@ class CompanyDataTable extends DataTable
             Column::make('name')->title('Company Name'),
             Column::make('address')->title('Company Address'),
             Column::make('phone')->title('Company Phone'),
-            Column::make('email')->title('Company Email'),
+            Column::make('tin_number')->title('Company TIN Number'),
             // Column::make('created_at'),
             // Column::make('updated_at'),
             Column::make('edit_button')->title('Actions')

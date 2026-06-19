@@ -31,41 +31,51 @@
                     <div class="card">
                         <div class="card-body">
             
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="invoice-title">
-                                
-                                <h3>
-                                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> {{ $companyInfo->name }} - Sales Invoice
-                                </h3>
-                            </div>
-                            <hr>
-                            
                             <div class="row">
-                                <div class="col-6 mt-4">
-                                    {{-- <h3 class="font-size-16"><strong>Company Details</strong></h3> --}}
-                                    <address>
-                                    <strong>{{ $companyInfo->name }}</strong>
-                                    <br>
-                                    {{ $companyInfo->address }}
-                                    <br>
-                                        {{ $companyInfo->phone }} | {{ $companyInfo->email }}
-                                    <br>
-                                        Invoice No # {{ $invoice->invoice_no }}
-                                    </address>
-                                </div>
-                                <div class="col-6 mt-4 text-end">
-                                    <address>
-                                        <strong>Invoice Date:</strong><br>
-                                        {{ date('d-m-Y',strtotime($invoice->date)) }} <br><br>
-                                    </address>
+                                <div class="col-12">
+                                    <div class="invoice-title" align="center">
+                                        
+                                        <h5>
+                                            Sales Receipt
+                                        </h5>
+                                        <p><strong>{{ $companyInfo->name }}</strong>
+                                            <br>
+                                        {{ $companyInfo->address }}
+                                        <br>
+                                        {{ $companyInfo->phone }} |  TIN: {{ $companyInfo->tin_number ?? 'N/A' }}</p>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            @php
+                                            $cashierName = optional($invoice->createdBy)->name;
+                                            $cashierFirstName = $cashierName ? explode(' ', trim($cashierName))[0] : 'N/A';
+                                            @endphp
+                                               <p>
+                                                Receipt No # {{ $invoice->invoice_no }} <br>
+                                                Cashier: {{ $cashierFirstName }} 
+                                               </p>  
+                                           
+                                        </div>
+                                        <div class="col-6 mt-4 text-end">
+                                                <p><strong>Invoice Date & Time:</strong><br></p>
+                                                <p>{{ optional($invoice->created_at)->format('d-m-Y h:i A') }}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
                         @php
                         $payment = App\Models\Payment::where('invoice_id',$invoice->id)->first();
+                        $discountAmount = $payment->discount_amount ?? 0;
+                        $taxableAmount = $payment->taxable_amount ?? 0;
+                        $nhilAmount = $payment->nhil_amount ?? 0;
+                        $getfundAmount = $payment->getfund_amount ?? 0;
+                        $vatAmount = $payment->vat_amount ?? 0;
+                        $paidAmount = $payment->paid_amount ?? 0;
+                        $totalAmount = $payment->total_amount ?? 0;
+                        $cashTendered = $payment->cash_tendered ?? 0;
+                        $changeDue = $payment->change_due ?? 0;
                         @endphp   
 
                 <div class="row">
@@ -126,9 +136,45 @@
                                                         <td class="no-line"></td>
                                                         <td class="no-line text-center">
                                                             <strong>Discount Amount</strong></td>
-                                                        <td class="no-line text-end">{{ number_format($payment->discount_amount, 2) }}</td>
+                                                        <td class="no-line text-end">{{ number_format($discountAmount, 2) }}</td>
                                                     </tr>
                                                     <tr>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line text-center">
+                                                            <strong>Taxable Subtotal</strong></td>
+                                                        <td class="no-line text-end">{{ number_format($taxableAmount, 2) }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line text-center">
+                                                            <strong>NHIL (2.5%)</strong></td>
+                                                        <td class="no-line text-end">{{ number_format($nhilAmount, 2) }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line text-center">
+                                                            <strong>GETFund (2.5%)</strong></td>
+                                                        <td class="no-line text-end">{{ number_format($getfundAmount, 2) }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line text-center">
+                                                            <strong>VAT (15%)</strong></td>
+                                                        <td class="no-line text-end">{{ number_format($vatAmount, 2) }}</td>
+                                                    </tr>
+                                                    {{-- <tr>
                                                         
                                                         <td class="no-line"></td>
                                                         <td class="no-line"></td>
@@ -136,19 +182,8 @@
                                                         <td class="no-line"></td>
                                                         <td class="no-line text-center">
                                                             <strong>Paid Amount</strong></td>
-                                                        <td class="no-line text-end">{{ number_format($payment->paid_amount, 2) }}</td>
-                                                    </tr>
-
-                                                    <tr>
-                                                        
-                                                        <td class="no-line"></td>
-                                                        <td class="no-line"></td>
-                                                        <td class="no-line"></td>
-                                                        <td class="no-line"></td>
-                                                        <td class="no-line text-center">
-                                                            <strong>Due Amount</strong></td>
-                                                        <td class="no-line text-end">{{ number_format($payment->due_amount, 2) }}</td>
-                                                    </tr>
+                                                        <td class="no-line text-end">{{ number_format($paidAmount, 2) }}</td>
+                                                    </tr> --}}
                                                     <tr>
                                                         
                                                         <td class="no-line"></td>
@@ -157,7 +192,16 @@
                                                         <td class="no-line"></td>
                                                         <td class="no-line text-center">
                                                             <strong>Grand Amount</strong></td>
-                                                        <td class="no-line text-end"><h4 class="m-0">Gh¢{{ number_format($payment->total_amount, 2) }}</h4></td>
+                                                        <td class="no-line text-end"><h5 class="m-0">Gh¢{{ number_format($totalAmount, 2) }}</h5></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line"></td>
+                                                        <td class="no-line text-center">
+                                                            <strong>Cash Tendered | Change Due</strong></td>
+                                                        <td class="no-line text-end">{{ number_format($cashTendered, 2) }} | {{ number_format($changeDue, 2) }}</td>
                                                     </tr>
                                         </tbody>
                                     </table>
@@ -166,11 +210,11 @@
                                 <div class="d-print-none">
                                     <div class="float-end">
                                         <a href="javascript:window.print()" class="btn btn-success waves-effect waves-light"><i class="fa fa-print"></i></a>
-                                        {{-- <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
+                                        <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
                                             <i class="fa fa-download"></i> Download
-                                        </a> --}}
-                                        <a href="{{ route('invoices.create') }}" class="btn btn-primary waves-effect waves-light ms-2">
-                                            <i class="fa fa-note"></i> New Sales
+                                        </a>
+                                        <a href="{{ route('invoices.create') }}" class="btn btn-info waves-effect waves-light ms-2">
+                                            <i class="fa fa-plus"></i> New Sales
                                         </a>   
                                     </div>
                                 </div>
@@ -205,7 +249,7 @@
             }
 
             .receipt-container {
-                width: 80mm; /* typical Epson TM-U220 paper width */
+                width: 100mm; /* typical Epson TM-U220 paper width */
                 margin: 0 auto;
             }
 
@@ -218,7 +262,7 @@
                 padding: 2px 4px;
                 text-align: left;
                 border: none;
-                word-wrap: break-word;
+                /* word-wrap: break-word; */
                 white-space: normal;
             }
 
@@ -230,7 +274,7 @@
 
             /* Force page to fit roll width */
             @page {
-                size: 80mm auto;
+                size: 100mm auto;
                 margin: 0;
             }
         }

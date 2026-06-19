@@ -16,6 +16,7 @@ class Company extends Model
         'address', 
         'phone',
         'email',
+       'tin_number',
         'created_by',
         'updated_by',
         'deleted_by',

@@ -73,41 +73,45 @@
     </div>
 
     <div class="col-xl-3 col-md-6">
-        <div class="card purchase_count">
-            <div class="card-body">
-                <div class="d-flex">
-                    <div class="flex-grow-1">
-                        <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Total Purchases</p>
-                        <h4 class="mb-2" style="color:#fff">{{ number_format($total_purchases, 2) }}</h4>
-                        <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i></span>Purchases</p>
-                    </div>
-                    <div class="avatar-sm">
-                        <span class="avatar-title bg-light text-primary rounded-3">
-                            <i class="fa fa-bars font-size-24"></i>  
-                        </span>
-                    </div>
-                </div>                                              
+        <a href="{{ route('purchases.index') }}">
+            <div class="card purchase_count">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Total Purchases</p>
+                            <h4 class="mb-2" style="color:#fff">{{ number_format($total_purchases, 2) }}</h4>
+                            <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i></span>Purchases</p>
+                        </div>
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-light text-primary rounded-3">
+                                <i class="fa fa-bars font-size-24"></i>  
+                            </span>
+                        </div>
+                    </div>                                              
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 
     <div class="col-xl-3 col-md-6">
-        <div class="card invoice_count">
-            <div class="card-body">
-                <div class="d-flex">
-                    <div class="flex-grow-1">
-                        <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Total Sales</p>
-                        <h4 class="mb-2" style="color:#fff">{{ number_format($total_sales, 2) }}</h4>
-                        <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Sales</p>
-                    </div>
-                    <div class="avatar-sm">
-                        <span class="avatar-title bg-light text-success rounded-3">
-                            <i class="fa fa-bars font-size-24"></i>  
-                        </span>
-                    </div>
-                </div>                                              
+        <a href="{{ route('invoices.index') }}">
+            <div class="card invoice_count">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Total Sales</p>
+                            <h4 class="mb-2" style="color:#fff">{{ number_format($total_sales, 2) }}</h4>
+                            <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Sales</p>
+                        </div>
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-light text-success rounded-3">
+                                <i class="fa fa-bars font-size-24"></i>  
+                            </span>
+                        </div>
+                    </div>                                              
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div><!-- end row -->
 

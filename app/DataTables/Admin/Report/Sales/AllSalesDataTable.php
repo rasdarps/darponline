@@ -35,6 +35,10 @@ class AllSalesDataTable extends DataTable
                     : '';
             })
 
+            ->addColumn('created_by_name', function($row) {
+                return $row->createdBy ? $row->createdBy->name : '';
+            })
+
             ->addColumn('amount', function($row) {
                 return $row->payment 
                     ? number_format($row->payment->total_amount, 2) 
@@ -67,8 +71,8 @@ class AllSalesDataTable extends DataTable
     public function query(Invoice $model): QueryBuilder
     {
         $query = $model->newQuery()
-            ->with(['payment.customer'])
-            ->orderBy('date', 'desc');
+            ->with(['payment.customer', 'createdBy'])
+            ->orderBy('date', 'ASC');
 
         // Apply filters
         if ($invoiceId = $this->request()->get('invoice_id')) {
@@ -79,6 +83,10 @@ class AllSalesDataTable extends DataTable
             $query->whereHas('payment.customer', function ($q) use ($customerId) {
                 $q->where('id', $customerId);
             });
+        }
+
+        if ($createdBy = $this->request()->get('created_by')) {
+            $query->where('created_by', $createdBy);
         }
 
         if ($fromDate = $this->request()->get('from_date')) {
@@ -119,6 +127,7 @@ class AllSalesDataTable extends DataTable
             Column::make('date'),
             Column::make('invoice_no'),
             Column::make('customer_name')->title('Customer Name'),
+            Column::make('created_by_name')->title('Created By'),
             Column::make('amount')->title('Amount (Gh¢)'),
             Column::make('edit_button')->title('Actions')
             ->searchable(false)->printable(false)->exportable(false),

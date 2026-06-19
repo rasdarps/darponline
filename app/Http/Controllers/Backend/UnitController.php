@@ -85,7 +85,7 @@ class UnitController extends Controller
         }
     }
 
-    public function edit($encryptedId){
+    public function edit(string $encryptedId){
         try {
             $id = Crypt::decrypt($encryptedId);
             $unit = Unit::find($id);
@@ -100,7 +100,7 @@ class UnitController extends Controller
         }
     }// End Method 
 
-    public function update(Request $request, $encryptedId){ 
+    public function update(Request $request, string $encryptedId){ 
         try {
             $id = Crypt::decrypt($encryptedId);
             $unit = Unit::find($id);
@@ -147,10 +147,10 @@ class UnitController extends Controller
         }
     }// End Method 
 
-    public function destroy($id){
+    public function destroy(string $encryptedId){
         try {
             // $id = Crypt::decrypt($encryptedId);
-            $unit = Unit::findOrFail(Crypt::decrypt($id));
+            $unit = Unit::findOrFail(Crypt::decrypt($encryptedId));
             
             if (!$unit) {
                 return response()->json([

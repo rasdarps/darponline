@@ -57,7 +57,15 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
+                                            {{-- <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
+                                                <option disabled selected value="">Select Product</option>
+                                                @foreach($products as $product)
+                                                    <option value="{{ $product->id }}" data-price="{{ $product->selling_price }}">
+                                                        {{ $product->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select> --}}
+                                             <div class="col-md-4">
                                                 <div class="form-group mb-1 d-flex align-items-center">
                                                     <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
                                                         <option disabled selected value="">Select Product</option>
@@ -105,7 +113,7 @@
                                                     <tr>
                                                         <td colspan="6">Grand Total</td>
                                                         <td>
-                                                            <input type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
+                                                            <input style="text-align: right;" type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
                                                         </td>
                                                         <td></td>
                                                     </tr>
@@ -119,7 +127,7 @@
                                         </div>
                                     </div>
                                     <div class="row mt-3">
-                                        <div class="form-group col-md-3">
+                                        <div class="form-group col-md-3 block_div">
                                             <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
                                             <select name="paid_status" id="paid_status" class="form-control" readonly>
                                                 {{-- <option value="">Select Payment Status</option> --}}
@@ -129,7 +137,7 @@
                                             </select>
                                             <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">
                                         </div>
-                                        <div class="form-group col-md-9">
+                                        <div class="form-group col-md-9 block_div">
                                             <label><strong>Account Name <span class="text-danger">*</span></strong></label>
                                             <select name="customer_id" id="customer_id" class="form-control" readonly>
                                                 <option value="" disabled>Select Customer</option>
@@ -145,7 +153,7 @@
                                     </div>
 
                                     <!-- Hidden Add Customer Form -->
-                                    <div class="row new_customer mt-3" style="display:none;">
+                                    <div class="row new_customer mt-3 block_div">
                                         <div class="form-group col-md-4">
                                             <input type="text" name="name" id="name" class="form-control" placeholder="Customer Name">
                                         </div>
@@ -176,6 +184,10 @@
 
 @section('styles')
     <style>
+        .block_div {
+            display: none;
+           
+        }
         .card {
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease-in-out;
@@ -466,7 +478,13 @@
             </td>
 
             <td>
-                <input type="number" class="form-control unit_selling_price text-right" id="unit_selling_price" name="unit_selling_price[]" value="{{ old('unit_selling_price') }}" onchange="checkQuantity()"> 
+                <!-- 🔹 Unit selling price auto-filled from products.selling_price -->
+                <input type="number" 
+                    class="form-control unit_selling_price text-right" 
+                    name="unit_selling_price[]"
+                    value="@{{unit_selling_price}}" 
+                    readonly 
+                    style="background-color:#ddd;">
             </td>
 
             <td>
@@ -525,6 +543,7 @@
                                 product_name: product.name,
                                 unit_id: product.unit_id,
                                 unit_name: product.unit.name,
+                                unit_selling_price: product.selling_price // 🔹 add this
                             };
                             var html = template(data);
                             $("#addRow").append(html);
@@ -554,6 +573,7 @@
                 var category_name = $('#category_id').find('option:selected').text();
                 var product_id = $('#product_id').val();
                 var product_name = $('#product_id').find('option:selected').text();
+                var selling_price = $('#product_id').find('option:selected').data('price'); // 🔹 new
                 var unit_id  = $('#unit_id').val();
                 var unit_name = $('#unit_id').find('option:selected').text();
 
@@ -593,7 +613,8 @@
                     product_name:product_name,
                     unit_id:unit_id,
                     unit_name:unit_name,
-                    barcode: '' // 🔹 empty if added manually
+                    barcode: '', // 🔹 empty if added manually
+                    unit_selling_price: selling_price // 🔹 add this
                 };
                 var html = tamplate(data);
                 $("#addRow").append(html);
@@ -654,7 +675,7 @@
                     success:function(data){
                         var html = '<option value="">Select Product</option>';
                         $.each(data,function(key,v){
-                            html += '<option value=" '+v.id+' "> '+v.name+'</option>';
+                            html += '<option value=" '+v.id+' " data-price="'+v.selling_price+'"> '+v.name+'</option>';
                         });
                         $('#product_id').html(html);
                     }

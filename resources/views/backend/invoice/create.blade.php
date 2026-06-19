@@ -111,9 +111,47 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
+                                                        <td colspan="6">Taxable Subtotal</td>
+                                                        <td>
+                                                            <input style="text-align: right;" type="text" name="taxable_amount" value="0.00" id="taxable_amount" class="form-control" readonly style="background-color: #ddd;">
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="6">NHIL (2.5%)</td>
+                                                        <td>
+                                                            <input style="text-align: right;" type="text" name="nhil_amount" value="0.00" id="nhil_amount" class="form-control" readonly style="background-color: #ddd;">
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="6">GETFund (2.5%)</td>
+                                                        <td>
+                                                            <input style="text-align: right;" type="text" name="getfund_amount" value="0.00" id="getfund_amount" class="form-control" readonly style="background-color: #ddd;">
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="6">VAT (15%)</td>
+                                                        <td>
+                                                            <input style="text-align: right;" type="text" name="vat_amount" value="0.00" id="vat_amount" class="form-control" readonly style="background-color: #ddd;">
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
                                                         <td colspan="6">Grand Total</td>
                                                         <td>
                                                             <input style="text-align: right;" type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
+                                                        </td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="6">Cash Tendered</td>
+                                                        <td>
+                                                            <input style="text-align: right;" type="number" step="0.01" min="0" name="cash_tendered" value="0" id="cash_tendered" class="form-control" placeholder="Enter cash tendered">
+                                                        </td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="6">Change Due</td>
+                                                        <td>
+                                                            <input style="text-align: right;" type="text" name="change_due" value="0.00" id="change_due" class="form-control" readonly style="background-color: #ddd;">
                                                         </td>
                                                         <td></td>
                                                     </tr>
@@ -314,6 +352,19 @@
                     notify('Please select a paid status');
                     return;
                 }
+
+                var totalAmount = parseFloat($('#estimated_amount').val()) || 0;
+                var cashTendered = parseFloat($('#cash_tendered').val());
+                if(isNaN(cashTendered) || cashTendered < 0) {
+                    notify('Please enter a valid cash tendered amount');
+                    return;
+                }
+
+                if($('#paid_status').val() === 'full_paid' && cashTendered < totalAmount) {
+                    notify('Cash tendered cannot be less than the grand total for full payment.');
+                    return;
+                }
+
                 if(!$('#customer_id').val()) {
                     notify('Please select a customer name');
                     return;
@@ -510,6 +561,23 @@
     <script type="text/javascript">
         $(document).ready(function(){
 
+            function round2(num) {
+                return (Math.round((num + Number.EPSILON) * 100) / 100).toFixed(2);
+            }
+
+            function getNumeric(selector) {
+                var value = parseFloat($(selector).val());
+                return isNaN(value) ? 0 : value;
+            }
+
+            function updateTenderSummary() {
+                var total = getNumeric('#estimated_amount');
+                var cashTendered = getNumeric('#cash_tendered');
+                var changeDue = Math.max(0, cashTendered - total);
+
+                $('#change_due').val(round2(changeDue));
+            }
+
              // 🔹 Handle barcode scan/entry
             $(document).on("change", "#barcode", function(){
                 var barcode = $(this).val();
@@ -637,23 +705,46 @@
                 totalAmountPrice();
             });
 
+            $(document).on('keyup change','#cash_tendered', function(){
+                updateTenderSummary();
+            });
+
             // Calculate sum of amout in invoice 
 
             function totalAmountPrice(){
-                var sum = 0;
+                var grossTotal = 0;
                 $(".selling_price").each(function(){
                     var value = $(this).val();
                     if(!isNaN(value) && value.length != 0){
-                        sum += parseFloat(value);
+                        grossTotal += parseFloat(value);
                     }
                 });
 
-                var discount_amount = parseFloat($('#discount_amount').val());
-                if(!isNaN(discount_amount) && discount_amount.length != 0){
-                        sum -= parseFloat(discount_amount);
-                    }
+                var discountAmount = parseFloat($('#discount_amount').val()) || 0;
+                if (discountAmount < 0) {
+                    discountAmount = 0;
+                }
 
-                $('#estimated_amount').val(sum);
+                var netTotal = grossTotal - discountAmount;
+                if (netTotal < 0) {
+                    netTotal = 0;
+                }
+
+                // Receipt-style tax-inclusive breakdown:
+                // total = taxable + NHIL(2.5%) + GETFund(2.5%) + VAT(15%) = taxable * 1.20
+                var taxableAmount = netTotal / 1.20;
+                var nhilAmount = taxableAmount * 0.025;
+                var getfundAmount = taxableAmount * 0.025;
+                var vatAmount = taxableAmount * 0.15;
+
+                $('#taxable_amount').val(round2(taxableAmount));
+                $('#nhil_amount').val(round2(nhilAmount));
+                $('#getfund_amount').val(round2(getfundAmount));
+                $('#vat_amount').val(round2(vatAmount));
+
+                $('#estimated_amount').val(round2(netTotal));
+                updateTenderSummary();
+
             }  
 
         });

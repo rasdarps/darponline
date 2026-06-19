@@ -15,8 +15,8 @@ class CompanySeeder extends Seeder
         //
         //
          $company = array(
-            array('id' => 1, 'name' => 'Rasdarps Enterprise', 'address' => 'P O Box ks 4508, Adum, Kumasi', 
-            'phone' =>'0242222874', 'email'=>'company@email.com',
+            array('id' => 1, 'name' => 'Factory Price Mall', 'address' => 'Near Tobinco Pharmaceuticals, Tudu-Mall, Accra, Ghana', 
+            'phone' =>'0240795803', 'tin_number' => 'GHA-718909812-9', 'email'=>'factorypricemall@email.com',
             'created_at' => now()),
            
 
@@ -29,6 +29,7 @@ class CompanySeeder extends Seeder
                     'name' => $comp['name'],
                     'address' => $comp['address'],
                     'phone' => $comp['phone'],
+                    'tin_number' => $comp['tin_number'],
                     'email' => $comp['email'],
                     'created_at' => now(),
                     'created_by' => 1,

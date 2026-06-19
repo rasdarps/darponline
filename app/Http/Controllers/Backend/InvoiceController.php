@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\PaymentDetail;
 use App\Models\Product;
 use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +39,8 @@ class InvoiceController extends Controller
         // $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
         $customers = Customer::orderBy('name')->get();
         $invoices = Invoice::orderBy('invoice_no')->get();
-        return $dataTable->render('backend.invoice.index', compact('customers', 'invoices'));
+          $users = User::orderBy('name')->get();
+          return $dataTable->render('backend.invoice.index', compact('customers', 'invoices', 'users'));
 
     }
 
@@ -65,6 +67,41 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
+        $grossTotal = collect($request->selling_price ?? [])->sum(function ($value) {
+            return (float) $value;
+        });
+
+        $discountAmount = (float) ($request->discount_amount ?? 0);
+        if ($discountAmount < 0) {
+            $discountAmount = 0;
+        }
+
+        $netTotal = max(0, $grossTotal - $discountAmount);
+
+        // Tax-inclusive receipt model:
+        // total = taxable + NHIL(2.5%) + GETFund(2.5%) + VAT(15%) = taxable * 1.20
+        $taxableAmount = $netTotal / 1.20;
+        $nhilAmount = $taxableAmount * 0.025;
+        $getfundAmount = $taxableAmount * 0.025;
+        $vatAmount = $taxableAmount * 0.15;
+
+        $calculated = [
+            'discount_amount' => round($discountAmount, 2),
+            'total_amount' => round($netTotal, 2),
+            'taxable_amount' => round($taxableAmount, 2),
+            'nhil_amount' => round($nhilAmount, 2),
+            'getfund_amount' => round($getfundAmount, 2),
+            'vat_amount' => round($vatAmount, 2),
+        ];
+
+        $cashTendered = (float) ($request->cash_tendered ?? 0);
+        if ($cashTendered < 0) {
+            $cashTendered = 0;
+        }
+
+        $calculated['cash_tendered'] = round($cashTendered, 2);
+        $calculated['change_due'] = round(max(0, $cashTendered - $calculated['total_amount']), 2);
+
         // Validation rules
         $rules = [
             'date' => ['required', 'date'],
@@ -78,7 +115,13 @@ class InvoiceController extends Controller
         ];
 
         if ($request->paid_status === 'partial_paid') {
-            $rules['paid_amount'] = ['required', 'numeric', 'min:1', 'max:' . $request->estimated_amount];
+            $rules['paid_amount'] = ['required', 'numeric', 'min:1', 'max:' . $calculated['total_amount']];
+        }
+
+        if ($request->paid_status === 'full_paid') {
+            $rules['cash_tendered'] = ['required', 'numeric', 'min:' . $calculated['total_amount']];
+        } else {
+            $rules['cash_tendered'] = ['nullable', 'numeric', 'min:0'];
         }
 
         if ($request->customer_id == '0') {
@@ -90,7 +133,7 @@ class InvoiceController extends Controller
         $validated = $request->validate($rules);
 
         // Capture the invoice returned from the transaction
-        $invoice = DB::transaction(function() use($request) {
+        $invoice = DB::transaction(function() use($request, $calculated) {
 
             // Generate next invoice number
             $lastInvoice = Invoice::orderBy('id', 'desc')->first();
@@ -141,20 +184,26 @@ class InvoiceController extends Controller
             $payment->invoice_id = $invoice->id;
             $payment->customer_id = $customer_id;
             $payment->paid_status = $request->paid_status;
-            $payment->discount_amount = $request->discount_amount;
-            $payment->total_amount = $request->estimated_amount;
+            $payment->discount_amount = $calculated['discount_amount'];
+            $payment->total_amount = $calculated['total_amount'];
+            $payment->taxable_amount = $calculated['taxable_amount'];
+            $payment->nhil_amount = $calculated['nhil_amount'];
+            $payment->getfund_amount = $calculated['getfund_amount'];
+            $payment->vat_amount = $calculated['vat_amount'];
+            $payment->cash_tendered = $calculated['cash_tendered'];
+            $payment->change_due = $calculated['change_due'];
 
             if ($request->paid_status == 'full_paid') {
-                $payment->paid_amount = $request->estimated_amount;
+                $payment->paid_amount = $calculated['total_amount'];
                 $payment->due_amount = 0;
-                $payment_details->current_paid_amount = $request->estimated_amount;
+                $payment_details->current_paid_amount = $calculated['total_amount'];
             } elseif ($request->paid_status == 'full_due') {
                 $payment->paid_amount = 0;
-                $payment->due_amount = $request->estimated_amount;
+                $payment->due_amount = $calculated['total_amount'];
                 $payment_details->current_paid_amount = 0;
             } elseif ($request->paid_status == 'partial_paid') {
                 $payment->paid_amount = $request->paid_amount;
-                $payment->due_amount = $request->estimated_amount - $request->paid_amount;
+                $payment->due_amount = $calculated['total_amount'] - $request->paid_amount;
                 $payment_details->current_paid_amount = $request->paid_amount;
             }
             $payment->save();
@@ -221,7 +270,7 @@ class InvoiceController extends Controller
     public function PrintInvoice($encryptedId){
 
         $id = Crypt::decrypt($encryptedId);
-        $invoice = Invoice::with('invoice_details')->findOrFail($id);
+        $invoice = Invoice::with(['invoice_details.category', 'invoice_details.product', 'createdBy'])->findOrFail($id);
         $companyInfo = Company::first();
         return view('backend.invoice.invoice_receipt',compact('invoice','companyInfo'));
 

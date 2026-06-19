@@ -186,6 +186,9 @@
                                             <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
                                                 <i class="fa fa-download"></i> Download
                                             </a>
+                                            <a href="{{ route('purchases.create') }}"  class="btn btn-info waves-effect waves-light ms-2">
+                                                <i class="fa fa-plus"></i> New Purchase
+                                            </a>
                                         </div>
                                     </div>
                                     </div>

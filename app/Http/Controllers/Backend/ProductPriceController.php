@@ -19,8 +19,8 @@ class ProductPriceController extends Controller
     public function index(ProductPriceDataTable $dataTable)
     {
         //
-        $products = Product::all();
-        return $dataTable->render('backend.product_price.index', compact('products'));
+        // $products = Product::all();
+        return $dataTable->render('backend.product_price.index');
       
     }
 

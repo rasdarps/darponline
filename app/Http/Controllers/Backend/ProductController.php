@@ -158,7 +158,7 @@ class ProductController extends Controller
       /**
      * Generate a unique SKU for the product.
      */
-    private function generateUniqueSKU($productName)
+    private function generateUniqueSKU(string $productName)
     {
         $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $productName), 0, 3));
         $random = strtoupper(Str::random(6));

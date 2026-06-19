@@ -10,6 +10,7 @@ use App\Http\Controllers\Backend\InvoiceController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\ProductPriceController;
 use App\Http\Controllers\Backend\PurchaseController;
+use App\Http\Controllers\Backend\ReportController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\StockController;
 use App\Http\Controllers\Backend\SupplierController;
@@ -75,9 +76,9 @@ Route::prefix('admin')->group(function () {
                 
             });
 
-            Route::resource('/companies', CompanyController::class);
-            Route::resource('/roles', RoleController::class);
-            Route::resource('/users', UserController::class);
+            // Route::resource('/companies', CompanyController::class);
+            // Route::resource('/roles', RoleController::class);
+            // Route::resource('/users', UserController::class);
 
 
             Route::prefix('suppliers')->name('suppliers.')->group(function () {
@@ -246,6 +247,12 @@ Route::prefix('admin')->group(function () {
                 
             });
 
+            //Reports Routes
+            Route::prefix('reports')->name('reports.')->group(function () {
+                Route::get('/profit', [ReportController::class, 'profitReport'])->name('profit');
+
+            });
+
 
 
 
@@ -255,8 +262,10 @@ Route::prefix('admin')->group(function () {
                 
                 Route::get('/detailed_stock_report', 'DetailedStockReport')->name('stock.detailed_stock_report');
                 Route::get('/stock/report', 'StockReport')->name('stock.report');
-                Route::get('/stock/report/pdf', 'StockReportPdf')->name('stock.report.pdf'); 
+                Route::get('/stock_value', 'StockValue')->name('stock.stock_value');
 
+
+                Route::get('/stock/report/pdf', 'StockReportPdf')->name('stock.report.pdf'); 
                 Route::get('/product/wise/pdf', 'ProductWisePdf')->name('product.wise.pdf');
                 Route::get('/stock/category/wise', 'StockCategoryWise')->name('stock.category.wise');
                 Route::get('/category/wise/pdf', 'CategoryWisePdf')->name('category.wise.pdf');

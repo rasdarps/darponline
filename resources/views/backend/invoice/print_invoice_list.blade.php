@@ -36,9 +36,9 @@
                             <th>Customer Name</th> 
                             <th>Invoice No </th>
                             <th>Date </th>
-                            <th>Desctipion</th>  
+                            <th>Description</th>  
                             <th>Amount (Gh¢)</th>
-                             <th>Action</th>
+                            <th>Action</th>
                             
                         </thead>
 

@@ -2,7 +2,7 @@
 
 namespace App\DataTables\Admin\Settings;
 
-use App\Models\ProductPrice;
+use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
@@ -26,7 +26,7 @@ class ProductPriceDataTable extends DataTable
                 return optional($row->createdBy)->name ?? 'N/A';
             })
             ->addColumn('edit_button', function($row) {
-                    $editUrl = route('product-prices.edit', Crypt::encrypt($row->product_id));
+                    $editUrl = route('product-prices.edit', Crypt::encrypt($row->id));
                     $deleteUrl = route('product-prices.destroy', Crypt::encrypt($row->id));
                     $csrf = csrf_field();
                     $method = method_field('DELETE');
@@ -65,10 +65,10 @@ class ProductPriceDataTable extends DataTable
     /**
      * Get the query source of dataTable.
      */
-    public function query(ProductPrice $model): QueryBuilder
+    public function query(Product $model): QueryBuilder
     {
         return $model->newQuery()
-            ->with(['createdBy', 'product'])
+            ->with(['createdBy'])
             ->latest('created_at');
     }
 
@@ -96,7 +96,7 @@ class ProductPriceDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('product.name')->title('Product Name'),
+            Column::make('name')->title('Product Name'),
             Column::make('cost_price')->title('Cost Price'),
             Column::make('selling_price')->title('Selling Price'),
             Column::make('created_by_name')->title('Created By'),

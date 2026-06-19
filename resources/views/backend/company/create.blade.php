@@ -39,7 +39,7 @@
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
                                                 <label for="barcode"><strong>Company Name</strong></label>
-                                                <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="scan or enter name">
+                                                <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="enter name">
                                             </div>
                                         </div>
 
@@ -62,12 +62,22 @@
 
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
+                                                <label for="tin_number"><strong>TIN Number <span class="text-danger">*</span></strong></label>
+                                                <input type="text" id="tin_number" name="tin_number" class="form-control" value="{{ old('tin_number') }}" placeholder="Enter 10 digit TIN number" maxlength="10" minlength="10" onkeypress="return isNumberKey(event)">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- row 2 ends --}}
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-group">
                                                 <label for="name"><strong>Company Email <span class="text-danger">*</span></strong></label>
                                                 <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="enter company email">
                                             </div>
                                         </div>
                                     </div>
-                                    {{-- row 2 ends --}}
+                                    {{-- row 3 ends --}}
 
                                     <div class="row">
                                         <div class="col-12 text-center">
@@ -204,6 +214,7 @@
                     } else {
                         alert('Please enter a company phone number');
                     }
+                    return;
                 }
 
                 var phone = $('#phone').val();
@@ -213,6 +224,17 @@
                         Notiflix.Notify.failure('Your phone number must be exactly 10 digits');
                     } else {
                         alert('Your phone number must be exactly 10 digits');
+                    }
+                    return;
+                }
+
+                var tinNumber = $('#tin_number').val();
+                var numericTin = tinNumber.replace(/\D/g, '');
+                if (!tinNumber || numericTin.length !== 10) {
+                    if (typeof Notiflix !== 'undefined') {
+                        Notiflix.Notify.failure('TIN number must be exactly 10 digits');
+                    } else {
+                        alert('TIN number must be exactly 10 digits');
                     }
                     return;
                 }

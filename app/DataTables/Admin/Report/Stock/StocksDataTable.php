@@ -27,7 +27,7 @@ class StocksDataTable extends DataTable
             })
 
             ->addColumn('selling_total', function($row) {
-                return '<span class="btn btn-sm btn-primary">'
+                return '<span class="btn btn-sm btn-danger">'
                     .($row->invoicedetails_sum_selling_qty ?? 0).'</span>';
             })
 

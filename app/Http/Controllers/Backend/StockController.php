@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\DataTables\Admin\Report\Stock\DetailedStocksReportDataTable;
 use App\DataTables\Admin\Report\Stock\StocksDataTable;
+use App\DataTables\Admin\Report\Stock\StockValueReportDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
@@ -31,6 +32,15 @@ class StockController extends Controller
 
         return $dataTable->render('backend.stock.detailed_stock_report', compact('products', 'categories'));
     }
+
+
+    public function StockValue(StockValueReportDataTable $dataTable){
+        $products = Product::orderBy('name')->get();
+
+        return $dataTable->render('backend.stock.stock_value', compact('products'));
+
+    } // End Method
+
 
 
     public function StockReportPdf(){

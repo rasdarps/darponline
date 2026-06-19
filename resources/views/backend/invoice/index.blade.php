@@ -57,6 +57,15 @@
                                 <label>To Date</label>
                                 <input type="date" id="filter_to_date" class="form-control">
                             </div>
+                            <div class="col-md-3 mt-2">
+                                <label>Created By</label>
+                                <select id="filter_created_by" class="form-control">
+                                    <option value="">All Users</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Reset Filters Button -->
@@ -85,7 +94,7 @@
             let table = $('#allsales-table').DataTable();
 
             // Reload table when filters change
-            $('#filter_invoice_id, #filter_customer_id, #filter_from_date, #filter_to_date').on('change', function() {
+            $('#filter_invoice_id, #filter_customer_id, #filter_from_date, #filter_to_date, #filter_created_by').on('change', function() {
                 table.ajax.reload();
             });
 
@@ -95,6 +104,7 @@
                 $('#filter_customer_id').val('');
                 $('#filter_from_date').val('');
                 $('#filter_to_date').val('');
+                $('#filter_created_by').val('');
                 table.ajax.reload();
             });
 
@@ -104,16 +114,17 @@
                 data.customer_id = $('#filter_customer_id').val();
                 data.from_date = $('#filter_from_date').val();
                 data.to_date = $('#filter_to_date').val();
+                data.created_by = $('#filter_created_by').val();
             });
 
-            // ✅ Footer totals calculation for Amount column (index 3)
+            // ✅ Footer totals calculation for Amount column (index 4)
             table.on('draw.dt', function() {
                 let intVal = i => typeof i === 'string' ? i.replace(/[\$,]/g, '')*1 : (typeof i === 'number' ? i : 0);
 
-               let totalAmount = table.column(3, {page:'current'}).data()
+               let totalAmount = table.column(4, {page:'current'}).data()
                     .reduce((a, b) => intVal(a) + intVal(b), 0);
 
-                $(table.column(3).footer()).html('Gh¢ ' + totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $(table.column(4).footer()).html('Gh¢ ' + totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
 
             });
 

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CompanyController extends Controller
 {
@@ -49,6 +50,7 @@ class CompanyController extends Controller
             'address' => 'required|string|max:255,',
             'phone' => 'required|numeric|digits:10|unique:companies,phone',
             'email' => 'nullable|email|unique:companies,email',
+            'tin_number' => ['required', 'regex:/^\d{10}$/'],
         ], [
             'name.required' => 'Please enter a Company name',
             'name.unique' => 'This company already exists',
@@ -59,11 +61,21 @@ class CompanyController extends Controller
             'phone.numeric' => 'Phone number must be numeric',
             'email.email' => 'Please enter a valid Company email address',
             'email.unique' => 'This company email is already in use',
+            'tin_number.required' => 'Please enter a TIN number',
+            'tin_number.regex' => 'TIN number must be exactly 10 digits',
         ]);
+
+        $formattedTin = $this->formatTinNumber($validatedData['tin_number']);
+        if (Company::where('tin_number', $formattedTin)->exists()) {
+            throw ValidationException::withMessages([
+                'tin_number' => ['This company TIN number is already in use'],
+            ]);
+        }
 
         try {
             // Use only validated data and add created_by
             $data = $validatedData;
+            $data['tin_number'] = $formattedTin;
             $data['created_by'] = Auth::id();
             
             // Use a transaction to ensure data integrity
@@ -74,6 +86,7 @@ class CompanyController extends Controller
             return response()->json([
                 'status' => 200,
                 'message' => "Company '{$data['name']}' was successfully created",
+                'redirect' => route('companies.index'),
             ]);
 
         } catch(\Throwable $e) {
@@ -117,7 +130,76 @@ class CompanyController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        try {
+            $companyId = Crypt::decrypt($id);
+            $company = Company::find($companyId);
+
+            if (!$company) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Company not found.',
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Invalid company ID.',
+            ]);
+        }
+
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255|unique:companies,name,' . $companyId,
+            'address' => 'required|string|max:255',
+            'phone' => 'required|numeric|digits:10|unique:companies,phone,' . $companyId,
+            'email' => 'nullable|email|unique:companies,email,' . $companyId,
+            'tin_number' => ['required', 'regex:/^\d{10}$/'],
+        ], [
+            'name.required' => 'Please enter a Company name',
+            'name.unique' => 'This company already exists',
+            'address.required' => 'Please enter a Company address',
+            'phone.required' => 'Please enter a Company phone number',
+            'phone.unique' => 'This company phone number is already in use',
+            'phone.digits' => 'Phone number must be 10 digits',
+            'phone.numeric' => 'Phone number must be numeric',
+            'email.email' => 'Please enter a valid Company email address',
+            'email.unique' => 'This company email is already in use',
+            'tin_number.required' => 'Please enter a TIN number',
+            'tin_number.regex' => 'TIN number must be exactly 10 digits',
+        ]);
+
+        $formattedTin = $this->formatTinNumber($validatedData['tin_number']);
+        if (Company::where('tin_number', $formattedTin)->where('id', '!=', $companyId)->exists()) {
+            throw ValidationException::withMessages([
+                'tin_number' => ['This company TIN number is already in use'],
+            ]);
+        }
+
+        try {
+            DB::transaction(function () use ($company, $validatedData, $formattedTin) {
+                $company->update(array_merge($validatedData, [
+                    'tin_number' => $formattedTin,
+                    'updated_by' => Auth::id(),
+                ]));
+            });
+
+            return response()->json([
+                'status' => 200,
+                'message' => "Company '{$validatedData['name']}' was successfully updated",
+                'redirect' => route('companies.index'),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 400,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function formatTinNumber(string $tinNumber): string
+    {
+        $digits = preg_replace('/\D/', '', $tinNumber);
+        return 'GHA-' . substr($digits, 0, 9) . '-' . substr($digits, 9, 1);
     }
 
     /**
