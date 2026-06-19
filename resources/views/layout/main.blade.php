@@ -147,6 +147,73 @@
             table.dataTable tbody tr:hover {
                 background-color: #e9ecef !important;
             }
+
+            .header-quick-actions {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                gap: 10px;
+                z-index: 2;
+                flex-wrap: nowrap;
+            }
+
+            .header-quick-actions .quick-action-btn {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                color: #ffffff;
+                background: rgba(255, 255, 255, 0.14);
+                border: 1px solid rgba(255, 255, 255, 0.28);
+                transition: all 0.2s ease;
+                padding: 0;
+            }
+
+            .header-quick-actions .quick-action-btn:hover {
+                color: #ffffff;
+                background: rgba(255, 255, 255, 0.26);
+                transform: translateY(-1px);
+            }
+
+            @media (max-width: 1199.98px) {
+                .header-quick-actions {
+                    left: 54%;
+                    gap: 6px;
+                }
+
+                .header-quick-actions .quick-action-btn {
+                    width: 36px;
+                    height: 36px;
+                    font-size: 18px;
+                }
+            }
+
+            @media (max-width: 767.98px) {
+                .header-quick-actions {
+                    left: auto;
+                    right: 58px;
+                    transform: translateY(-50%);
+                    gap: 4px;
+                    max-width: 58vw;
+                    overflow-x: auto;
+                    scrollbar-width: none;
+                }
+
+                .header-quick-actions::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .header-quick-actions .quick-action-btn {
+                    width: 32px;
+                    height: 32px;
+                    font-size: 16px;
+                    flex: 0 0 auto;
+                }
+            }
         </style>
         
     </head>

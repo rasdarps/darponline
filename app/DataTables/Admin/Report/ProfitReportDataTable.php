@@ -5,6 +5,7 @@ namespace App\DataTables\Admin\Report;
 use App\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
@@ -22,6 +23,11 @@ class ProfitReportDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->addColumn('action', 'profitreport.action')
+             ->addColumn('edit_button', function($row) {
+                $printUrl = route('print.invoice', Crypt::encrypt($row->id));
+                
+                return '<a href="'.$printUrl.'" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+            })
 
             ->addColumn('customer_name', function($row) {
                 return $row->payment && $row->payment->customer
@@ -159,6 +165,8 @@ class ProfitReportDataTable extends DataTable
             Column::make('sales_total')->title('Net Sales (Gh¢)'),
             Column::make('cost_total')->title('COGS Latest Cost (Gh¢)'),
             Column::make('profit_total')->title('Profit (Gh¢)'),
+            Column::make('edit_button')->title('Actions')
+            ->searchable(false)->printable(false)->exportable(false),
         ];
     }
 

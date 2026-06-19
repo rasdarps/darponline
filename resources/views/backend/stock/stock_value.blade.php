@@ -26,7 +26,7 @@
                             <div class="col-md-4">
                                 <label for="product_name_search" class="form-label">Product Name</label>
                                 <div class="d-flex gap-2">
-                                    <select id="product_name_search" class="form-control">
+                                    <select id="product_name_search" class="form-control select2">
                                         <option value="">All Products</option>
                                         @foreach($products as $product)
                                             <option value="{{ $product->name }}">{{ $product->name }}</option>

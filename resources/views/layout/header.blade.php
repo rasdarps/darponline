@@ -1,5 +1,5 @@
   <header id="page-topbar">
-                <div class="navbar-header" style="background-color:#034141">
+                <div class="navbar-header" style="background-color:#034141; position: relative;">
                     <div class="d-flex">
                         <!-- LOGO -->
                         <div class="navbar-brand-box">
@@ -26,13 +26,41 @@
         <i class="ri-menu-2-line align-middle"></i>
     </button>
 
+    <div class="header-quick-actions d-flex align-items-center">
+        <a href="{{ route('dashboard') }}" class="btn quick-action-btn header-item waves-effect" title="Dashboard">
+            <i class="ri-home-4-line align-middle"></i>
+        </a>
+        <a href="{{ route('invoices.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Sale">
+            <i class="ri-shopping-cart-2-line align-middle"></i>
+        </a>
+        <a href="{{ route('purchases.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Purchase">
+            <i class="ri-add-circle-line align-middle"></i>
+        </a>
+        <a href="{{ route('invoices.index') }}" class="btn quick-action-btn header-item waves-effect" title="View Sales">
+            <i class="ri-file-list-3-line align-middle"></i>
+        </a>
+        <a href="{{ route('purchases.index') }}" class="btn quick-action-btn header-item waves-effect" title="View Purchases">
+            <i class="ri-archive-line align-middle"></i>
+        </a>
+        <a href="{{ route('product-prices.index') }}" class="btn quick-action-btn header-item waves-effect" title="View Price">
+            <i class="ri-price-tag-3-line align-middle"></i>
+        </a>
+        <a href="{{ route('stock.report') }}" class="btn quick-action-btn header-item waves-effect" title="View Stock Report">
+            <i class="ri-bar-chart-box-line align-middle"></i>
+        </a>
+        <a href="{{ route('admin.logout') }}" class="btn quick-action-btn header-item waves-effect" title="Logout">
+            <i class="ri-logout-box-r-line align-middle"></i>
+        </a>
+    </div>
+
     <!-- App Search-->
-    <form class="app-search d-none d-lg-block">
+    {{-- <form class="app-search d-none d-lg-block">
         <div class="position-relative">
             <input type="text" class="form-control" placeholder="Search...">
             <span class="ri-search-line"></span>
         </div>
-    </form>
+    </form> --}}
+    
 
     
 </div>
@@ -76,4 +104,5 @@
             
                     </div>
                 </div>
+
             </header>

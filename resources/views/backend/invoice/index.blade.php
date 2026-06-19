@@ -42,7 +42,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label>Customer Name</label>
-                                <select id="filter_customer_id" class="form-control">
+                                <select id="filter_customer_id" class="form-control select2">
                                     <option value="">All Customers</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}">{{ $customer->name }}</option>
