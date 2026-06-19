@@ -16,33 +16,47 @@ class ShopCartController extends Controller
      */
     public function index()
     {
+       
+        
         $cartItems = Cart::content();
-        $subtotal = Cart::subtotal();
-        $total = Cart::total();
-        $cartCount = Cart::count();
-        $cartItems = [];
+        $cartItemsWithProducts = [];
         $subtotal = 0;
         
-        // foreach ($cart as $item) {
-        //     $product = Product::find($item['product_id']);
-        //     if ($product) {
-        //         $item['product'] = $product;
-        //         $item['total'] = $item['price'] * $item['quantity'];
-        //         $cartItems[] = $item;
-        //         $subtotal += $item['total'];
-        //     }
-        // }
+        // Fetch fresh product data for each cart item
+        foreach ($cartItems as $item) {
+            $product = Product::find($item->id);
+            
+            if ($product) {
+                // Update the cart item with fresh product data
+                $cartItemsWithProducts[] = [
+                    'rowId' => $item->rowId,
+                    'id' => Crypt::encrypt($product->id),
+                    'name' => $product->name,
+                    'price' => $product->selling_price ?? 0,
+                    'qty' => $item->qty,
+                    'subtotal' => ($product->selling_price ?? 0) * $item->qty,
+                    'product' => $product,
+                    'options' => $item->options,
+                ];
+                
+                $subtotal += ($product->selling_price ?? 0) * $item->qty;
+            }
+        }
         
+        $total = $subtotal;
+        $cartCount = Cart::count();
+        
+        // Get coupon from session if exists
         $coupon = Session::get('coupon', null);
         $discount = 0;
-        $total = $subtotal;
         
         if ($coupon) {
             $discount = $this->calculateDiscount($subtotal, $coupon);
             $total = $subtotal - $discount;
         }
+
         
-        return view('shop.cart', compact('cartItems', 'subtotal', 'discount', 'total', 'coupon'));
+        return view('client.cart_page', compact('cartItemsWithProducts', 'subtotal', 'discount', 'total', 'coupon', 'cartCount'));
     }
     
     /**
@@ -129,9 +143,7 @@ class ShopCartController extends Controller
                     [
                         'product_slug' => $product->slug,
                         'sku' => $product->sku,
-                        'image' => $product->getFirstMedia('featured_image')->getUrl('thumb'),
                         'max_quantity' => $product->quantity,
-                        'weight' => $product->weight ?? 0,
                     ]
                 );
             }
@@ -139,6 +151,17 @@ class ShopCartController extends Controller
             // Remove coupon if cart changed
             Session::forget('coupon');
             
+            // Get fresh totals from database
+            $subtotal = $this->getCartSubtotalFromDB();
+            $total = $subtotal;
+            $discount = 0;
+
+            if (Session::has('coupon')) {
+                $coupon = Session::get('coupon');
+                $discount = $this->calculateDiscount($subtotal, $coupon);
+                $total = $subtotal - $discount;
+            }
+                        
             return response()->json([
                 'status' => 'success',
                 'message' => 'Product added to cart successfully',
@@ -206,18 +229,26 @@ class ShopCartController extends Controller
             // Update quantity
             Cart::update($rowId, $validated['quantity']);
             
-            // Get updated cart info
-            $item = Cart::get($rowId);
-            $itemTotal = $item->selling_price * $item->qty;
-            $subtotal = Cart::total();
+            // Get fresh totals from database
+            $itemTotal = ($product->selling_price ?? 0) * $validated['quantity'];
+            $subtotal = $this->getCartSubtotalFromDB();
+            $total = $subtotal;
+            $discount = 0;
+
+            if (Session::has('coupon')) {
+                $coupon = Session::get('coupon');
+                $discount = $this->calculateDiscount($subtotal, $coupon);
+                $total = $subtotal - $discount;
+            }
             
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cart updated successfully',
                 'item_total' => number_format($itemTotal, 2),
                 'subtotal' => number_format($subtotal, 2),
-                'cart_count' => Cart::count(),
-                'cart_total' => number_format($this->getCartTotalAfterDiscount(), 2)
+                'discount' => number_format($discount, 2),
+                'cart_total' => number_format($total, 2),
+                'cart_count' => Cart::count()
             ]);
             
         } catch (\Exception $e) {
@@ -227,6 +258,25 @@ class ShopCartController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get cart subtotal from database (fresh prices)
+     */
+    private function getCartSubtotalFromDB()
+    {
+        $subtotal = 0;
+        $cartItems = Cart::content();
+        
+        foreach ($cartItems as $item) {
+            $product = Product::find($item->id);
+            if ($product) {
+                $subtotal += ($product->selling_price ?? 0) * $item->qty;
+            }
+        }
+        
+        return $subtotal;
+    }
+
     /**
      * Remove item from cart
      */
@@ -409,29 +459,67 @@ class ShopCartController extends Controller
      */
     public function getItems()
     {
-        $items = Cart::content();
-        $itemsArray = [];
-        
-        foreach ($items as $item) {
-            $itemsArray[] = [
-                'rowId' => $item->rowId,
-                'id' => $item->id,
-                'name' => $item->name,
-                'qty' => $item->qty,
-                'price' => $item->price,
-                'options' => $item->options,
-                'subtotal' => $item->price * $item->qty,
-            ];
+        try {
+            $cartItems = Cart::content();
+            $itemsArray = [];
+            $subtotal = 0;
+            
+            foreach ($cartItems as $item) {
+                $product = Product::find($item->id);
+                
+                if ($product) {
+
+                    $imageUrl = $product->hasMedia('featured_image') ? $product->getFirstMedia('featured_image')->getUrl('thumb') : asset('client/shop/files/default_product_image.png');
+
+                    $price = $product->selling_price ?? 0;
+                    $subtotal += $price * $item->qty;
+                    
+                    $itemsArray[] = [
+                        'rowId' => $item->rowId,
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'qty' => $item->qty,
+                        'price' => number_format($price, 2),
+                        'subtotal' => number_format($price * $item->qty, 2),
+                        'product_slug' => $product->slug,
+                        'sku' => $product->sku,
+                        'image' => $imageUrl,
+                        'stock_quantity' => $product->stock_quantity,
+                        'max_quantity' => $product->stock_quantity,
+                    ];
+                }
+            }
+            
+            $discount = 0;
+            $total = $subtotal;
+            
+            if (Session::has('coupon')) {
+                $coupon = Session::get('coupon');
+                $discount = $this->calculateDiscount($subtotal, $coupon);
+                $total = $subtotal - $discount;
+            }
+            
+            return response()->json([
+                'status' => 'success',
+                'items' => $itemsArray,
+                'count' => Cart::count(),
+                'subtotal' => number_format($subtotal, 2),
+                'discount' => number_format($discount, 2),
+                'total' => number_format($total, 2),
+                'has_coupon' => Session::has('coupon'),
+                'coupon' => Session::get('coupon', null),
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Cart items error: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get cart items'
+            ], 500);
         }
-        
-        return response()->json([
-            'status' => 'success',
-            'items' => $itemsArray,
-            'count' => Cart::count(),
-            'total' => $this->getCartTotalAfterDiscount(),
-            'subtotal' => Cart::total()
-        ]);
     }
+
     
 
               /**
@@ -447,7 +535,7 @@ class ShopCartController extends Controller
             
             foreach ($items as $item) {
                 $product = Product::find($item->id);
-                $imageUrl = $product ? $product->featured_image_url : asset('images/default-product.jpg');
+                $imageUrl = $product->hasMedia('featured_image') ? $product->getFirstMedia('featured_image')->getUrl('thumb') : asset('client/shop/files/default_product_image.png');
                 
                 $itemsArray[] = [
                     'rowId' => $item->rowId,
@@ -474,7 +562,6 @@ class ShopCartController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Cart summary error: ' . $e->getMessage());
             
             return response()->json([
                 'status' => 'error',
@@ -525,7 +612,7 @@ class ShopCartController extends Controller
      */
     private function getCartTotalAfterDiscount()
     {
-        $subtotal = Cart::total();
+        $subtotal = $this->getCartSubtotalFromDB();
         $coupon = Session::get('coupon', null);
         if ($coupon) {
             $discount = $this->calculateDiscount($subtotal, $coupon);

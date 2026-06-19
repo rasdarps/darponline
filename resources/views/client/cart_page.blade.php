@@ -291,7 +291,6 @@
 
 @section('content')
     <div id="shopify-section-template--14758548865142__main" class="shopify-section">
-        <!-- PAGE SECTION START -->
         <div class="cart-page theme-default-margin">
             <div class="container">
                 @if(Cart::count() > 0)
@@ -302,54 +301,50 @@
                                 <div class="cart-table table-responsive mb-40">
                                     <table>
                                         <tbody id="cartItemsContainer">
-                                            @foreach(Cart::content() as $item)
-                                                <tr id="cart-row-{{ $item->rowId }}">
+                                            @foreach($cartItemsWithProducts as $item)
+                                                <tr id="cart-row-{{ $item['rowId'] }}">
                                                     <td class="pro-thumbnail">
-                                                        <a href="{{ route('shop.product.details', $item->options->product_slug ?? '#') }}">
-                                                            <img src="{{ $item->options->image ?? asset('images/default-product.jpg') }}" 
-                                                                alt="{{ $item->name }}" 
+                                                        <a href="{{ route('shop.product.details', $item['options']['product_slug'] ?? '#') }}">
+                                                            <img src="{{ $item['product']->featured_image_url }}" 
+                                                                alt="{{ $item['name'] }}" 
                                                                 loading="lazy" />
                                                         </a>
                                                     </td>
                                                     <td class="pro-title">
-                                                        <a href="{{ route('shop.product.details', $item->options->product_slug ?? '#') }}">
-                                                            {{ $item->name }}
+                                                        <a href="{{ route('shop.product.details', $item['options']['product_slug'] ?? '#') }}">
+                                                            {{ $item['name'] }}
                                                         </a>
-                                                        @if($item->options->variant ?? false)
-                                                            <br><small class="text-muted">{{ $item->options->variant }}</small>
+                                                        @if($item['options']['sku'] ?? false)
+                                                            <br><small class="text-muted">SKU: {{ $item['options']['sku'] }}</small>
                                                         @endif
                                                     </td>
                                                     <td class="pro-price">
                                                         <span class="amount">
-                                                            <span class="money">${{ number_format($item->price, 2) }}</span>
+                                                            <span class="money">${{ number_format($item['price'], 2) }}</span>
                                                         </span>
                                                     </td>
                                                     <td class="pro-quantity cart-product-quantity">
                                                         <div class="product-quantity cart-plus-minus quantity">
                                                             <div class="cart-plus-minus-box-wrapper">
-                                                                <button type="button" class="qtybutton dec" onclick="updateCartQuantity('{{ $item->rowId }}', -1, '{{ $item->id }}')">
-                                                                    <i class="fas fa-minus"></i>
-                                                                </button>
+                                                               
                                                                 <input class="cart-plus-minus-box" 
                                                                     type="text" 
-                                                                    value="{{ $item->qty }}" 
+                                                                    value="{{ $item['qty'] }}" 
                                                                     name="updates[]" 
-                                                                    id="qty-{{ $item->rowId }}"
+                                                                    id="qty-{{ $item['rowId'] }}"
                                                                     min="1" 
-                                                                    max="{{ $item->options->max_quantity ?? 999 }}"
-                                                                    data-rowid="{{ $item->rowId }}"
-                                                                    data-productid="{{ $item->id }}">
-                                                                <button type="button" class="qtybutton inc" onclick="updateCartQuantity('{{ $item->rowId }}', 1, '{{ $item->id }}')">
-                                                                    <i class="fas fa-plus"></i>
-                                                                </button>
+                                                                    max="{{ $item['options']['max_quantity'] ?? 999 }}"
+                                                                    data-rowid="{{ $item['rowId'] }}"
+                                                                    data-productid="{{ $item['id'] }}">
+                                                                
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td class="pro-subtotal" id="subtotal-{{ $item->rowId }}">
-                                                        <span class="money">${{ number_format($item->price * $item->qty, 2) }}</span>
+                                                    <td class="pro-subtotal" id="subtotal-{{ $item['rowId'] }}">
+                                                        <span class="money">${{ number_format($item['subtotal'], 2) }}</span>
                                                     </td>
                                                     <td class="pro-remove">
-                                                        <a href="javascript:void(0);" onclick="removeFromCart('{{ $item->id }}')">×</a>
+                                                        <a href="javascript:void(0);" onclick="removeFromCart('{{ $item['id'] }}')">×</a>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -400,7 +395,7 @@
                                                             <td>
                                                                 <span class="amount">
                                                                     <span id="cart-subtotal">
-                                                                        <span class="money">${{ number_format(Cart::total(), 2) }}</span>
+                                                                        <span class="money">${{ number_format($subtotal, 2) }}</span>
                                                                     </span>
                                                                 </span>
                                                             </td>
@@ -410,7 +405,7 @@
                                                                 <th>Discount ({{ Session::get('coupon.code') }})</th>
                                                                 <td>
                                                                     <span class="amount text-success">
-                                                                        -$<span id="cart-discount">{{ number_format($discount ?? 0, 2) }}</span>
+                                                                        -$<span id="cart-discount">{{ number_format($discount, 2) }}</span>
                                                                     </span>
                                                                     <button type="button" class="btn btn-sm btn-danger ml-2" onclick="removeCoupon()">
                                                                         <i class="fas fa-times"></i>
@@ -424,7 +419,7 @@
                                                                 <strong>
                                                                     <span class="amount">
                                                                         <span id="cart-total">
-                                                                            <span class="money">${{ number_format($total ?? Cart::total(), 2) }}</span>
+                                                                            <span class="money">${{ number_format($total, 2) }}</span>
                                                                         </span>
                                                                     </span>
                                                                 </strong>
@@ -432,11 +427,11 @@
                                                         </tr>
                                                     </tbody>
                                                 </table>
-                                                <div class="proceed-to-checkout">
+                                                {{-- <div class="proceed-to-checkout">
                                                     <a href="{{ route('checkout.guest') }}" class="theme-default-button">
                                                         Proceed to Checkout <i class="fas fa-arrow-right"></i>
                                                     </a>
-                                                </div>
+                                                </div> --}}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +455,6 @@
                 @endif
             </div>
         </div>
-        <!-- PAGE SECTION END -->
     </div>
 
     <div id="shopify-section-template--14758548865142__474a1338-1821-4778-a604-18dfa0ef27ea" class="shopify-section">
@@ -488,19 +482,36 @@
                                     <a href="{{ route('shop.product.details', $product->slug) }}" 
                                     class="image-position-wrapper primary_img" 
                                     style="padding-bottom: 100.0%;">
-                                        <img src="{{ $product->featured_image_url }}" 
-                                            alt="{{ $product->name }}" 
-                                            loading="lazy" 
-                                            class="image-position-size">
+
+                                    @if($product->hasMedia('featured_image'));
+
+                                            {{ $product->getFirstMedia('featured_image')->img('uniform')->attributes([
+                                                'class' => 'image-position-size',
+                                                'width' => '600',
+                                                'height' => '600',
+                                                'alt' => $product->name,
+                                                'loading' => 'lazy',
+                                                ]) 
+                                            }}
+                                    @else
+                                        <img class="image-position-size popup_cart_image" width="600" height="600" alt="{{$product->name}}" loading="lazy"sizes="18vw"
+                                        src="{{asset('client/shop/files/default_product_image.png')}}">
+                                    @endif
+                                        
                                     </a>
-                                    @if($product->gallery_images && $product->gallery_images->count() > 0)
+                                    @if($product->hasMedia('gallery_images'))
                                         <a href="{{ route('shop.product.details', $product->slug) }}" 
                                         class="image-position-wrapper secondary_img" 
                                         style="padding-bottom: 100.0%;">
-                                            <img src="{{ $product->gallery_images->first()['url'] }}" 
-                                                alt="{{ $product->name }}" 
-                                                loading="lazy" 
-                                                class="image-position-size">
+
+                                        {!! $product->getMedia('gallery_images')->first()->img('uniform')->attributes([
+                                                    'class' => 'image-position-size popup_cart_image',
+                                                    'width' => '600',
+                                                    'height' => '600',
+                                                    'alt' => $product->name,
+                                                    'loading' => 'lazy',
+                                                ]) !!}
+                                            
                                         </a>
                                     @endif
                                     <div class="product-badge">
@@ -556,7 +567,7 @@
             Notiflix.Loading.pulse('Updating cart...');
             
             $.ajax({
-                url: '{{ route("cart.update") }}',
+                url: '{{ route("shop.cart.update") }}',
                 type: 'PUT',
                 data: {
                     product_id: productId,
@@ -599,7 +610,7 @@
                     Notiflix.Loading.pulse('Removing item...');
                     
                     $.ajax({
-                        url: '{{ route("cart.remove") }}',
+                        url: '{{ route("shop.cart.remove") }}',
                         type: 'DELETE',
                         data: {
                             product_id: productId,
@@ -634,7 +645,7 @@
                     Notiflix.Loading.pulse('Clearing cart...');
                     
                     $.ajax({
-                        url: '{{ route("cart.clear") }}',
+                        url: '{{ route("shop.cart.clear") }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}'
@@ -669,7 +680,7 @@
             Notiflix.Loading.pulse('Applying coupon...');
             
             $.ajax({
-                url: '{{ route("cart.coupon.apply") }}',
+                url: '{{ route("shop.cart.coupon.apply") }}',
                 type: 'POST',
                 data: {
                     code: couponCode,
@@ -706,7 +717,7 @@
                     Notiflix.Loading.pulse('Removing coupon...');
                     
                     $.ajax({
-                        url: '{{ route("cart.coupon.remove") }}',
+                        url: '{{ route("shop.cart.coupon.remove") }}',
                         type: 'DELETE',
                         data: {
                             _token: '{{ csrf_token() }}'
@@ -732,11 +743,16 @@
         // Update cart count in header
         function updateCartCount() {
             $.ajax({
-                url: '{{ route("cart.count") }}',
+                url: '{{ route("shop.cart.count") }}',
                 type: 'GET',
                 success: function(response) {
                     if (response.count !== undefined) {
-                        $('.cart-count').text(response.count);
+
+                        
+                        document.querySelectorAll('[data-cart="count"]').forEach(element => {
+                            element.textContent = response.count;
+                        });
+                    
                     }
                 }
             });
@@ -751,6 +767,8 @@
             var maxVal = parseInt(input.attr('max')) || 999;
             var minVal = parseInt(input.attr('min')) || 1;
             
+            console.log(productId);
+            
             // Validate and correct value
             if (newVal < minVal) {
                 input.val(minVal);
@@ -762,10 +780,10 @@
             }
             
             // Update cart
-            Notiflix.Loading.pulse('Updating cart...');
+            // Notiflix.Loading.pulse('Updating cart...');
             
             $.ajax({
-                url: '{{ route("cart.update") }}',
+                url: '{{ route("shop.cart.update") }}',
                 type: 'PUT',
                 data: {
                     product_id: productId,
@@ -773,7 +791,7 @@
                     _token: '{{ csrf_token() }}'
                 },
                 success: function(response) {
-                    Notiflix.Loading.remove();
+                    // Notiflix.Loading.remove();
                     if (response.status === 'success') {
                         $('#subtotal-' + rowId + ' .money').text('$' + response.item_total);
                         $('#cart-subtotal .money').text('$' + response.subtotal);
@@ -786,7 +804,7 @@
                     }
                 },
                 error: function() {
-                    Notiflix.Loading.remove();
+                    // Notiflix.Loading.remove();
                     Notiflix.Notify.failure('Failed to update cart');
                 }
             });

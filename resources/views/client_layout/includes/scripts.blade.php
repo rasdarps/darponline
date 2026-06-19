@@ -552,6 +552,8 @@ function refreshMiniCart() {
         type: 'GET',
         success: function(response) {
             if (response.status === 'success' && response.items) {
+
+                
                 // Clear existing items
                 $('#miniCartItems .mini-cart-item').remove();
                 
@@ -561,8 +563,8 @@ function refreshMiniCart() {
                     itemsHtml += `
                         <div class="mini-cart-item clearfix" id="mini-cart-item-${item.rowId}">
                             <div class="mini-cart-img">
-                                <a href="${item.options.product_slug ? '/shop/product/' + item.options.product_slug : '#'}">
-                                    <img src="${item.options.image || '/images/default-product.jpg'}" alt="${item.name}">
+                                <a href="${item.product_slug ? '/shop/product/' + item.product_slug : '#'}">
+                                    <img src="${item.image || '/images/default-product.jpg'}" alt="${item.name}">
                                 </a>
                                 <span onclick="removeFromCartMini('${item.id}', '${item.rowId}')" class="mini-cart-item-delete">
                                     <i class="icon-cancel"></i>
@@ -570,13 +572,13 @@ function refreshMiniCart() {
                             </div>
                             <div class="mini-cart-info">
                                 <h6>
-                                    <a href="${item.options.product_slug ? '/shop/product/' + item.options.product_slug : '#'}">
+                                    <a href="${item.product_slug ? '/shop/product/' + item.product_slug : '#'}">
                                         ${item.name}
-                                        ${item.options.variant ? ' - ' + item.options.variant : ''}
+                                        ${item.variant ? ' - ' + item.variant : ''}
                                     </a>
                                 </h6>
                                 <span class="mini-cart-quantity">
-                                    ${item.qty} x GH₵${parseFloat(item.price).toFixed(2)}
+                                    ${item.qty} x GH₵${item.price}
                                 </span>
                             </div>
                         </div>
