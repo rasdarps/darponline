@@ -5,7 +5,6 @@ namespace App\DataTables\Admin\Report;
 use App\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
@@ -23,11 +22,6 @@ class ProfitReportDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->addColumn('action', 'profitreport.action')
-             ->addColumn('edit_button', function($row) {
-                $printUrl = route('print.invoice', Crypt::encrypt($row->id));
-                
-                return '<a href="'.$printUrl.'" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
-            })
 
             ->addColumn('customer_name', function($row) {
                 return $row->payment && $row->payment->customer
@@ -37,6 +31,10 @@ class ProfitReportDataTable extends DataTable
 
             ->addColumn('created_by_name', function($row) {
                 return $row->createdBy ? $row->createdBy->name : '';
+            })
+
+            ->addColumn('cancelled_by_name', function($row) {
+                return $row->cancelledBy ? $row->cancelledBy->name : '';
             })
 
             ->addColumn('sales_total', function($row) {
@@ -49,6 +47,14 @@ class ProfitReportDataTable extends DataTable
 
             ->addColumn('profit_total', function($row) {
                 return number_format((float) ($row->profit_total ?? 0), 2);
+            })
+
+            ->addColumn('cancelled_status', function($row) {
+                if ($row->cancelled_at) {
+                    return '<span class="badge bg-danger" title="' . e($row->cancellation_reason) . '">Cancelled</span>';
+                }
+
+                return '<span class="badge bg-success">Active</span>';
             })
 
              ->editColumn('date', function($row)
@@ -67,7 +73,7 @@ class ProfitReportDataTable extends DataTable
             })
 
             
-            ->rawColumns(['sales_total','cost_total','profit_total','edit_button'])
+            ->rawColumns(['sales_total','cost_total','profit_total','cancelled_status'])
             ->setRowId('id');
     }
 
@@ -105,7 +111,7 @@ class ProfitReportDataTable extends DataTable
                 DB::raw('COALESCE(costs.cost_total, 0) as cost_total'),
                 DB::raw('(COALESCE(sales.sales_total, 0) - COALESCE(costs.cost_total, 0)) as profit_total')
             )
-            ->with(['payment.customer', 'createdBy'])
+            ->with(['payment.customer', 'createdBy', 'cancelledBy'])
             ->orderBy('date', 'desc');
 
             // Apply filters
@@ -161,15 +167,29 @@ class ProfitReportDataTable extends DataTable
                             return 0;
                         };
 
-                        var totalSales = api.column(4, { page: "current" }).data().reduce(function (a, b) {
+                        var resolveIndex = function (columnDataName) {
+                            return api.columns().indexes().toArray().find(function (idx) {
+                                return (api.settings()[0].aoColumns[idx] || {}).data === columnDataName;
+                            });
+                        };
+
+                        var salesColIndex = resolveIndex("sales_total");
+                        var costColIndex = resolveIndex("cost_total");
+                        var profitColIndex = resolveIndex("profit_total");
+
+                        if (typeof salesColIndex === "undefined" || typeof costColIndex === "undefined" || typeof profitColIndex === "undefined") {
+                            return;
+                        }
+
+                        var totalSales = api.column(salesColIndex, { page: "current" }).data().reduce(function (a, b) {
                             return intVal(a) + intVal(b);
                         }, 0);
 
-                        var totalCost = api.column(5, { page: "current" }).data().reduce(function (a, b) {
+                        var totalCost = api.column(costColIndex, { page: "current" }).data().reduce(function (a, b) {
                             return intVal(a) + intVal(b);
                         }, 0);
 
-                        var totalProfit = api.column(6, { page: "current" }).data().reduce(function (a, b) {
+                        var totalProfit = api.column(profitColIndex, { page: "current" }).data().reduce(function (a, b) {
                             return intVal(a) + intVal(b);
                         }, 0);
 
@@ -180,9 +200,9 @@ class ProfitReportDataTable extends DataTable
                             });
                         };
 
-                        $(api.column(4).footer()).html(formatValue(totalSales));
-                        $(api.column(5).footer()).html(formatValue(totalCost));
-                        $(api.column(6).footer()).html(formatValue(totalProfit));
+                        $(api.column(salesColIndex).footer()).html(formatValue(totalSales));
+                        $(api.column(costColIndex).footer()).html(formatValue(totalCost));
+                        $(api.column(profitColIndex).footer()).html(formatValue(totalProfit));
                     }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
@@ -205,12 +225,15 @@ class ProfitReportDataTable extends DataTable
             Column::make('date'),
             Column::make('invoice_no'),
             Column::make('customer_name')->title('Customer Name'),
-            Column::make('created_by_name')->title('Created By'),
             Column::make('sales_total')->title('Net Sales (Gh¢)'),
             Column::make('cost_total')->title('COGS Latest Cost (Gh¢)'),
             Column::make('profit_total')->title('Profit (Gh¢)'),
-            Column::make('edit_button')->title('Actions')
-            ->searchable(false)->printable(false)->exportable(false),
+            Column::make('cancelled_status')->title('Status')
+            ->searchable(true)->printable(true)->exportable(true),
+            Column::make('created_by_name')->title('Created By'),
+            Column::make('cancelled_by_name')->title('Cancelled By')
+            ->searchable(true)->printable(true)->exportable(true),
+         
         ];
     }
 

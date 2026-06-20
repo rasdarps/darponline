@@ -228,32 +228,90 @@ class PurchaseController extends Controller
     }
 
 
-    public function destroy($encryptedId){
+    public function destroy(){
+        
+    }// End Method
+
+    public function cancel(Request $request, $encryptedId)
+    {
         try {
             $id = Crypt::decrypt($encryptedId);
-            $purchase = Purchase::findOrFail($id);
-            
-            DB::transaction(function() use($purchase){
-                PurchaseDetail::where('purchase_id',$purchase->id)->delete(); 
-                PurchasePayment::where('purchase_id',$purchase->id)->delete(); 
-                PurchasePaymentDetail::where('purchase_id',$purchase->id)->delete(); 
-                $purchase->delete();
+            $purchase = Purchase::with('purchase_details')->findOrFail($id);
+
+            if ($purchase->cancelled_at) {
+                return response()->json([
+                    'status' => 422,
+                    'message' => 'Purchase #' . $purchase->purchase_no . ' is already cancelled.',
+                ], 422);
+            }
+
+            $validated = $request->validate([
+                'reason' => 'required|string|max:500',
+            ], [
+                'reason.required' => 'Please provide a reason for cancellation.',
+            ]);
+
+            DB::transaction(function () use ($purchase, $validated) {
+                // Reverse stock-in for every line item. If stock has been consumed, block cancellation.
+                foreach ($purchase->purchase_details as $detail) {
+                    $product = Product::find($detail->product_id);
+                    if ($product) {
+                        $newQty = ((float) $product->quantity) - ((float) $detail->buying_qty);
+                        if ($newQty < 0) {
+                            throw ValidationException::withMessages([
+                                'reason' => ['Cannot cancel this purchase because some purchased stock has already been used/sold.'],
+                            ]);
+                        }
+                        $product->quantity = $newQty;
+                        $product->save();
+                    }
+                }
+
+                // Zero-out line values so cancelled purchase does not affect quantity/value reporting
+                PurchaseDetail::where('purchase_id', $purchase->id)->update([
+                    'buying_qty' => 0,
+                    'unit_cost_price' => 0,
+                    'buying_price' => 0,
+                ]);
+
+                // Zero-out payment values so cancelled purchase does not affect financial totals
+                PurchasePayment::where('purchase_id', $purchase->id)->update([
+                    'paid_status' => 'full_paid',
+                    'paid_amount' => 0,
+                    'due_amount' => 0,
+                    'total_amount' => 0,
+                    'discount_amount' => 0,
+                ]);
+
+                // Zero-out payment detail entries tied to this purchase
+                PurchasePaymentDetail::where('purchase_id', $purchase->id)->update([
+                    'current_paid_amount' => 0,
+                ]);
+
+                // Stamp cancellation on the purchase
+                $purchase->update([
+                    'cancelled_at'        => now(),
+                    'cancelled_by'        => Auth::id(),
+                    'cancellation_reason' => $validated['reason'],
+                ]);
             });
 
-             $notification = array(
-            'message' => 'Purchase Deleted Successfully', 
-            'alert-type' => 'success'
-        );
-        return redirect()->back()->with($notification); 
-
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Purchase #' . $purchase->purchase_no . ' has been cancelled successfully.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status'  => 422,
+                'message' => collect($e->errors())->flatten()->first(),
+            ], 422);
         } catch (\Exception $e) {
-            $notification = array(
-                'message' => 'Invalid purchase ID', 
-                'alert-type' => 'error'
-            );
-            return redirect()->back()->with($notification);
+            return response()->json([
+                'status'  => 400,
+                'message' => 'Failed to cancel purchase.',
+            ], 400);
         }
-    }// End Method
+    } // End Method
 
 
     public function PrintPurchaseList(){

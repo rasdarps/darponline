@@ -56,7 +56,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3 d-flex align-items-end mt-3">
-                                <button id="reset_filters" class="btn btn-danger w-100">Reset Filters</button>
+                                <button id="reset_filters" class="btn btn-dark w-100">Reset Filters</button>
                             </div>
                         </div>
 

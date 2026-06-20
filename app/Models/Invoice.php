@@ -17,14 +17,17 @@ class Invoice extends Model
         'date', 
         'description',
         'sales_source',
-        'status',
+        'cancelled_at',
+        'cancelled_by',
+        'cancellation_reason',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'date' => 'date',
-        'status' => 'integer',
+        'cancelled_at' => 'datetime',
+        'cancelled_by' => 'integer',
         'created_by' => 'integer',
         'updated_by' => 'integer',
         'deleted_by' => 'integer',
@@ -44,6 +47,11 @@ class Invoice extends Model
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     // Existing relationships

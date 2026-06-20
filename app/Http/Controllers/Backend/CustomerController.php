@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -38,9 +39,9 @@ class CustomerController extends Controller
 
     public function store(Request $request){
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:customers,name',
-            'mobile_no' => 'required|string|max:15|unique:customers,mobile_no',
-            'email' => 'nullable|email|max:255|unique:customers,email',
+            'name' => ['required', 'string', 'max:255', Rule::unique('customers', 'name')->whereNull('deleted_at')],
+            'mobile_no' => ['required', 'string', 'max:15', Rule::unique('customers', 'mobile_no')->whereNull('deleted_at')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('customers', 'email')->whereNull('deleted_at')],
             'address' => 'nullable|string|max:500',
         ], [
             'name.required' => 'Please enter a customer name',
@@ -174,29 +175,56 @@ class CustomerController extends Controller
         try {
             $id = Crypt::decrypt($encryptedId);
             $customer = Customer::find($id);
-            
+
             if (!$customer) {
-                return response()->json([
-                    'status' => 404,
-                    'message' => 'Customer not found.',
-                ]);
+                $message = 'Customer not found.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json(['status' => 404, 'message' => $message], 404);
+                }
+                return redirect()->route('customers.index')->with(['message' => $message, 'alert-type' => 'error']);
             }
-            
+
+            if ($customer->payments()->count() > 0) {
+                $message = 'Cannot delete customer with associated invoice or payment records.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json(['status' => 422, 'message' => $message], 422);
+                }
+                return redirect()->route('customers.index')->with(['message' => $message, 'alert-type' => 'error']);
+            }
+
             $customerName = $customer->name;
-            
+
             DB::transaction(function () use ($customer) {
                 $customer->delete();
             });
-            
-            return response()->json([
-                'status' => 200,
-                'message' => "Customer '{$customerName}' was successfully deleted.",
+
+            $message = "Customer '{$customerName}' was successfully deleted.";
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 200,
+                    'message' => $message,
+                ]);
+            }
+
+            return redirect()->route('customers.index')->with([
+                'message' => $message,
+                'alert-type' => 'success',
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 400,
-                'message' => 'Invalid customer ID.',
+            $message = 'Failed to delete customer.';
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => $message,
+                ], 400);
+            }
+
+            return redirect()->route('customers.index')->with([
+                'message' => $message,
+                'alert-type' => 'error',
             ]);
         }
     } // End Method

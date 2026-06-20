@@ -72,7 +72,7 @@
                                 <input type="date" id="filter_to_date" class="form-control">
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
-                                <button id="reset_filters" class="btn btn-danger w-100">Reset Filters</button>
+                                <button id="reset_filters" class="btn btn-dark w-100">Reset Filters</button>
                             </div>
                         </div>
 

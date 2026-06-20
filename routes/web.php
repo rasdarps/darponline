@@ -197,6 +197,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/edit/{id}', [PurchaseController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [PurchaseController::class, 'update'])->name('update');
                 Route::delete('/destroy/{id}', [PurchaseController::class, 'destroy'])->name('destroy');
+                Route::post('/cancel/{id}', [PurchaseController::class, 'cancel'])->name('cancel');
             
             });
 
@@ -226,21 +227,16 @@ Route::prefix('admin')->group(function () {
             // Invoice All Route 
             Route::prefix('invoices')->name('invoices.')->group(function () {
                 Route::get('/', [InvoiceController::class, 'index'])->name('index');
-                // Route::get('/show/{id}', [CategoryController::class, 'show'])->name('show');
                 Route::get('/create', [InvoiceController::class, 'create'])->name('create');
                 Route::post('/store', [InvoiceController::class, 'store'])->name('store');
                 Route::get('/edit/{id}', [InvoiceController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [InvoiceController::class, 'update'])->name('update');
-                Route::delete('/destroy/{id}', [InvoiceController::class, 'destroy'])->name('destroy');
-
+                Route::post('/cancel/{id}', [InvoiceController::class, 'cancel'])->name('cancel');
             });
 
 
             // Invoice All Route 
             Route::controller(InvoiceController::class)->group(function () {
-             
-                Route::get('/invoice/delete/{id}', 'InvoiceDelete')->name('invoice.delete');
-              
                 Route::get('/print/invoice/list', 'PrintInvoiceList')->name('print.invoice.list');
                 Route::get('/print/invoice/{id}', 'PrintInvoice')->name('print.invoice');
 

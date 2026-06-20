@@ -12,7 +12,7 @@
                         <div class="card-header with-border">
                             <span class="card-title" style="font-size:20px;">Create | Invoice</span>
                             <a href="{{route('invoices.index')}}" style="float:right">
-                                <button style="background-color:#034141" type="button" class="btn btn-primary modal_btn">
+                                <button type="button" class="btn btn-dark modal_btn">
                                     View Invoices
                                 </button>
                             </a>
@@ -83,7 +83,7 @@
 
                                         <div class="row mb-2">
                                             <div class="col-12 text-center">
-                                                <button style="background-color:#034141" type="button" class="btn btn-secondary waves-effect waves-light fas fa-plus-circle addeventmore" style="margin-top: 10px;"> Add</button>
+                                                <button type="button" class="btn btn-dark waves-effect waves-light fas fa-plus-circle addeventmore"> Add</button>
                                             </div>
                                         </div>
                                     {{-- <hr> --}}
@@ -91,7 +91,7 @@
                                         <div class="col-12">
                                             <table class="table-sm table-bordered" width="100%" style="border-color: #ddd;">
                                                 <thead>
-                                                    <tr style="background-color:#dc3545; text-align:center;" class="text-white">  
+                                                    <tr style="background-color:#111827; text-align:center;" class="text-white">  
                                                         <th width="10%">Category</th>
                                                         <th width="12%">Barcode</th>
                                                         <th width="15%">Product Name</th>

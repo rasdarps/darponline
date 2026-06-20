@@ -35,29 +35,6 @@
 
 @section('scripts')
     {{ $dataTable->scripts() }}
-    <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.6/dist/notiflix-aio-3.2.6.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.delete-confirm-btn').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    let form = this.closest('form');
-                    Notiflix.Confirm.show(
-                        'Delete Confirmation',
-                        'Are you sure you want to delete this customer?',
-                        'Yes',
-                        'No',
-                        function okCb() {
-                            form.submit();
-                        },
-                        function cancelCb() {
-                            // Do nothing
-                        }
-                    );
-                });
-            });
-        });
-    </script>
 @endsection
 
 @stack('scripts')

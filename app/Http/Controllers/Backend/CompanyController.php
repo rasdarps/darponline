@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class CompanyController extends Controller
@@ -46,10 +47,10 @@ class CompanyController extends Controller
     {
         //
          $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:companies,name,',
-            'address' => 'required|string|max:255,',
-            'phone' => 'required|numeric|digits:10|unique:companies,phone',
-            'email' => 'nullable|email|unique:companies,email',
+            'name' => ['required', 'string', 'max:255', Rule::unique('companies', 'name')->whereNull('deleted_at')],
+            'address' => 'required|string|max:255',
+            'phone' => ['required', 'numeric', 'digits:10', Rule::unique('companies', 'phone')->whereNull('deleted_at')],
+            'email' => ['nullable', 'email', Rule::unique('companies', 'email')->whereNull('deleted_at')],
             'tin_number' => ['required', 'regex:/^\d{10}$/'],
         ], [
             'name.required' => 'Please enter a Company name',
@@ -66,7 +67,7 @@ class CompanyController extends Controller
         ]);
 
         $formattedTin = $this->formatTinNumber($validatedData['tin_number']);
-        if (Company::where('tin_number', $formattedTin)->exists()) {
+        if (Company::where('tin_number', $formattedTin)->whereNull('deleted_at')->exists()) {
             throw ValidationException::withMessages([
                 'tin_number' => ['This company TIN number is already in use'],
             ]);
@@ -210,6 +211,59 @@ class CompanyController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+            $companyId = Crypt::decrypt($id);
+            $company = Company::find($companyId);
+
+            if (!$company) {
+                $message = 'Company not found.';
+
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json([
+                        'status' => 404,
+                        'message' => $message,
+                    ], 404);
+                }
+
+                return redirect()->route('companies.index')->with([
+                    'message' => $message,
+                    'alert-type' => 'error',
+                ]);
+            }
+
+            $companyName = $company->name;
+
+            DB::transaction(function () use ($company) {
+                $company->delete();
+            });
+
+            $message = "Company '{$companyName}' was successfully deleted.";
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 200,
+                    'message' => $message,
+                ]);
+            }
+
+            return redirect()->route('companies.index')->with([
+                'message' => $message,
+                'alert-type' => 'success',
+            ]);
+        } catch (\Exception $e) {
+            $message = 'Failed to delete company.';
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => $message,
+                ], 400);
+            }
+
+            return redirect()->route('companies.index')->with([
+                'message' => $message,
+                'alert-type' => 'error',
+            ]);
+        }
     }
 }

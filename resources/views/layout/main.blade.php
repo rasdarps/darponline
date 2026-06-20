@@ -51,6 +51,38 @@
         @yield('styles')
         @stack('styles')
         <style>
+            :root {
+                --pos-bg: #f5f7fa;
+                --pos-surface: #ffffff;
+                --pos-text: #1f2937;
+                --pos-muted: #6b7280;
+                --pos-border: #e5e7eb;
+                --pos-primary: #2563eb;
+                --pos-primary-hover: #1d4ed8;
+                --pos-dark-btn: #111827;
+            }
+
+            body {
+                background-color: var(--pos-bg);
+                color: var(--pos-text);
+            }
+
+            .main-content,
+            .page-content {
+                background-color: var(--pos-bg);
+            }
+
+            .card {
+                background: var(--pos-surface);
+                border: 1px solid var(--pos-border);
+            }
+
+            .card-title,
+            .page-title-box h4,
+            .page-title-box .mb-sm-0 {
+                color: var(--pos-text);
+            }
+
             .filter-summary {
                 background: #f8f9fa;
                 padding: 12px 15px;
@@ -109,7 +141,8 @@
                 border-top: none !important;
                 border-left: none !important;
                 border-right: none !important;
-                background-color: #f8f9fa !important;
+                background-color: #f3f4f6 !important;
+                color: var(--pos-text) !important;
                 font-weight: 600 !important;
                 padding: 12px 8px !important;
             }
@@ -124,6 +157,7 @@
                 padding: 10px 8px !important;
                 border: none !important;
                 border-bottom: 1px solid #dee2e6 !important;
+                color: var(--pos-text) !important;
             }
             
             table.dataTable tbody tr:nth-child(odd) {
@@ -146,6 +180,32 @@
             
             table.dataTable tbody tr:hover {
                 background-color: #e9ecef !important;
+            }
+
+            .form-control,
+            .select2-container .select2-selection--single,
+            .select2-container .select2-selection--multiple {
+                border-color: var(--pos-border) !important;
+            }
+
+            .form-control:focus,
+            .select2-container--default.select2-container--focus .select2-selection--multiple,
+            .select2-container--default.select2-container--open .select2-selection--single {
+                border-color: var(--pos-primary) !important;
+                box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15) !important;
+            }
+
+            .btn-dark,
+            .btn-dark:focus,
+            .btn-dark:active {
+                background-color: var(--pos-dark-btn) !important;
+                border-color: var(--pos-dark-btn) !important;
+                color: #fff !important;
+            }
+
+            .btn-dark:hover {
+                background-color: #000 !important;
+                border-color: #000 !important;
             }
 
             .header-quick-actions {
@@ -310,6 +370,39 @@
 
         $(document).ajaxComplete(function () {
             applyBlackButtons();
+        });
+    })();
+</script>
+
+<script>
+    (function () {
+        // Delegate click handling so delete works for dynamically rendered DataTables rows.
+        $(document).on('click', '.btn-delete, .delete-confirm-btn', function (e) {
+            e.preventDefault();
+
+            var $button = $(this);
+            var form = $button.closest('form')[0];
+
+            if (!form) {
+                return;
+            }
+
+            if (typeof Notiflix !== 'undefined' && Notiflix.Confirm && typeof Notiflix.Confirm.show === 'function') {
+                Notiflix.Confirm.show(
+                    'Confirm Delete',
+                    'Are you sure you want to delete this record?',
+                    'Yes, Delete',
+                    'Cancel',
+                    function () {
+                        form.submit();
+                    }
+                );
+                return;
+            }
+
+            if (window.confirm('Are you sure you want to delete this record?')) {
+                form.submit();
+            }
         });
     })();
 </script>

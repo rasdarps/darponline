@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 
 class CategoryController extends Controller
@@ -38,7 +38,7 @@ class CategoryController extends Controller
     public function store(Request $request){
 
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,',
+            'name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->whereNull('deleted_at')],
             'description' => 'nullable|string',
             'show_on_homepage' => 'boolean',
             'category_image' => 'required',
@@ -158,39 +158,56 @@ class CategoryController extends Controller
         try {
             $id = Crypt::decrypt($encryptedId);
             $category = Category::findOrFail($id);
-            
 
-            
-            
-            if (!$category) {
-                return response()->json([
-                    'status' => 404,
-                    'message' => 'Category not found.',
-                ]);
-            } 
             // Check if category has products
             if ($category->products()->count() > 0) {
-               return response()->json([
-                   'status' => 422,
-                   'message' => 'Cannot delete category with associated products. Reassign products first.'
-               ], 422);
-           }
+                $message = 'Cannot delete category with associated products. Reassign products first.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json([
+                        'status' => 422,
+                        'message' => $message,
+                    ], 422);
+                }
+
+                return redirect()->route('categories.index')->with([
+                    'message' => $message,
+                    'alert-type' => 'error',
+                ]);
+            }
             
             $categoryName = $category->name;
             
             DB::transaction(function () use ($category) {
                 $category->delete();
             });
-            
-            return response()->json([
-                'status' => 200,
-                'message' => "Category '{$categoryName}' was successfully deleted.",
+
+            $message = "Category '{$categoryName}' was successfully deleted.";
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 200,
+                    'message' => $message,
+                ]);
+            }
+
+            return redirect()->route('categories.index')->with([
+                'message' => $message,
+                'alert-type' => 'success',
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 400,
-                'message' => 'Failed to delete category',
+            $message = 'Failed to delete category.';
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => $message,
+                ], 400);
+            }
+
+            return redirect()->route('categories.index')->with([
+                'message' => $message,
+                'alert-type' => 'error',
             ]);
         }
 

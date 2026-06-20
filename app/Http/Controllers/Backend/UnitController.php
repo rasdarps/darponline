@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class UnitController extends Controller
 {
@@ -34,7 +35,7 @@ class UnitController extends Controller
 
     public function store(Request $request){
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:units,name',
+            'name' => ['required', 'string', 'max:255', Rule::unique('units', 'name')->whereNull('deleted_at')],
         ], [
             'name.required' => 'Please enter a Unit name',
             'name.unique' => 'This unit already exists',
@@ -149,31 +150,49 @@ class UnitController extends Controller
 
     public function destroy(string $encryptedId){
         try {
-            // $id = Crypt::decrypt($encryptedId);
             $unit = Unit::findOrFail(Crypt::decrypt($encryptedId));
-            
-            if (!$unit) {
-                return response()->json([
-                    'status' => 404,
-                    'message' => 'Unit not found.',
-                ]);
+
+            if ($unit->products()->count() > 0) {
+                $message = 'Cannot delete unit with associated products. Reassign products to another unit first.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json(['status' => 422, 'message' => $message], 422);
+                }
+                return redirect()->route('units.index')->with(['message' => $message, 'alert-type' => 'error']);
             }
-            
+
             $unitName = $unit->name;
-            
+
             DB::transaction(function () use ($unit) {
                 $unit->delete();
             });
-            
-            return response()->json([
-                'status' => 200,
-                'message' => "Unit '{$unitName}' was successfully deleted.",
+
+            $message = "Unit '{$unitName}' was successfully deleted.";
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 200,
+                    'message' => $message,
+                ]);
+            }
+
+            return redirect()->route('units.index')->with([
+                'message' => $message,
+                'alert-type' => 'success',
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 400,
-                'message' => 'Invalid unit ID.',
+            $message = 'Failed to delete unit.';
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => $message,
+                ], 400);
+            }
+
+            return redirect()->route('units.index')->with([
+                'message' => $message,
+                'alert-type' => 'error',
             ]);
         }
     } // End Method 

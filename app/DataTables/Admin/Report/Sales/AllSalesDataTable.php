@@ -25,8 +25,27 @@ class AllSalesDataTable extends DataTable
 
             ->addColumn('edit_button', function($row) {
                 $printUrl = route('print.invoice', Crypt::encrypt($row->id));
-                
-                return '<a href="'.$printUrl.'" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+
+                $html = '<a href="' . $printUrl . '" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+
+                if (!$row->cancelled_at) {
+                    $encryptedId = Crypt::encrypt($row->id);
+                    $html .= ' <button type="button"
+                        class="btn btn-sm btn-warning btn-cancel-invoice ms-1"
+                        data-id="' . $encryptedId . '"
+                        data-no="' . e($row->invoice_no) . '">
+                        <i class="fas fa-ban"></i> Cancel
+                    </button>';
+                }
+
+                return $html;
+            })
+
+            ->addColumn('cancelled_status', function($row) {
+                if ($row->cancelled_at) {
+                    return '<span class="badge bg-danger" title="' . e($row->cancellation_reason) . '">Cancelled</span>';
+                }
+                return '<span class="badge bg-success">Active</span>';
             })
 
             ->addColumn('customer_name', function($row) {
@@ -37,6 +56,10 @@ class AllSalesDataTable extends DataTable
 
             ->addColumn('created_by_name', function($row) {
                 return $row->createdBy ? $row->createdBy->name : '';
+            })
+
+            ->addColumn('cancelled_by_name', function($row) {
+                return $row->cancelledBy ? $row->cancelledBy->name : '';
             })
 
             ->addColumn('amount', function($row) {
@@ -61,7 +84,7 @@ class AllSalesDataTable extends DataTable
             })
 
             
-            ->rawColumns(['amount','edit_button'])
+            ->rawColumns(['amount', 'edit_button', 'cancelled_status'])
             ->setRowId('id');
     }
 
@@ -71,7 +94,7 @@ class AllSalesDataTable extends DataTable
     public function query(Invoice $model): QueryBuilder
     {
         $query = $model->newQuery()
-            ->with(['payment.customer', 'createdBy'])
+            ->with(['payment.customer', 'createdBy', 'cancelledBy'])
             ->orderBy('date', 'ASC');
 
         // Apply filters
@@ -127,7 +150,15 @@ class AllSalesDataTable extends DataTable
                             return 0;
                         };
 
-                        var totalAmount = api.column(5, { page: "current" }).data().reduce(function (a, b) {
+                        var amountColIndex = api.columns().indexes().toArray().find(function (idx) {
+                            return (api.settings()[0].aoColumns[idx] || {}).data === "amount";
+                        });
+
+                        if (typeof amountColIndex === "undefined") {
+                            return;
+                        }
+
+                        var totalAmount = api.column(amountColIndex, { page: "current" }).data().reduce(function (a, b) {
                             return intVal(a) + intVal(b);
                         }, 0);
 
@@ -138,7 +169,7 @@ class AllSalesDataTable extends DataTable
                             });
                         };
 
-                        $(api.column(5).footer()).html(formatValue(totalAmount));
+                        $(api.column(amountColIndex).footer()).html(formatValue(totalAmount));
                     }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
@@ -162,11 +193,14 @@ class AllSalesDataTable extends DataTable
             Column::make('invoice_no'),
             Column::make('sales_source')->title('Sales Source'),
             Column::make('customer_name')->title('Customer Name'),
-            Column::make('created_by_name')->title('Created By'),
             Column::make('amount')->title('Amount (Gh¢)'),
+            // Column::make('cancelled_status')->title('Status')
+            //     ->searchable(true)->printable(true)->exportable(true),
+            Column::make('created_by_name')->title('Created By'),
+            Column::make('cancelled_by_name')->title('Cancelled By')
+                ->searchable(true)->printable(true)->exportable(true),
             Column::make('edit_button')->title('Actions')
-            ->searchable(false)->printable(false)->exportable(false),
-            
+                ->searchable(false)->printable(false)->exportable(false),
         ];
     }
 

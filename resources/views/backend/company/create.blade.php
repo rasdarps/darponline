@@ -62,7 +62,7 @@
 
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group">
-                                                <label for="tin_number"><strong>TIN Number <span class="text-danger">*</span></strong></label>
+                                                <label for="tin_number"><strong>TIN Number/Ghana Card <span class="text-danger">*</span></strong></label>
                                                 <input type="text" id="tin_number" name="tin_number" class="form-control" value="{{ old('tin_number') }}" placeholder="Enter 10 digit TIN number" maxlength="10" minlength="10" onkeypress="return isNumberKey(event)">
                                             </div>
                                         </div>

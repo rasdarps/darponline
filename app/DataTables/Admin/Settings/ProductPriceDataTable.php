@@ -27,7 +27,6 @@ class ProductPriceDataTable extends DataTable
             })
             ->addColumn('edit_button', function($row) {
                     $editUrl = route('product-prices.edit', Crypt::encrypt($row->id));
-                    $deleteUrl = route('product-prices.destroy', Crypt::encrypt($row->id));
                     $csrf = csrf_field();
                     $method = method_field('DELETE');
 
@@ -36,13 +35,6 @@ class ProductPriceDataTable extends DataTable
                             '.$csrf.'
                             <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
                                 <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
-                            </button>
-                        </form>
-                        <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
-                            '.$csrf.'
-                            '.$method.'
-                            <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete btn btn-sm btn-danger">
-                                <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                             </button>
                         </form>
                     ';

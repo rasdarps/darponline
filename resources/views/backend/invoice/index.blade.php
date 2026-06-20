@@ -67,7 +67,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3 mt-2 d-flex align-items-end">
-                                <button id="reset_filters" class="btn btn-danger w-100">Reset Filters</button>
+                                <button id="reset_filters" class="btn btn-dark w-100">Reset Filters</button>
                             </div>
                         </div>
 
@@ -79,6 +79,40 @@
             </div> <!-- end col -->
         </div> <!-- end row -->
     </div> <!-- container-fluid -->
+</div>
+
+{{-- Cancel Invoice Modal --}}
+<div class="modal fade" id="cancelInvoiceModal" tabindex="-1" aria-labelledby="cancelInvoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelInvoiceModalLabel">Cancel Invoice <span id="cancelModalInvoiceNo" class="text-danger"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger py-2">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Warning:</strong> This will restore stock for all items in this invoice. This action cannot be undone.
+                </div>
+                <div class="mb-3">
+                    <label for="cancellation_reason" class="form-label">
+                        Reason for Cancellation <span class="text-danger">*</span>
+                    </label>
+                    <textarea class="form-control" id="cancellation_reason" rows="3"
+                        placeholder="Enter reason for cancellation..."></textarea>
+                    <div id="reason_error" class="text-danger small mt-1" style="display:none;">
+                        Please provide a reason for cancellation.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelInvoice">
+                    <i class="fas fa-ban me-1"></i> Confirm Cancellation
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -117,6 +151,53 @@
             $.fn.dataTable.ext.errMode = 'none';
             $('#allsales-table').on('error.dt', function(e, settings, techNote, message) {
                 Notiflix.Notify.failure("DataTables error: " + message);
+            });
+
+            // ── Cancel Invoice ──────────────────────────────────────
+            let cancelInvoiceId = null;
+            const cancelUrl = '{{ route("invoices.cancel", "__ID__") }}';
+
+            $(document).on('click', '.btn-cancel-invoice', function() {
+                cancelInvoiceId = $(this).data('id');
+                $('#cancelModalInvoiceNo').text('#' + $(this).data('no'));
+                $('#cancellation_reason').val('');
+                $('#reason_error').hide();
+                $('#cancelInvoiceModal').modal('show');
+            });
+
+            $('#confirmCancelInvoice').on('click', function() {
+                let reason = $('#cancellation_reason').val().trim();
+                if (!reason) {
+                    $('#reason_error').show();
+                    return;
+                }
+
+                let $btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...');
+
+                $.ajax({
+                    url: cancelUrl.replace('__ID__', cancelInvoiceId),
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        reason: reason,
+                    },
+                    success: function(response) {
+                        $('#cancelInvoiceModal').modal('hide');
+                        if (response.status === 200) {
+                            Notiflix.Notify.success(response.message);
+                            table.ajax.reload(null, false);
+                        } else {
+                            Notiflix.Notify.failure(response.message || 'Failed to cancel invoice.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = xhr.responseJSON?.message || 'Failed to cancel invoice.';
+                        Notiflix.Notify.failure(msg);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('<i class="fas fa-ban me-1"></i> Confirm Cancellation');
+                    }
+                });
             });
         });
     </script>

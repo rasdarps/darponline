@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Backend;
 
 use App\DataTables\Admin\Settings\SupplierDataTable;
 use App\Http\Controllers\Controller;
+use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
 {
@@ -30,9 +32,9 @@ class SupplierController extends Controller
 
     public function store(Request $request){
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:suppliers,name',
-            'mobile_no' => 'required|string|max:15|unique:suppliers,mobile_no',
-            'email' => 'nullable|email|max:255|unique:suppliers,email',
+            'name' => ['required', 'string', 'max:255', Rule::unique('suppliers', 'name')->whereNull('deleted_at')],
+            'mobile_no' => ['required', 'string', 'max:15', Rule::unique('suppliers', 'mobile_no')->whereNull('deleted_at')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('suppliers', 'email')->whereNull('deleted_at')],
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'type' => 'nullable|string|in:Distributor,Wholesaler,Retailer,Manufacturer,Other',
@@ -174,29 +176,56 @@ class SupplierController extends Controller
         try {
             $id = Crypt::decrypt($encryptedId);
             $supplier = Supplier::find($id);
-            
+
             if (!$supplier) {
-                return response()->json([
-                    'status' => 404,
-                    'message' => 'Supplier not found.',
-                ]);
+                $message = 'Supplier not found.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json(['status' => 404, 'message' => $message], 404);
+                }
+                return redirect()->route('suppliers.index')->with(['message' => $message, 'alert-type' => 'error']);
             }
-            
+
+            if (Purchase::where('supplier_id', $supplier->id)->exists()) {
+                $message = 'Cannot delete supplier with associated purchase records.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json(['status' => 422, 'message' => $message], 422);
+                }
+                return redirect()->route('suppliers.index')->with(['message' => $message, 'alert-type' => 'error']);
+            }
+
             $supplierName = $supplier->name;
-            
+
             DB::transaction(function () use ($supplier) {
                 $supplier->delete();
             });
-            
-            return response()->json([
-                'status' => 200,
-                'message' => "Supplier '{$supplierName}' was successfully deleted.",
+
+            $message = "Supplier '{$supplierName}' was successfully deleted.";
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 200,
+                    'message' => $message,
+                ]);
+            }
+
+            return redirect()->route('suppliers.index')->with([
+                'message' => $message,
+                'alert-type' => 'success',
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 400,
-                'message' => 'Invalid supplier ID.',
+            $message = 'Failed to delete supplier.';
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => $message,
+                ], 400);
+            }
+
+            return redirect()->route('suppliers.index')->with([
+                'message' => $message,
+                'alert-type' => 'error',
             ]);
         }
     } // End Method 

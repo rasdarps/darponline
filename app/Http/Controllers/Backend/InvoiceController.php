@@ -26,8 +26,7 @@ class InvoiceController extends Controller
     {
          $this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['index','store']]);
          $this->middleware('permission:invoice-create', ['only' => ['create','store']]);
-         $this->middleware('permission:invoice-edit', ['only' => ['edit','update']]);
-         $this->middleware('permission:invoice-delete', ['only' => ['destroy']]);
+            $this->middleware('permission:invoice-edit|invoice-delete', ['only' => ['edit','update', 'cancel']]);
     }
 
     // public function index(){
@@ -235,30 +234,86 @@ class InvoiceController extends Controller
     }
 
 
-    public function destroy($encryptedId){
+    public function cancel(Request $request, $encryptedId)
+    {
         try {
             $id = Crypt::decrypt($encryptedId);
-            $invoice = Invoice::findOrFail($id);
-            DB::transaction(function() use($invoice){
-                InvoiceDetail::where('invoice_id',$invoice->id)->delete(); 
-                Payment::where('invoice_id',$invoice->id)->delete(); 
-                PaymentDetail::where('invoice_id',$invoice->id)->delete(); 
-                $invoice->delete();
-            });
-            $notification = array(
-                'message' => 'Invoice Deleted Successfully', 
-                'alert-type' => 'success'
-            );
-            return redirect()->back()->with($notification); 
-        } catch (\Exception $e) {
-            $notification = array(
-                'message' => 'Invalid invoice ID', 
-                'alert-type' => 'error'
-            );
-            return redirect()->back()->with($notification);
-        }
-    }// End Method
+            $invoice = Invoice::with('invoice_details')->findOrFail($id);
 
+            if ($invoice->cancelled_at) {
+                return response()->json([
+                    'status' => 422,
+                    'message' => 'Invoice #' . $invoice->invoice_no . ' is already cancelled.',
+                ], 422);
+            }
+
+            $validated = $request->validate([
+                'reason' => 'required|string|max:500',
+            ], [
+                'reason.required' => 'Please provide a reason for cancellation.',
+            ]);
+
+            DB::transaction(function () use ($invoice, $validated) {
+                // Restore stock for every line item
+                foreach ($invoice->invoice_details as $detail) {
+                    $product = Product::find($detail->product_id);
+                    if ($product) {
+                        $product->quantity = ((float) $product->quantity) + ((float) $detail->selling_qty);
+                        $product->save();
+                    }
+                }
+
+                // Zero-out line values so cancelled invoice does not affect quantity/value reporting
+                InvoiceDetail::where('invoice_id', $invoice->id)->update([
+                    'selling_qty' => 0,
+                    'unit_selling_price' => 0,
+                    'selling_price' => 0,
+                ]);
+
+                // Zero-out payment values so cancelled invoice does not affect financial totals
+                Payment::where('invoice_id', $invoice->id)->update([
+                    'paid_status' => 'full_due',
+                    'discount_amount' => 0,
+                    'total_amount' => 0,
+                    'taxable_amount' => 0,
+                    'nhil_amount' => 0,
+                    'getfund_amount' => 0,
+                    'vat_amount' => 0,
+                    'cash_tendered' => 0,
+                    'change_due' => 0,
+                    'paid_amount' => 0,
+                    'due_amount' => 0,
+                ]);
+
+                // Zero-out payment detail entries tied to this invoice
+                PaymentDetail::where('invoice_id', $invoice->id)->update([
+                    'current_paid_amount' => 0,
+                ]);
+
+                // Stamp cancellation on the invoice
+                $invoice->update([
+                    'cancelled_at'        => now(),
+                    'cancelled_by'        => Auth::id(),
+                    'cancellation_reason' => $validated['reason'],
+                ]);
+            });
+
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Invoice #' . $invoice->invoice_no . ' has been cancelled and stock has been restored.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status'  => 422,
+                'message' => collect($e->errors())->flatten()->first(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 400,
+                'message' => 'Failed to cancel invoice.',
+            ], 400);
+        }
+    } // End Method
 
     public function PrintInvoiceList(){
 

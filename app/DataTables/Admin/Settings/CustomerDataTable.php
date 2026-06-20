@@ -38,7 +38,7 @@ class CustomerDataTable extends DataTable
                         <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
                             '.$csrf.'
                             '.$method.'
-                            <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete btn btn-sm btn-danger">
+                            <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete delete-confirm-btn btn btn-sm btn-danger">
                                 <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                             </button>
                         </form>
