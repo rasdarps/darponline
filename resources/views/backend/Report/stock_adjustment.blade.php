@@ -81,10 +81,11 @@
                             <div class="col-md-2">
                                 <label>To Date</label>
                                 <input type="date" id="filter_to_date" class="form-control">
-                            </div>
-                            <div class="col-md-1 d-flex align-items-end">
-                                <button id="reset_filters" class="btn btn-dark w-100">Reset</button>
-                            </div>
+                            </div> 
+                            
+                        </div>
+                        <div class="col-md-2 d-flex mb-3">
+                            <button id="reset_filters" class="btn btn-dark w-100">Reset</button>
                         </div>
 
                         <div class="table-responsive">

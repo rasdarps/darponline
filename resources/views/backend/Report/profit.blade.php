@@ -1,6 +1,26 @@
 @extends('layout.main')
 @section('title') {{'View Profit'}} @endsection
 
+<style>
+    .summary-card {
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .summary-card:hover {
+        background-color: #f8f9fa;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.08);
+    }
+
+    .summary-card-link {
+        display: block;
+        color: inherit;
+    }
+
+    .summary-card-link .summary-card {
+        cursor: pointer;
+    }
+</style>
+
 @section('content')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
@@ -28,6 +48,38 @@
                         <br><br>               
 
                         <h4 class="card-title">Profit Report</h4>      
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="card border mb-0 summary-card">
+                                    <div class="card-body py-2">
+                                        <small class="text-muted">Gross Profit</small>
+                                        <h5 id="summary_gross_profit" class="mb-0">0.00</h5>
+                                        <small class="text-muted">Total Profit before expenses</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ route('reports.expense') }}" class="summary-card-link text-decoration-none">
+                                    <div class="card border mb-0 summary-card">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted">Total Expenses</small>
+                                            <h5 id="summary_total_expenses" class="mb-0">0.00</h5>
+                                            <small class="text-muted">Click to open expense report</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border mb-0 summary-card">
+                                    <div class="card-body py-2">
+                                        <small class="text-muted">Net Profit</small>
+                                        <h5 id="summary_net_profit" class="mb-0">0.00</h5>
+                                        <small class="text-muted">Total Profit after expenses</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- 🔎 Filter boxes -->
                         <div class="row mb-3">
@@ -88,10 +140,43 @@
     <script>
         $(function() {
             let table = $('#profitreport-table').DataTable();
+            const summaryUrl = "{{ route('reports.profit.summary') }}";
+
+            function currentFilters() {
+                return {
+                    invoice_id: $('#filter_invoice_id').val(),
+                    customer_id: $('#filter_customer_id').val(),
+                    from_date: $('#filter_from_date').val(),
+                    to_date: $('#filter_to_date').val(),
+                    created_by: $('#filter_created_by').val(),
+                };
+            }
+
+            function formatMoney(value) {
+                return Number(value || 0).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            function loadSummary() {
+                $.get(summaryUrl, currentFilters())
+                    .done(function(res) {
+                        $('#summary_gross_profit').text(formatMoney(res.gross_profit));
+                        $('#summary_total_expenses').text(formatMoney(res.total_expenses));
+                        $('#summary_net_profit').text(formatMoney(res.net_profit));
+                    })
+                    .fail(function() {
+                        $('#summary_gross_profit').text('0.00');
+                        $('#summary_total_expenses').text('0.00');
+                        $('#summary_net_profit').text('0.00');
+                    });
+            }
 
             // Reload table when filters change
             $('#filter_invoice_id, #filter_customer_id, #filter_from_date, #filter_to_date, #filter_created_by').on('change', function() {
                 table.ajax.reload();
+                loadSummary();
             });
 
             // Reset filters
@@ -102,6 +187,7 @@
                 $('#filter_to_date').val('');
                 $('#filter_created_by').val(null).trigger('change');
                 table.ajax.reload();
+                loadSummary();
             });
 
             // Pass filter values into AJAX
@@ -118,6 +204,8 @@
             $('#profitreport-table').on('error.dt', function(e, settings, techNote, message) {
                 Notiflix.Notify.failure("DataTables error: " + message);
             });
+
+            loadSummary();
         });
     </script>
 @endsection

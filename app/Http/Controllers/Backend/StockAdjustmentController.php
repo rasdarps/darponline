@@ -359,6 +359,7 @@ class StockAdjustmentController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
+            //StockLedgerService record to log stock movement
             app(StockLedgerService::class)->record([
                 'product_id' => $product->id,
                 'movement_type' => $lineDirection === 'increase' ? 'adjustment_increase' : 'adjustment_decrease',
@@ -407,6 +408,7 @@ class StockAdjustmentController extends Controller
                 'updated_by' => Auth::id(),
             ]);
 
+            //StockLedgerService record to log stock movement
             app(StockLedgerService::class)->record([
                 'product_id' => $product->id,
                 'movement_type' => $movementType,

@@ -84,6 +84,7 @@
                                     <span>Report</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{{ route('reports.summary-ledger') }}">Summary Ledger</a></li>
                                     <li><a href="{{ route('reports.profit') }}">Profit Report</a></li>
                                     <li><a href="{{ route('stock.product_trail_report') }}">Product-wise Stock Trail</a></li>
                                     <li><a href="{{ route('stock.report') }}">Summary Stock Report</a></li>

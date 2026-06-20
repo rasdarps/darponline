@@ -169,6 +169,7 @@ class InvoiceController extends Controller
                 $product->quantity = $afterQty;
                 $product->save();
 
+                //StockLedgerService record to log stock movement
                 app(StockLedgerService::class)->record([
                     'product_id' => $product->id,
                     'movement_type' => 'sale',
@@ -285,6 +286,7 @@ class InvoiceController extends Controller
                         $product->quantity = $afterQty;
                         $product->save();
 
+                        //StockLedgerService record to log stock movement
                         app(StockLedgerService::class)->record([
                             'product_id' => $product->id,
                             'movement_type' => 'sale_cancel',

@@ -283,6 +283,8 @@ Route::prefix('admin')->group(function () {
             //Reports Routes
             Route::prefix('reports')->name('reports.')->group(function () {
                 Route::get('/profit', [ReportController::class, 'profitReport'])->name('profit');
+                Route::get('/profit/summary', [ReportController::class, 'profitSummary'])->name('profit.summary');
+                Route::get('/summary-ledger', [ReportController::class, 'summaryLedger'])->name('summary-ledger');
                 Route::get('/expense', [ReportController::class, 'expenseReport'])->name('expense');
                 Route::get('/stock-adjustment', [ReportController::class, 'stockAdjustmentReport'])->name('stock-adjustment');
 

@@ -168,6 +168,7 @@ class PurchaseController extends Controller
                     ]);
                 }
 
+                //StockLedgerService record to log stock movement
                 app(StockLedgerService::class)->record([
                     'product_id' => $product->id,
                     'movement_type' => 'purchase',
