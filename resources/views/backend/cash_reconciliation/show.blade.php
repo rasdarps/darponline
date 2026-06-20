@@ -3,6 +3,7 @@
 @section('title') {{ 'Cash Reconciliation Details' }} @endsection
 
 @section('content')
+@php use Illuminate\Support\Facades\Crypt; @endphp
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <div class="page-content">
     <div class="container-fluid">
@@ -12,7 +13,7 @@
                     <h4 class="mb-sm-0">Cash Reconciliation Details</h4>
                     <div>
                         @if(in_array($reconciliation->status, ['submitted', 'reopened'], true))
-                            <a href="{{ route('cash-reconciliations.edit', $reconciliation->id) }}" class="btn btn-success btn-sm">Edit</a>
+                            <a href="{{ route('cash-reconciliations.edit', Crypt::encryptString((string) $reconciliation->id)) }}" class="btn btn-success btn-sm">Edit</a>
                         @endif
                         <a href="{{ route('cash-reconciliations.index') }}" class="btn btn-dark btn-sm">Back</a>
                     </div>
@@ -116,17 +117,18 @@
                                 </form>
                             </div>
                         @else
-                            <form action="{{ route('cash-reconciliations.reverse-approval', $reconciliation->id) }}" method="POST" class="mt-4">
+                            <form action="{{ route('cash-reconciliations.reverse-approval', $reconciliation->id) }}" method="POST" class="mt-4" id="reversal-form">
                                 @csrf
                                 <div class="row mb-3">
                                     <div class="col-md-8">
                                         <label>Supervisor Reversal Reason</label>
-                                        <textarea name="reversal_reason" class="form-control" rows="3" placeholder="Reason for unlocking this reconciliation..." required></textarea>
+                                        <textarea name="reversal_reason" id="reversal_reason" class="form-control" rows="3" placeholder="Reason for unlocking this reconciliation..."></textarea>
                                     </div>
-                                    
                                 </div>
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-warning w-100">Reverse Approval / Unlock</button>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <button type="submit" class="btn btn-warning">Reverse Approval / Unlock</button>
+                                    </div>
                                 </div>
                             </form>
                         @endif
@@ -137,3 +139,21 @@
     </div>
 </div>
 @endsection
+
+                    @section('scripts')
+                    <script>
+                    $(function () {
+                        $('#reversal-form').on('submit', function (event) {
+                            const reason = ($('#reversal_reason').val() || '').trim();
+
+                            if (!reason) {
+                                event.preventDefault();
+                                if (window.Notiflix && Notiflix.Notify) {
+                                    Notiflix.Notify.failure('Please enter a reversal reason before unlocking.');
+                                }
+                                $('#reversal_reason').focus();
+                            }
+                        });
+                    });
+                    </script>
+                    @endsection

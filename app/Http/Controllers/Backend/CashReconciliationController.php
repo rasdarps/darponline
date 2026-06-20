@@ -36,7 +36,21 @@ class CashReconciliationController extends Controller
     public function edit($routeId)
     {
         try {
-            $reconciliation = $this->findReconciliation($routeId, ['user', 'createdBy', 'approvedBy', 'reversedBy']);
+            $decryptedId = $routeId;
+
+            try {
+                $decryptedId = Crypt::decryptString((string) $routeId);
+            } catch (\Throwable $e) {
+                // Keep the original route value when it is already numeric.
+            }
+
+            $reconciliation = CashReconciliation::with(['user', 'createdBy', 'approvedBy', 'reversedBy'])
+                ->find($decryptedId);
+
+            if (! $reconciliation && is_numeric($routeId)) {
+                $reconciliation = CashReconciliation::with(['user', 'createdBy', 'approvedBy', 'reversedBy'])
+                    ->find((int) $routeId);
+            }
 
             if (! $reconciliation) {
                 return redirect()->route('cash-reconciliations.index')->with('error', 'Cash reconciliation not found.');
@@ -125,7 +139,21 @@ class CashReconciliationController extends Controller
     public function show($routeId)
     {
         try {
-            $reconciliation = $this->findReconciliation($routeId, ['user', 'createdBy', 'approvedBy', 'reversedBy']);
+            $decryptedId = $routeId;
+
+            try {
+                $decryptedId = Crypt::decryptString((string) $routeId);
+            } catch (\Throwable $e) {
+                // Keep the original route value when it is already numeric.
+            }
+
+            $reconciliation = CashReconciliation::with(['user', 'createdBy', 'approvedBy', 'reversedBy'])
+                ->find($decryptedId);
+
+            if (! $reconciliation && is_numeric($routeId)) {
+                $reconciliation = CashReconciliation::with(['user', 'createdBy', 'approvedBy', 'reversedBy'])
+                    ->find((int) $routeId);
+            }
 
             if (! $reconciliation) {
                 return redirect()->route('cash-reconciliations.index')->with('error', 'Cash reconciliation not found.');

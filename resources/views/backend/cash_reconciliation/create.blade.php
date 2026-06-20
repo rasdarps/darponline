@@ -35,21 +35,21 @@
 
                         <h4 class="card-title">Enter Physical Cash For The Day</h4>
 
-                        <form action="{{ route('cash-reconciliations.store') }}" method="POST">
+                        <form action="{{ route('cash-reconciliations.store') }}" method="POST" id="cash-reconciliation-create-form">
                             @csrf
 
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label>Business Date</label>
-                                    <input type="date" id="business_date" name="business_date" class="form-control" value="{{ old('business_date', $businessDate) }}" required>
+                                    <input type="date" id="business_date" name="business_date" class="form-control" value="{{ old('business_date', $businessDate) }}">
                                 </div>
                                 <div class="col-md-4">
                                     <label>Opening Float</label>
-                                    <input type="number" step="0.01" min="0" id="opening_float" name="opening_float" class="form-control" value="{{ old('opening_float', number_format((float) $openingFloat, 2, '.', '')) }}" required>
+                                    <input type="number" step="0.01" min="0" id="opening_float" name="opening_float" class="form-control" value="{{ old('opening_float', number_format((float) $openingFloat, 2, '.', '')) }}">
                                 </div>
                                 <div class="col-md-4">
                                     <label>Physical Counted Cash</label>
-                                    <input type="number" step="0.01" min="0" id="physical_counted_cash" name="physical_counted_cash" class="form-control" value="{{ old('physical_counted_cash') }}" required>
+                                    <input type="number" step="0.01" min="0" id="physical_counted_cash" name="physical_counted_cash" class="form-control" value="{{ old('physical_counted_cash') }}">
                                 </div>
                             </div>
 
@@ -105,6 +105,14 @@
 $(function () {
     const expectedUrl = "{{ route('cash-reconciliations.expected') }}";
 
+    function notifyFailure(message) {
+        if (window.Notiflix && Notiflix.Notify) {
+            Notiflix.Notify.failure(message);
+        } else {
+            alert(message);
+        }
+    }
+
     function toNumber(value) {
         const n = parseFloat(value);
         return Number.isNaN(n) ? 0 : n;
@@ -148,6 +156,32 @@ $(function () {
 
     $('#physical_counted_cash').on('change input', function () {
         refreshVariance();
+    });
+
+    $('#cash-reconciliation-create-form').on('submit', function (event) {
+        const businessDate = ($('#business_date').val() || '').trim();
+        const openingFloat = ($('#opening_float').val() || '').trim();
+        const physicalCountedCash = ($('#physical_counted_cash').val() || '').trim();
+
+        if (!businessDate) {
+            event.preventDefault();
+            notifyFailure('Please select the business date.');
+            $('#business_date').focus();
+            return;
+        }
+
+        if (!openingFloat || Number(openingFloat) < 0) {
+            event.preventDefault();
+            notifyFailure('Please enter a valid opening float.');
+            $('#opening_float').focus();
+            return;
+        }
+
+        if (!physicalCountedCash || Number(physicalCountedCash) < 0) {
+            event.preventDefault();
+            notifyFailure('Please enter a valid physical counted cash value.');
+            $('#physical_counted_cash').focus();
+        }
     });
 
     refreshVariance();

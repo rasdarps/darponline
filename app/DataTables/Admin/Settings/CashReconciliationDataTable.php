@@ -5,6 +5,7 @@ namespace App\DataTables\Admin\Settings;
 use App\Models\CashReconciliation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Illuminate\Support\Facades\Crypt;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -22,8 +23,8 @@ class CashReconciliationDataTable extends DataTable
                 return $row->createdBy->name ?? '';
             })
             ->addColumn('action_button', function ($row) {
-                $showUrl = route('cash-reconciliations.show', $row->id);
-                $editUrl = route('cash-reconciliations.edit', $row->id);
+                $showUrl = route('cash-reconciliations.show', Crypt::encryptString((string) $row->id));
+                $editUrl = route('cash-reconciliations.edit', Crypt::encryptString((string) $row->id));
                 $canEdit = in_array($row->status, ['submitted', 'reopened'], true);
 
                 $buttons = '<a class="btn btn-sm btn-primary" href="' . $showUrl . '"><i class="fas fa-eye"></i></a>';
