@@ -73,6 +73,17 @@
                                                 <li><a href="{{ route('stock-adjustments.index') }}">All Stock Adjustments</a></li>
                                             </ul>
                                         </li>
+
+                                        <li>
+                                            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                                <i class="fa fa-money-bill-wave"></i>
+                                                <span>Cash Reconciliation</span>
+                                            </a>
+                                            <ul class="sub-menu" aria-expanded="false">
+                                                <li><a href="{{ route('cash-reconciliations.create') }}">Create</a></li>
+                                                <li><a href="{{ route('cash-reconciliations.index') }}">All Reconciliations</a></li>
+                                            </ul>
+                                        </li>
                                     </ul><!--drop ul ends-->    
                             </li><!--cover ends--> 
                          {{-- transaction menu ends --}}

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Backend\AdminController;
 use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\CashReconciliationController;
 use App\Http\Controllers\Backend\CompanyController;
 use App\Http\Controllers\Backend\CustomerController;
 use App\Http\Controllers\Backend\DashboardController;
@@ -206,6 +207,18 @@ Route::prefix('admin')->group(function () {
                 Route::get('/edit/{id}', [StockAdjustmentController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [StockAdjustmentController::class, 'update'])->name('update');
                 Route::delete('/destroy/{id}', [StockAdjustmentController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::prefix('cash-reconciliations')->name('cash-reconciliations.')->group(function () {
+                Route::get('/', [CashReconciliationController::class, 'index'])->name('index');
+                Route::get('/create', [CashReconciliationController::class, 'create'])->name('create');
+                Route::get('/expected', [CashReconciliationController::class, 'expected'])->name('expected');
+                Route::post('/store', [CashReconciliationController::class, 'store'])->name('store');
+                Route::get('/show/{id}', [CashReconciliationController::class, 'show'])->name('show');
+                Route::get('/edit/{id}', [CashReconciliationController::class, 'edit'])->name('edit');
+                Route::patch('/update/{id}', [CashReconciliationController::class, 'update'])->name('update');
+                Route::post('/approve/{id}', [CashReconciliationController::class, 'approve'])->name('approve');
+                Route::post('/reverse-approval/{id}', [CashReconciliationController::class, 'reverseApproval'])->name('reverse-approval');
             });
 
             //Product Price routes

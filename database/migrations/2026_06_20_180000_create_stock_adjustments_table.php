@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->date('adjustment_date');
             $table->string('reference_no')->nullable()->unique();
-            $table->enum('adjustment_type', ['increase', 'decrease']);
+            $table->enum('adjustment_type', ['increase', 'decrease','mixed']);
             $table->string('reason', 150)->nullable();
             $table->text('notes')->nullable();
             $table->decimal('total_qty', 15, 2)->default(0);
