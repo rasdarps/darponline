@@ -302,12 +302,18 @@
                                     <table>
                                         <tbody id="cartItemsContainer">
                                             @foreach($cartItemsWithProducts as $item)
+
+                                            @php
+                                                // Get the product model from the cart item
+                                                $product = App\Models\Product::find(Illuminate\Support\Facades\Crypt::decrypt($item['id']));
+                                                // Get the featured image URL using Spatie Media Library
+                                                $imageUrl = $product->hasMedia('featured_image') ? $product->getFirstMedia('featured_image')->getUrl('thumb') : asset('client/shop/files/default_product_image.png');
+                                            @endphp
                                                 <tr id="cart-row-{{ $item['rowId'] }}">
                                                     <td class="pro-thumbnail">
                                                         <a href="{{ route('shop.product.details', $item['options']['product_slug'] ?? '#') }}">
-                                                            <img src="{{ $item['product']->featured_image_url }}" 
-                                                                alt="{{ $item['name'] }}" 
-                                                                loading="lazy" />
+                                                            <img src="{{ $imageUrl }}" alt="{{ $item['name'] }}">
+
                                                         </a>
                                                     </td>
                                                     <td class="pro-title">
@@ -320,7 +326,7 @@
                                                     </td>
                                                     <td class="pro-price">
                                                         <span class="amount">
-                                                            <span class="money">${{ number_format($item['price'], 2) }}</span>
+                                                            <span class="money">GH₵{{ number_format($item['price'], 2) }}</span>
                                                         </span>
                                                     </td>
                                                     <td class="pro-quantity cart-product-quantity">
@@ -341,7 +347,7 @@
                                                         </div>
                                                     </td>
                                                     <td class="pro-subtotal" id="subtotal-{{ $item['rowId'] }}">
-                                                        <span class="money">${{ number_format($item['subtotal'], 2) }}</span>
+                                                        <span class="money">GH₵{{ number_format($item['subtotal'], 2) }}</span>
                                                     </td>
                                                     <td class="pro-remove">
                                                         <a href="javascript:void(0);" onclick="removeFromCart('{{ $item['id'] }}')">×</a>
@@ -395,7 +401,7 @@
                                                             <td>
                                                                 <span class="amount">
                                                                     <span id="cart-subtotal">
-                                                                        <span class="money">${{ number_format($subtotal, 2) }}</span>
+                                                                        <span class="money">GH₵{{ number_format($subtotal, 2) }}</span>
                                                                     </span>
                                                                 </span>
                                                             </td>
@@ -405,7 +411,7 @@
                                                                 <th>Discount ({{ Session::get('coupon.code') }})</th>
                                                                 <td>
                                                                     <span class="amount text-success">
-                                                                        -$<span id="cart-discount">{{ number_format($discount, 2) }}</span>
+                                                                        -GH₵<span id="cart-discount">{{ number_format($discount, 2) }}</span>
                                                                     </span>
                                                                     <button type="button" class="btn btn-sm btn-danger ml-2" onclick="removeCoupon()">
                                                                         <i class="fas fa-times"></i>
@@ -419,7 +425,7 @@
                                                                 <strong>
                                                                     <span class="amount">
                                                                         <span id="cart-total">
-                                                                            <span class="money">${{ number_format($total, 2) }}</span>
+                                                                            <span class="money">GH₵{{ number_format($total, 2) }}</span>
                                                                         </span>
                                                                     </span>
                                                                 </strong>
@@ -458,8 +464,28 @@
     </div>
 
     <div id="shopify-section-template--14758548865142__474a1338-1821-4778-a604-18dfa0ef27ea" class="shopify-section">
-        <!-- Featured Products Section -->
-        <div class="ltn__product-slider-area ltn__product-gutter" id="section-featured-products">
+        <style data-shopify="">
+            #section-template--14758548865142__474a1338-1821-4778-a604-18dfa0ef27ea {
+                padding-top: 0px;
+                padding-bottom: 60px;
+            }
+    
+            @media (min-width: 768px) and (max-width: 991px) {
+                #section-template--14758548865142__474a1338-1821-4778-a604-18dfa0ef27ea {
+                    padding-top: 0px;
+                    padding-bottom: 40px;
+                }
+            }
+    
+            @media (max-width: 767px) {
+                #section-template--14758548865142__474a1338-1821-4778-a604-18dfa0ef27ea {
+                    padding-top: 0px;
+                    padding-bottom: 30px;
+                }
+            }
+        </style><!-- PRODUCT SLIDER AREA START -->
+        <div class="ltn__product-slider-area ltn__product-gutter"  id="section-template--14758548865142__474a1338-1821-4778-a604-18dfa0ef27ea" data-section="featuredCollection">
+
             <div class="container">
                 <div class="row">
                     <div class="col-lg-12">
@@ -469,12 +495,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="row ltn__product-slider-item-four-active slick-arrow-1"
-                    data-slick='{"rows": 1, "slidesToShow": 4, "responsive":[
-                        {"breakpoint":992, "settings": {"slidesToShow": 3, "arrows": false, "dots": true}},
-                        {"breakpoint":768, "settings": {"slidesToShow": 2, "arrows": false, "dots": true}},
-                        {"breakpoint":480, "settings": {"slidesToShow": 2, "slidesToScroll": 2, "arrows": false, "dots": true}}
-                    ]}'>
+                <div class="row ltn__product-slider-item-four-active slick-arrow-1" data-slick='{"rows": 1,
+                "slidesToShow": 4,
+                 "responsive":[
+                     {"breakpoint":992, "settings": {"slidesToShow": 3, "arrows": false, "dots": true} },
+                     {"breakpoint":768, "settings": {"slidesToShow": 2, "arrows": false, "dots": true} },
+                     {"breakpoint":480, "settings": {"slidesToShow": 2, "slidesToScroll": 2, "arrows": false, "dots": true} }
+                   ] 
+ 
+                    }'>
                     @foreach($featuredProducts ?? [] as $product)
                         <div class="col-lg-12">
                             <div class="ltn__product-item ltn__product-item-3 text-center product-wrapper">
@@ -486,7 +515,7 @@
                                     @if($product->hasMedia('featured_image'));
 
                                             {{ $product->getFirstMedia('featured_image')->img('uniform')->attributes([
-                                                'class' => 'image-position-size',
+                                                'class' => 'image-position-size popup_cart_image',
                                                 'width' => '600',
                                                 'height' => '600',
                                                 'alt' => $product->name,
@@ -530,7 +559,7 @@
                                         <a href="{{ route('shop.product.details', $product->slug) }}">{{ $product->name }}</a>
                                     </h3>
                                     <div class="product-price">
-                                        <span>${{ number_format($product->price ?? 0, 2) }}</span>
+                                        <span>GH₵{{ number_format($product->price ?? 0, 2) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -767,13 +796,18 @@
             var maxVal = parseInt(input.attr('max')) || 999;
             var minVal = parseInt(input.attr('min')) || 1;
             
-            console.log(productId);
+            console.log(newVal);
             
             // Validate and correct value
             if (newVal < minVal) {
                 input.val(minVal);
                 newVal = minVal;
+                Notiflix.Notify.warning('Minimum quantity is 1');
+
+                
             } else if (newVal > maxVal) {
+
+                
                 input.val(maxVal);
                 newVal = maxVal;
                 Notiflix.Notify.warning('Only ' + maxVal + ' items available');
@@ -793,10 +827,10 @@
                 success: function(response) {
                     // Notiflix.Loading.remove();
                     if (response.status === 'success') {
-                        $('#subtotal-' + rowId + ' .money').text('$' + response.item_total);
-                        $('#cart-subtotal .money').text('$' + response.subtotal);
+                        $('#subtotal-' + rowId + ' .money').text('GH₵' + response.item_total);
+                        $('#cart-subtotal .money').text('GH₵' + response.subtotal);
                         if (response.cart_total) {
-                            $('#cart-total .money').text('$' + response.cart_total);
+                            $('#cart-total .money').text('GH₵' + response.cart_total);
                         }
                         updateCartCount();
                     } else {

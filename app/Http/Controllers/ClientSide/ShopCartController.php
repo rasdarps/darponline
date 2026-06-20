@@ -42,7 +42,14 @@ class ShopCartController extends Controller
                 $subtotal += ($product->selling_price ?? 0) * $item->qty;
             }
         }
-        
+        $featuredProducts = Product::with(['category', 'brand', 'unit'])
+        ->where('is_online', true)
+        ->where('is_active', true)
+        ->where('is_featured', true)
+        ->orderBy('created_at', 'desc')
+        ->take(10)
+        ->get();
+
         $total = $subtotal;
         $cartCount = Cart::count();
         
@@ -56,7 +63,7 @@ class ShopCartController extends Controller
         }
 
         
-        return view('client.cart_page', compact('cartItemsWithProducts', 'subtotal', 'discount', 'total', 'coupon', 'cartCount'));
+        return view('client.cart_page', compact('cartItemsWithProducts','featuredProducts', 'subtotal', 'discount', 'total', 'coupon', 'cartCount'));
     }
     
     /**
@@ -282,13 +289,15 @@ class ShopCartController extends Controller
      */
     public function remove(Request $request)
     {
+
         try {
             $validated = $request->validate([
-                'product_id' => 'required|exists:products,id'
+                'product_id' => 'required|string',
             ]);
 
-            // Decrypt product ID
-            $product = Product::findOrFail($validated['product_id']);
+             // Decrypt product ID
+             $productId = Crypt::decrypt($validated['product_id']);
+             $product = Product::findOrFail($productId);
             
             // Find product in cart
             $existingCartItem = Cart::search(function ($cartItem, $rowId) use ($product) {

@@ -61,16 +61,41 @@ class OnlineShoppingController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
         
-        // Get related products
+        // Get gallery images from Spatie Media Library
+        $galleryImages = $product->getMedia('gallery_images');
+        
+        // Get featured image
+        $featuredImage = $product->getFirstMedia('featured_image')->img('uniform');
+        
+        // Get related products (same category)
         $relatedProducts = Product::with(['category', 'brand', 'unit'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_online', true)
             ->where('is_active', true)
-            ->take(8)
+            ->take(10)
             ->get();
+
+            // Calculate visitor count (random for demo)
+        $visitorCount = rand(5, 20);
         
-        return view('shop.product-details', compact('product', 'relatedProducts'));
+        // Calculate estimated delivery date
+        $deliveryStart = now()->addDays(rand(2, 5));
+        $deliveryEnd = now()->addDays(rand(6, 10));
+        
+        
+        // Get product colors/variants (if you have variants table)
+        // For now, using color from product model
+        
+        return view('client.product_details', compact(
+            'product',
+            'galleryImages',
+            'featuredImage',
+            'relatedProducts',
+            'visitorCount',
+            'deliveryStart',
+            'deliveryEnd'
+        ));
     }
 
     public function quickView($slug)
