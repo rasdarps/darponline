@@ -30,8 +30,6 @@ class ProductController extends Controller
     public function index(ProductDataTable $dataTable){
      
         $categories = Category::orderBy('name', 'asc')->get();
-
-
         return $dataTable->render('backend.product.index', compact('categories'));
     } // End Method 
 

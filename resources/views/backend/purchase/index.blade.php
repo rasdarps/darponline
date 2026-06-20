@@ -59,10 +59,18 @@
                             </div>
                         </div>
 
-                        <!-- Reset Filters Button -->
                         <div class="row mb-3">
-                            <div class="col-md-12">
-                                <button id="reset_filters" class="btn btn-secondary">Reset Filters</button>
+                            <div class="col-md-3">
+                                <label>Created By</label>
+                                <select id="filter_created_by" class="form-control select2">
+                                    <option value="">All Users</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button id="reset_filters" class="btn btn-danger w-100">Reset Filters</button>
                             </div>
                         </div>
 
@@ -85,16 +93,17 @@
             let table = $('#allpurchases-table').DataTable();
 
             // Reload table when filters change
-            $('#filter_purchase_id, #filter_supplier_id, #filter_from_date, #filter_to_date').on('change', function() {
+            $('#filter_purchase_id, #filter_supplier_id, #filter_from_date, #filter_to_date, #filter_created_by').on('change', function() {
                 table.ajax.reload();
             });
 
             // Reset filters
             $('#reset_filters').on('click', function() {
-                $('#filter_purchase_id').val('');
-                $('#filter_supplier_id').val('');
+                $('#filter_purchase_id').val(null).trigger('change');
+                $('#filter_supplier_id').val(null).trigger('change');
                 $('#filter_from_date').val('');
                 $('#filter_to_date').val('');
+                $('#filter_created_by').val(null).trigger('change');
                 table.ajax.reload();
             });
 
@@ -104,16 +113,7 @@
                 data.supplier_id = $('#filter_supplier_id').val();
                 data.from_date = $('#filter_from_date').val();
                 data.to_date = $('#filter_to_date').val();
-            });
-
-            // ✅ Footer totals calculation for Amount column (index 3)
-            table.on('draw.dt', function() {
-                let intVal = i => typeof i === 'string' ? i.replace(/[\$,]/g, '')*1 : (typeof i === 'number' ? i : 0);
-
-                let totalAmount = table.column(3, {page:'current'}).data()
-                    .reduce((a, b) => intVal(a) + intVal(b), 0);
-
-                $(table.column(3).footer()).html('Gh¢ ' + totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                data.created_by = $('#filter_created_by').val();
             });
 
             // Handle DataTables errors gracefully

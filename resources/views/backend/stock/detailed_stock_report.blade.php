@@ -44,6 +44,26 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
+                                <label>Transaction Type</label>
+                                <select id="filter_transaction_type" class="form-control select2">
+                                    <option value="">All Types</option>
+                                    <option value="Purchase">Purchase</option>
+                                    <option value="Sale">Sale</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Created By</label>
+                                <select id="filter_created_by" class="form-control select2">
+                                    <option value="">All Users</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->name }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-3">
                                 <label>From Date</label>
                                 <input type="date" id="filter_from_date" class="form-control">
                             </div>
@@ -51,12 +71,8 @@
                                 <label>To Date</label>
                                 <input type="date" id="filter_to_date" class="form-control">
                             </div>
-                        </div>
-
-                        <!-- Reset Filters Button -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <button id="reset_filters" class="btn btn-secondary">Reset Filters</button>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button id="reset_filters" class="btn btn-danger w-100">Reset Filters</button>
                             </div>
                         </div>
 
@@ -81,14 +97,16 @@
             let table = $('#detailedstocksreport-table').DataTable();
 
             // Reload table when filters change
-            $('#filter_product, #filter_category, #filter_from_date, #filter_to_date').on('change', function() {
+            $('#filter_product, #filter_category, #filter_transaction_type, #filter_created_by, #filter_from_date, #filter_to_date').on('change', function() {
                 table.ajax.reload();
             });
 
             // Reset filters
             $('#reset_filters').on('click', function() {
-                $('#filter_product').val('');
-                $('#filter_category').val('');
+                $('#filter_product').val(null).trigger('change');
+                $('#filter_category').val(null).trigger('change');
+                $('#filter_transaction_type').val(null).trigger('change');
+                $('#filter_created_by').val(null).trigger('change');
                 $('#filter_from_date').val('');
                 $('#filter_to_date').val('');
                 table.ajax.reload();
@@ -98,29 +116,10 @@
             table.on('preXhr.dt', function(e, settings, data) {
                 data.product_id = $('#filter_product').val();
                 data.category_id = $('#filter_category').val();
+                data.transaction_type = $('#filter_transaction_type').val();
+                data.created_by = $('#filter_created_by').val();
                 data.from_date = $('#filter_from_date').val();
                 data.to_date = $('#filter_to_date').val();
-            });
-
-            // Footer totals calculation
-            table.on('draw.dt', function() {
-                let intVal = i => typeof i === 'string' ? i.replace(/[\$,]/g, '')*1 : (typeof i === 'number' ? i : 0);
-
-                // Stock In (column index 5)
-                let stockInTotal = table.column(5, {page:'current'}).data()
-                    .reduce((a, b) => intVal(a) + intVal(b), 0);
-
-                // Stock Out (column index 6)
-                let stockOutTotal = table.column(6, {page:'current'}).data()
-                    .reduce((a, b) => intVal(a) + intVal(b), 0);
-
-                // Balance = Stock In - Stock Out
-                let balance = stockInTotal - stockOutTotal;
-
-                // Update footer cells
-                $(table.column(5).footer()).html(stockInTotal);
-                $(table.column(6).footer()).html(stockOutTotal);
-                $(table.column(7).footer()).html(balance);
             });
 
             // Handle DataTables errors gracefully

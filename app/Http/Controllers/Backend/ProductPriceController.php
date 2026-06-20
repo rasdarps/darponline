@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\DataTables\Admin\Report\ProductPriceHistoryDataTable;
 use App\DataTables\Admin\Settings\ProductPriceDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductPrice;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -22,6 +24,13 @@ class ProductPriceController extends Controller
         // $products = Product::all();
         return $dataTable->render('backend.product_price.index');
       
+    }
+
+    public function ProductPriceHistory(ProductPriceHistoryDataTable $dataTable)
+    {
+        $products = Product::orderBy('name')->get();
+        $users = User::orderBy('name')->get();
+        return $dataTable->render('backend.product_price.product_price_history', compact('products', 'users'));
     }
 
     /**

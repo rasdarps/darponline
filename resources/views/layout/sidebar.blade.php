@@ -201,9 +201,11 @@
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
                                     <li><a href="{{ route('reports.profit') }}">Profit Report</a></li>
+                                    <li><a href="{{ route('stock.stock_value') }}">Stock Value Report</a></li>
                                     <li><a href="{{ route('stock.report') }}">Stock Report</a></li>
                                     <li><a href="{{ route('stock.detailed_stock_report') }}">Detailed Stock Report</a></li>
-                                    <li><a href="{{ route('stock.stock_value') }}">Stock Value Report</a></li>
+                                    <li><a href="{{ route('product-prices.product_price_history') }}">Product Price History</a></li>
+                                </ul>
 
                                     <li><a href="#">Backup</a></li>
                                 </ul>

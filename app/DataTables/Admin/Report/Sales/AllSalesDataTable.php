@@ -47,7 +47,7 @@ class AllSalesDataTable extends DataTable
 
              ->editColumn('date', function($row)
             {
-                return  Carbon::parse($row->date)->format('jS F, Y g:i A');
+                return  Carbon::parse($row->date)->format('jS F, Y');
             })
 
               ->editColumn('created_at', function($row)
@@ -112,9 +112,43 @@ class AllSalesDataTable extends DataTable
                     //->dom('Bfrtip')
                     ->orderBy(1)
                     ->selectStyleSingle()
+                    ->footerCallback('function (row, data, start, end, display) {
+                        var api = this.api();
+
+                        var intVal = function (value) {
+                            if (typeof value === "string") {
+                                return value.replace(/[^0-9.-]/g, "") * 1;
+                            }
+
+                            if (typeof value === "number") {
+                                return value;
+                            }
+
+                            return 0;
+                        };
+
+                        var totalAmount = api.column(5, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var formatValue = function (value) {
+                            return Number(value).toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        };
+
+                        $(api.column(5).footer()).html(formatValue(totalAmount));
+                    }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
-                        'buttons'      => ['colvis', 'excel', 'csv', 'reset', 'reload'],
+                        'buttons'      => [
+                            'colvis',
+                            ['extend' => 'excel', 'footer' => true],
+                            ['extend' => 'csv', 'footer' => true],
+                            'reset',
+                            'reload'
+                        ],
                     ]);
     }
 
@@ -126,6 +160,7 @@ class AllSalesDataTable extends DataTable
         return [
             Column::make('date'),
             Column::make('invoice_no'),
+            Column::make('sales_source')->title('Sales Source'),
             Column::make('customer_name')->title('Customer Name'),
             Column::make('created_by_name')->title('Created By'),
             Column::make('amount')->title('Amount (Gh¢)'),

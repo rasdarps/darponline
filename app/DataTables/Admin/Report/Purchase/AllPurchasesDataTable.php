@@ -79,6 +79,10 @@ class AllPurchasesDataTable extends DataTable
             });
         }
 
+        if ($createdBy = $this->request()->get('created_by')) {
+            $query->where('created_by', $createdBy);
+        }
+
         if ($fromDate = $this->request()->get('from_date')) {
             $query->whereDate('date', '>=', $fromDate);
         }
@@ -101,11 +105,45 @@ class AllPurchasesDataTable extends DataTable
                     ->columns($this->getColumns())
                     ->minifiedAjax()
                     //->dom('Bfrtip')
-                      ->orderBy(1)
+                    ->orderBy(1)
                     ->selectStyleSingle()
+                    ->footerCallback('function (row, data, start, end, display) {
+                        var api = this.api();
+
+                        var intVal = function (value) {
+                            if (typeof value === "string") {
+                                return value.replace(/[^0-9.-]/g, "") * 1;
+                            }
+
+                            if (typeof value === "number") {
+                                return value;
+                            }
+
+                            return 0;
+                        };
+
+                        var totalAmount = api.column(3, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var formatValue = function (value) {
+                            return Number(value).toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        };
+
+                        $(api.column(3).footer()).html(formatValue(totalAmount));
+                    }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
-                        'buttons'      => ['colvis', 'excel', 'csv', 'reset', 'reload'],
+                        'buttons'      => [
+                            'colvis',
+                            ['extend' => 'excel', 'footer' => true],
+                            ['extend' => 'csv', 'footer' => true],
+                            'reset',
+                            'reload'
+                        ],
                     ]);
     }
 

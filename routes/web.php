@@ -88,7 +88,7 @@ Route::prefix('admin')->group(function () {
                 Route::post('/store', [SupplierController::class, 'store'])->name('store');
                 Route::get('/edit/{id}', [SupplierController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [SupplierController::class, 'update'])->name('update');
-                Route::delete('/destroy/{id}', [UnitController::class, 'destroy'])->name('destroy');
+                Route::delete('/destroy/{id}', [SupplierController::class, 'destroy'])->name('destroy');
                 
 
             });
@@ -180,6 +180,9 @@ Route::prefix('admin')->group(function () {
                 Route::get('/edit/{encryptedId}', [ProductPriceController::class, 'edit'])->name('edit');
                 Route::patch('/update/{encryptedId}', [ProductPriceController::class, 'update'])->name('update');
                 Route::delete('/destroy/{encryptedId}', [ProductPriceController::class, 'destroy'])->name('destroy');
+
+                //price change history
+                Route::get('/product_price_history', [ProductPriceController::class, 'ProductPriceHistory'])->name('product_price_history');
 
             });
 
@@ -348,7 +351,7 @@ Route::prefix('shop')->name('shop.')->group(function () {
                 // Route::put('/addresses/{id}', [AddressController::class, 'update'])->name('addresses.update');
                 // Route::delete('/addresses/{id}', [AddressController::class, 'destroy'])->name('addresses.destroy');
 
-                Route::get('/whislist', [OnlineShoppingController::class, 'wishlist_page'])->name('wishlist_page');
+                Route::get('/wishlist', [OnlineShoppingController::class, 'wishlist_page'])->name('wishlist_page');
                 
         
             });
@@ -395,7 +398,7 @@ Route::prefix('shop')->name('shop.')->group(function () {
         // Collections/Categories (Public)
 
         Route::get('/collections', [OnlineShoppingController::class, 'collection_page'])->name('collection_page');
-        Route::get('/collections{slug}', [ShopCategoryController::class, 'show'])->name('collections.show');
+        Route::get('/collections/{slug}', [ShopCategoryController::class, 'show'])->name('collections.show');
         Route::get('/collections/all', [ShopCategoryController::class, 'getAllCategories'])->name('collections.all');
 });
 

@@ -5,13 +5,12 @@ namespace App\Http\Controllers\ClientSide;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Http\Request;
 
 class ShopCategoryController extends Controller
 {
     //
 
-    public function show($slug)
+    public function show(string $slug)
     {
         $category = Category::where('slug', $slug)
             ->where('is_active', true)

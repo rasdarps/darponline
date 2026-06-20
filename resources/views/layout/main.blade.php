@@ -264,6 +264,56 @@
         
     @include('layout.scripts')
 
+<script>
+    (function () {
+        function shouldStyleAsBlack($el) {
+            // Keep DataTables buttons/actions unchanged.
+            if ($el.closest('.dataTables_wrapper').length || $el.closest('.dt-buttons').length || $el.hasClass('dt-button')) {
+                return false;
+            }
+
+            var text = '';
+            if ($el.is('input[type="submit"], input[type="button"]')) {
+                text = ($el.val() || '').trim().toLowerCase();
+            } else {
+                text = ($el.text() || '').trim().toLowerCase();
+            }
+
+            if (!text) {
+                return false;
+            }
+
+            return /\b(add|submit|save|view)\b/.test(text);
+        }
+
+        function applyBlackButtons() {
+            $('a.btn, button.btn, input.btn[type="submit"], input.btn[type="button"]').each(function () {
+                var $el = $(this);
+
+                if (!shouldStyleAsBlack($el)) {
+                    return;
+                }
+
+                $el.removeClass('btn-primary btn-success btn-info btn-secondary btn-warning btn-danger btn-light btn-outline-primary btn-outline-success btn-outline-info btn-outline-secondary btn-outline-warning btn-outline-danger');
+                $el.addClass('btn-dark');
+                $el.css({
+                    'background-color': '#000',
+                    'border-color': '#000',
+                    'color': '#fff'
+                });
+            });
+        }
+
+        $(document).ready(function () {
+            applyBlackButtons();
+        });
+
+        $(document).ajaxComplete(function () {
+            applyBlackButtons();
+        });
+    })();
+</script>
+
 @yield('scripts')
 @stack('scripts')
 </body>

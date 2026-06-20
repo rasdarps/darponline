@@ -14,13 +14,14 @@ use App\Models\PurchasePayment;
 use App\Models\PurchasePaymentDetail;
 use App\Models\Supplier;
 use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
   
 class PurchaseController extends Controller
 
@@ -37,7 +38,8 @@ class PurchaseController extends Controller
     public function index(AllPurchasesDataTable $dataTable){
         $suppliers = Supplier::orderBy('name')->get();
         $purchase_invoices = Purchase::orderBy('purchase_no')->get();
-        return $dataTable->render('backend.purchase.index', compact('suppliers', 'purchase_invoices'));
+        $users = User::orderBy('name')->get();
+        return $dataTable->render('backend.purchase.index', compact('suppliers', 'purchase_invoices', 'users'));
     } // End Method
 
     public function create(){ 

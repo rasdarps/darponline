@@ -26,8 +26,41 @@
                     <div class="card-body">
                         <h4 class="card-title">Stock Report </h4>
 
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label>Brand</label>
+                                <select id="filter_brand" class="form-control select2">
+                                    <option value="">All Brands</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Category</label>
+                                <select id="filter_category" class="form-control select2">
+                                    <option value="">All Categories</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Unit</label>
+                                <select id="filter_unit" class="form-control select2">
+                                    <option value="">All Units</option>
+                                    @foreach($units as $unit)
+                                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button id="reset_filters" class="btn btn-danger w-100">Reset Filters</button>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
-                            {!! $dataTable->table() !!}
+                            {!! $dataTable->table(['class' => 'table table-bordered table-striped'], true) !!}
                         </div>
         
                     </div>
@@ -41,6 +74,33 @@
 @section('scripts')
     {{ $dataTable->scripts() }}
     <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.6/dist/notiflix-aio-3.2.6.min.js"></script>
+    <script>
+        $(function() {
+            let table = $('#stocks-table').DataTable();
+
+            $('#filter_brand, #filter_category, #filter_unit').on('change', function() {
+                table.ajax.reload();
+            });
+
+            $('#reset_filters').on('click', function() {
+                $('#filter_brand').val(null).trigger('change');
+                $('#filter_category').val(null).trigger('change');
+                $('#filter_unit').val(null).trigger('change');
+                table.ajax.reload();
+            });
+
+            table.on('preXhr.dt', function(e, settings, data) {
+                data.brand_id = $('#filter_brand').val();
+                data.category_id = $('#filter_category').val();
+                data.unit_id = $('#filter_unit').val();
+            });
+
+            $.fn.dataTable.ext.errMode = 'none';
+            $('#stocks-table').on('error.dt', function(e, settings, techNote, message) {
+                Notiflix.Notify.failure("DataTables error: " + message);
+            });
+        });
+    </script>
 @endsection
 
 @stack('scripts')

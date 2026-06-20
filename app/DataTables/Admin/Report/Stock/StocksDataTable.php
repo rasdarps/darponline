@@ -48,11 +48,25 @@ class StocksDataTable extends DataTable
      */
     public function query(Product $model): QueryBuilder
     {
-        return $model->newQuery()
+        $query = $model->newQuery()
             ->with(['category', 'brand', 'unit'])
             ->withSum('purchasedetails', 'buying_qty')
             ->withSum('invoicedetails', 'selling_qty')
             ->orderBy('products.name', 'asc');
+
+        if ($brandId = $this->request()->get('brand_id')) {
+            $query->where('products.brand_id', $brandId);
+        }
+
+        if ($categoryId = $this->request()->get('category_id')) {
+            $query->where('products.category_id', $categoryId);
+        }
+
+        if ($unitId = $this->request()->get('unit_id')) {
+            $query->where('products.unit_id', $unitId);
+        }
+
+        return $query;
     }
 
     /**
@@ -65,11 +79,59 @@ class StocksDataTable extends DataTable
                     ->columns($this->getColumns())
                     ->minifiedAjax()
                     //->dom('Bfrtip')
-                   ->orderBy(1)
+                    ->orderBy(1)
                     ->selectStyleSingle()
+                    ->footerCallback('function (row, data, start, end, display) {
+                        var api = this.api();
+
+                        var intVal = function (value) {
+                            if (typeof value === "string") {
+                                var textValue = $("<div>").html(value).text().trim();
+                                var normalized = textValue.replace(/,/g, "");
+                                var parsed = parseFloat(normalized);
+                                return isNaN(parsed) ? 0 : parsed;
+                            }
+
+                            if (typeof value === "number") {
+                                return value;
+                            }
+
+                            return 0;
+                        };
+
+                        var totalStockIn = api.column(4, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var totalStockOut = api.column(5, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var totalCurrentStock = api.column(6, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var formatValue = function (value) {
+                            return Number(value).toLocaleString("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+                        };
+
+                        $(api.column(3).footer()).html("Totals");
+                        $(api.column(4).footer()).html(formatValue(totalStockIn));
+                        $(api.column(5).footer()).html(formatValue(totalStockOut));
+                        $(api.column(6).footer()).html(formatValue(totalCurrentStock));
+                    }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
-                        'buttons'      => ['colvis', 'excel', 'csv', 'reset', 'reload'],
+                        'buttons'      => [
+                            'colvis',
+                            ['extend' => 'excel', 'footer' => true],
+                            ['extend' => 'csv', 'footer' => true],
+                            'reset',
+                            'reload',
+                        ],
                     ]);
     }
 
@@ -80,6 +142,7 @@ class StocksDataTable extends DataTable
     {
         return [
            Column::make('name')->title('Product Name'),
+           Column::make('brand.name')->title('Brand'),
             Column::make('category.name')->title('Category'),
             Column::make('unit.name')->title('Unit'),
             Column::make('buying_total')->title('Stock In'),

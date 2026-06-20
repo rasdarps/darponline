@@ -146,9 +146,53 @@ class ProfitReportDataTable extends DataTable
                     //->dom('Bfrtip')
                     ->orderBy(1)
                     ->selectStyleSingle()
+                    ->footerCallback('function (row, data, start, end, display) {
+                        var api = this.api();
+
+                        var intVal = function (value) {
+                            if (typeof value === "string") {
+                                return value.replace(/[^0-9.-]/g, "") * 1;
+                            }
+
+                            if (typeof value === "number") {
+                                return value;
+                            }
+
+                            return 0;
+                        };
+
+                        var totalSales = api.column(4, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var totalCost = api.column(5, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var totalProfit = api.column(6, { page: "current" }).data().reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+
+                        var formatValue = function (value) {
+                            return Number(value).toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        };
+
+                        $(api.column(4).footer()).html(formatValue(totalSales));
+                        $(api.column(5).footer()).html(formatValue(totalCost));
+                        $(api.column(6).footer()).html(formatValue(totalProfit));
+                    }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
-                        'buttons'      => ['colvis', 'excel', 'csv', 'reset', 'reload'],
+                        'buttons'      => [
+                            'colvis',
+                            ['extend' => 'excel', 'footer' => true],
+                            ['extend' => 'csv', 'footer' => true],
+                            'reset',
+                            'reload'
+                        ],
                     ]);
     }
 

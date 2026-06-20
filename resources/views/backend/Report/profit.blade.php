@@ -66,12 +66,8 @@
                                     @endforeach
                                 </select>
                             </div>
-                        </div>
-
-                        <!-- Reset Filters Button -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <button id="reset_filters" class="btn btn-secondary">Reset Filters</button>
+                            <div class="col-md-3 mt-2 d-flex align-items-end">
+                                <button id="reset_filters" class="btn btn-danger w-100">Reset Filters</button>
                             </div>
                         </div>
 
@@ -100,11 +96,11 @@
 
             // Reset filters
             $('#reset_filters').on('click', function() {
-                $('#filter_invoice_id').val('');
-                $('#filter_customer_id').val('');
+                $('#filter_invoice_id').val(null).trigger('change');
+                $('#filter_customer_id').val(null).trigger('change');
                 $('#filter_from_date').val('');
                 $('#filter_to_date').val('');
-                $('#filter_created_by').val('');
+                $('#filter_created_by').val(null).trigger('change');
                 table.ajax.reload();
             });
 
@@ -115,17 +111,6 @@
                 data.from_date = $('#filter_from_date').val();
                 data.to_date = $('#filter_to_date').val();
                 data.created_by = $('#filter_created_by').val();
-            });
-
-            // ✅ Footer totals calculation for Profit column
-            table.on('draw.dt', function() {
-                let intVal = i => typeof i === 'string' ? i.replace(/[\$,]/g, '')*1 : (typeof i === 'number' ? i : 0);
-
-               let totalAmount = table.column(6, {page:'current'}).data()
-                    .reduce((a, b) => intVal(a) + intVal(b), 0);
-
-                $(table.column(6).footer()).html('Gh¢ ' + totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-
             });
 
             // Handle DataTables errors gracefully

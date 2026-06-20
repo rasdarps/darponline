@@ -91,7 +91,7 @@
                                         <div class="col-12">
                                             <table class="table-sm table-bordered" width="100%" style="border-color: #ddd;">
                                                 <thead>
-                                                    <tr style="background-color:#034141; text-align:center;" class="text-white">  
+                                                    <tr style="background-color:#dc3545; text-align:center;" class="text-white">  
                                                         <th width="10%">Category</th>
                                                         <th width="12%">Barcode</th>
                                                         <th width="15%">Product Name</th>

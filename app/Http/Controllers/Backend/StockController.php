@@ -6,8 +6,11 @@ use App\DataTables\Admin\Report\Stock\DetailedStocksReportDataTable;
 use App\DataTables\Admin\Report\Stock\StocksDataTable;
 use App\DataTables\Admin\Report\Stock\StockValueReportDataTable;
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Http\Request;
  
 class StockController extends Controller
@@ -21,7 +24,10 @@ class StockController extends Controller
 
     public function StockReport(StocksDataTable $dataTable){
 
-        return $dataTable->render('backend.stock.stock_report');
+       $units = Unit::orderBy('name')->get();
+       $brands = Brand::orderBy('name')->get();
+       $categories = Category::orderBy('name')->get(); 
+       return $dataTable->render('backend.stock.stock_report', compact('units', 'brands', 'categories'));
 
     }
 
@@ -29,8 +35,9 @@ class StockController extends Controller
     {
         $products = Product::orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
+        $users = User::orderBy('name')->get();
 
-        return $dataTable->render('backend.stock.detailed_stock_report', compact('products', 'categories'));
+        return $dataTable->render('backend.stock.detailed_stock_report', compact('products', 'categories', 'users'));
     }
 
 

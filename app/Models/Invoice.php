@@ -16,6 +16,7 @@ class Invoice extends Model
         'invoice_no',
         'date', 
         'description',
+        'sales_source',
         'status',
         'created_by',
         'updated_by',
