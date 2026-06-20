@@ -125,9 +125,9 @@
                                     </div>
                                     
                                 </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                        <button type="submit" class="btn btn-warning w-100">Reverse Approval / Unlock</button>
-                                    </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-warning w-100">Reverse Approval / Unlock</button>
+                                </div>
                             </form>
                         @endif
                     </div>
