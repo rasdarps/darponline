@@ -71,10 +71,37 @@ class PermissionTableSeeder extends Seeder
             'purchase-list','purchase-create','purchase-edit','purchase-delete',
         ];
 
+        $expense_management_permissions = [
+            'expense-list','expense-create','expense-edit','expense-delete',
+        ];
+
+        $expense_category_permissions = [
+            'expense-category-list','expense-category-create','expense-category-edit','expense-category-delete',
+        ];
+
+        $stock_adjustment_permissions = [
+            'stock-adjustment-list','stock-adjustment-create','stock-adjustment-edit','stock-adjustment-delete',
+        ];
+
 
         // Create transactions management permissions in the database if they don't already exist
         foreach ($transactions_management_permissions as $transaction_permission) {
             Permission::firstOrCreate(['name' => $transaction_permission]);
+        }
+
+        // Create expense management permissions in the database if they don't already exist
+        foreach ($expense_management_permissions as $expense_permission) {
+            Permission::firstOrCreate(['name' => $expense_permission]);
+        }
+
+        // Create expense category permissions in the database if they don't already exist
+        foreach ($expense_category_permissions as $expense_category_permission) {
+            Permission::firstOrCreate(['name' => $expense_category_permission]);
+        }
+
+        // Create stock adjustment permissions in the database if they don't already exist
+        foreach ($stock_adjustment_permissions as $stock_adjustment_permission) {
+            Permission::firstOrCreate(['name' => $stock_adjustment_permission]);
         }
 
         // Find or retrieve the Super Admin role (must exist)
@@ -135,6 +162,39 @@ class PermissionTableSeeder extends Seeder
             // Check if Manager doesn't have the permission, then assign it
             if (!$manager_role->hasPermissionTo($transaction_permission)) {
                 $manager_role->givePermissionTo($transaction_permission);
+            }
+        }
+
+        // Assign expense permissions to Super Admin and Manager roles
+        foreach ($expense_management_permissions as $expense_permission) {
+            if (!$role->hasPermissionTo($expense_permission)) {
+                $role->givePermissionTo($expense_permission);
+            }
+
+            if (!$manager_role->hasPermissionTo($expense_permission)) {
+                $manager_role->givePermissionTo($expense_permission);
+            }
+        }
+
+        // Assign expense category permissions to Super Admin and Manager roles
+        foreach ($expense_category_permissions as $expense_category_permission) {
+            if (!$role->hasPermissionTo($expense_category_permission)) {
+                $role->givePermissionTo($expense_category_permission);
+            }
+
+            if (!$manager_role->hasPermissionTo($expense_category_permission)) {
+                $manager_role->givePermissionTo($expense_category_permission);
+            }
+        }
+
+        // Assign stock adjustment permissions to Super Admin and Manager roles
+        foreach ($stock_adjustment_permissions as $stock_adjustment_permission) {
+            if (!$role->hasPermissionTo($stock_adjustment_permission)) {
+                $role->givePermissionTo($stock_adjustment_permission);
+            }
+
+            if (!$manager_role->hasPermissionTo($stock_adjustment_permission)) {
+                $manager_role->givePermissionTo($stock_adjustment_permission);
             }
         }
 

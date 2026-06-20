@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\DataTables\Admin\Report\Stock\DetailedStocksReportDataTable;
+use App\DataTables\Admin\Report\Stock\ProductWiseStockReportDataTable;
+use App\DataTables\Admin\Report\Stock\StockReportDataTable;
 use App\DataTables\Admin\Report\Stock\StocksDataTable;
 use App\DataTables\Admin\Report\Stock\StockValueReportDataTable;
 use App\Http\Controllers\Controller;
@@ -31,13 +32,21 @@ class StockController extends Controller
 
     }
 
-     public function DetailedStockReport(DetailedStocksReportDataTable $dataTable)
+    public function StockLedgerReport(StockReportDataTable $dataTable)
     {
-        $products = Product::orderBy('name')->get();
-        $categories = Category::orderBy('name')->get();
-        $users = User::orderBy('name')->get();
+        $products = Product::orderBy('name')->get(['id', 'name']);
+        $categories = Category::orderBy('name')->get(['id', 'name']);
+        $users = User::orderBy('name')->get(['id', 'name']);
 
-        return $dataTable->render('backend.stock.detailed_stock_report', compact('products', 'categories', 'users'));
+        return $dataTable->render('backend.stock.stock_ledger_report', compact('products', 'categories', 'users'));
+    }
+
+    public function ProductWiseStockTrail(ProductWiseStockReportDataTable $dataTable)
+    {
+        $products = Product::orderBy('name')->get(['id', 'name']);
+        $users = User::orderBy('name')->get(['id', 'name']);
+
+        return $dataTable->render('backend.stock.product_wise_stock_trail', compact('products', 'users'));
     }
 
 

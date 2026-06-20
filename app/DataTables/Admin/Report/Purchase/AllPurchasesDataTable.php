@@ -69,16 +69,16 @@ class AllPurchasesDataTable extends DataTable
 
              ->editColumn('date', function($row)
             {
-                return  Carbon::parse($row->date)->format('jS F, Y g:i A');
+                return  Carbon::parse($row->date)->format('d-m-Y');
             })
 
               ->editColumn('created_at', function($row)
             {
-                return  Carbon::parse($row->created_at)->format('jS F, Y g:i A');
+                return  Carbon::parse($row->created_at)->format('d-m-Y');
             })
             ->editColumn('updated_at', function($row) {
                 return $row->updated_at
-                    ? Carbon::parse($row->updated_at)->format('jS F, Y g:i A')
+                    ? Carbon::parse($row->updated_at)->format('d-m-Y')
                     : '';
             })
 

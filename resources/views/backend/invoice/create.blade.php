@@ -1,5 +1,5 @@
 @extends('layout.main')
-@section('title') {{'Create Invoice'}} @endsection
+@section('title') {{'Create Sales Invoice'}} @endsection
 
 @section('content')
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -10,10 +10,10 @@
                 <div class="col-12">
                     <div class="card" style="margin-top: 5px;">
                         <div class="card-header with-border">
-                            <span class="card-title" style="font-size:20px;">Create | Invoice</span>
+                            <span class="card-title" style="font-size:20px;">Create | Sales Invoice</span>
                             <a href="{{route('invoices.index')}}" style="float:right">
                                 <button type="button" class="btn btn-dark modal_btn">
-                                    View Invoices
+                                    View Sales Invoices
                                 </button>
                             </a>
                             <hr>

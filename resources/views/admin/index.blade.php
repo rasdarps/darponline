@@ -31,48 +31,6 @@
 <!-- Cards -->
 <div class="row">
     <div class="col-xl-3 col-md-6">
-        <a href="{{ route('invoices.create') }}">
-            <div class="card sell-card">
-                <div class="card-body">
-                    <div class="d-flex">
-                        <div class="flex-grow-1">
-                            <p class="text-truncate font-size-14 mb-2">Need to Sell</p>
-                            <h4 class="mb-2" style="color:#fff;">Create Sale</h4>
-                            <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i></span>Sales Order</p>
-                        </div>
-                        <div class="avatar-sm">
-                            <span class="avatar-title bg-light text-primary rounded-3">
-                                <i class="ri-shopping-cart-2-line font-size-24"></i>  
-                            </span>
-                        </div>
-                    </div>                                            
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-xl-3 col-md-6">
-        <a href="{{ route('purchases.create') }}">
-            <div class="card buy-card">
-                <div class="card-body">
-                    <div class="d-flex">
-                        <div class="flex-grow-1">
-                            <p class="text-truncate font-size-14 mb-2">Need to buy</p>
-                            <h4 class="mb-2" style="color:#fff">Purchase</h4>
-                            <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Purchase Order</p>
-                        </div>
-                        <div class="avatar-sm">
-                            <span class="avatar-title bg-light text-success rounded-3">
-                                <i class="ri-shopping-cart-2-line font-size-24"></i>  
-                            </span>
-                        </div>
-                    </div>                                              
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-xl-3 col-md-6">
         <a href="{{ route('purchases.index') }}">
             <div class="card purchase_count">
                 <div class="card-body">
@@ -106,6 +64,48 @@
                         <div class="avatar-sm">
                             <span class="avatar-title bg-light text-success rounded-3">
                                 <i class="fa fa-bars font-size-24"></i>  
+                            </span>
+                        </div>
+                    </div>                                              
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <a href="#">
+            <div class="card sell-card">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <p class="text-truncate font-size-14 mb-2">Stock Balance</p>
+                            <h4 class="mb-2" style="color:#fff;">{{ number_format($total_stock_balance, 2) }}</h4>
+                            <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i></span>Sales Order</p>
+                        </div>
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-light text-primary rounded-3">
+                                <i class="ri-stack-line font-size-24"></i>
+                            </span>
+                        </div>
+                    </div>                                            
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <a href="#">
+            <div class="card buy-card">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+                            <p class="text-truncate font-size-14 mb-2">Total Stock Value</p>
+                            <h4 class="mb-2" style="color:#fff">{{ number_format($total_stock_value, 2) }}</h4>
+                            <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Purchase Order</p>
+                        </div>
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-light text-success rounded-3">
+                                <i class="ri-money-dollar-circle-line font-size-24"></i> 
                             </span>
                         </div>
                     </div>                                              

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,9 @@ class DashboardController extends Controller
         $approved_purchase =Purchase::get()->count();
         $total_sales = Payment::sum('total_amount');
         $total_purchases = PurchasePayment::sum('total_amount');
+        $total_stock_balance = (float) Product::sum('quantity');
+        $total_stock_value = (float) Product::selectRaw('COALESCE(SUM(quantity * cost_price), 0) as total')
+            ->value('total');
        
         $products = DB::select('SELECT * FROM products WHERE quantity < stock_level');
         
@@ -64,6 +68,8 @@ class DashboardController extends Controller
             'total_invoice',
             'total_sales',
             'total_purchases',
+            'total_stock_balance',
+            'total_stock_value',
             'pending_purchase',
             'products',
             'approved_purchase',

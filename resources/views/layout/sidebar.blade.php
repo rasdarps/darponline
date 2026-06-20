@@ -51,9 +51,49 @@
                                                 
                                             </ul>
                                         </li>
+
+                                        <li>
+                                            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                                <i class="ri-file-list-3-fill"></i>
+                                                <span>Expenses</span>
+                                            </a>
+                                            <ul class="sub-menu" aria-expanded="false">
+                                                <li><a href="{{ route('expense-vouchers.create') }}">Create</a></li>
+                                                <li><a href="{{ route('expense-vouchers.index') }}">All Expense </a></li>
+                                            </ul>
+                                        </li>
+
+                                        <li>
+                                            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                                <i class="fa fa-cubes"></i>
+                                                <span>Stock </span>
+                                            </a>
+                                            <ul class="sub-menu" aria-expanded="false">
+                                                <li><a href="{{ route('stock-adjustments.create') }}">Create</a></li>
+                                                <li><a href="{{ route('stock-adjustments.index') }}">All Stock Adjustments</a></li>
+                                            </ul>
+                                        </li>
                                     </ul><!--drop ul ends-->    
                             </li><!--cover ends--> 
                          {{-- transaction menu ends --}}
+
+                         <li class="menu-title">Reports</li>
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                    <i class="fa-solid fa-chart-simple"></i>
+                                    <span>Report</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{{ route('reports.profit') }}">Profit Report</a></li>
+                                    <li><a href="{{ route('stock.product_trail_report') }}">Product-wise Stock Trail</a></li>
+                                    <li><a href="{{ route('stock.report') }}">Summary Stock Report</a></li>
+                                    <li><a href="{{ route('stock.stock_value') }}">Stock Value Report</a></li>
+                                    <li><a href="{{ route('stock.ledger_report') }}">Stock Ledger Report</a></li>
+                                    <li><a href="{{ route('reports.stock-adjustment') }}">Stock Adjustment Report</a></li>           
+                                    <li><a href="{{ route('reports.expense') }}">Expense Report</a></li>
+                                    <li><a href="{{ route('product-prices.product_price_history') }}">Product Price History</a></li>
+                                </ul>
+                            </li>
 
                         {{-- setup menu starts --}}
                          <li class="menu-title">Setups</li>
@@ -77,7 +117,7 @@
 
                                 <li>
                                     <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                        <i class="fa fa-users"></i>
+                                        <i class="fa fa-truck"></i>
                                         <span>Suppliers</span>
                                     </a>
                                     <ul class="sub-menu" aria-expanded="false">
@@ -89,7 +129,7 @@
 
                                 <li>
                                     <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                        <i class="fa fa-building"></i>
+                                        <i class="fa fa-users"></i>
                                         <span>Customers</span>
                                     </a>
                                     <ul class="sub-menu" aria-expanded="false">
@@ -124,6 +164,17 @@
                                         <li><a href="{{ route('units.create') }}">Create</a></li>
                                         <li><a href="{{ route('units.index') }}">All Unit</a></li>
                                         
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                        <i class="fa fa-list"></i>
+                                        <span>Expense Category</span>
+                                    </a>
+                                    <ul class="sub-menu" aria-expanded="false">
+                                        <li><a href="{{ route('expense-categories.create') }}">Create</a></li>
+                                        <li><a href="{{ route('expense-categories.index') }}">All Expense Categories</a></li>
                                     </ul>
                                 </li>
 
@@ -190,40 +241,6 @@
                             </ul><!--drop ul ends-->    
                         </li><!--user li ends--> 
                         {{-- setup user ends    --}}
-
-                            
-
-                            <li class="menu-title">Reports</li>
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="fa-solid fa-chart-simple"></i>
-                                    <span>Report</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{{ route('reports.profit') }}">Profit Report</a></li>
-                                    <li><a href="{{ route('stock.stock_value') }}">Stock Value Report</a></li>
-                                    <li><a href="{{ route('stock.report') }}">Stock Report</a></li>
-                                    <li><a href="{{ route('stock.detailed_stock_report') }}">Detailed Stock Report</a></li>
-                                    <li><a href="{{ route('product-prices.product_price_history') }}">Product Price History</a></li>
-                                </ul>
-
-                                    <li><a href="#">Backup</a></li>
-                                </ul>
-                            </li>
-
-                            {{-- <li class="menu-title">System</li>
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="fa-solid fa-file"></i>
-                                    <span>Backup</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    <li>
-                                        <a href="#">Backup</a>
-                                        
-                                    </li>
-                                </ul>
-                            </li> --}}
                         </ul>
                     </div>
                     <!-- Sidebar -->

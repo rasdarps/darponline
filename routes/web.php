@@ -6,6 +6,8 @@ use App\Http\Controllers\Backend\CompanyController;
 use App\Http\Controllers\Backend\CustomerController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DefaultController;
+use App\Http\Controllers\Backend\ExpenseCategoryController;
+use App\Http\Controllers\Backend\ExpenseVoucherController;
 use App\Http\Controllers\Backend\InvoiceController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\ProductPriceController;
@@ -13,6 +15,7 @@ use App\Http\Controllers\Backend\PurchaseController;
 use App\Http\Controllers\Backend\ReportController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\StockController;
+use App\Http\Controllers\Backend\StockAdjustmentController;
 use App\Http\Controllers\Backend\SupplierController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Backend\UserController;
@@ -174,6 +177,37 @@ Route::prefix('admin')->group(function () {
 
             });
 
+            Route::prefix('expense-vouchers')->name('expense-vouchers.')->group(function () {
+                Route::get('/', [ExpenseVoucherController::class, 'index'])->name('index');
+                Route::get('/create', [ExpenseVoucherController::class, 'create'])->name('create');
+                Route::get('/show/{id}', [ExpenseVoucherController::class, 'show'])->name('show');
+                Route::get('/print/{id}', [ExpenseVoucherController::class, 'print'])->name('print');
+                Route::post('/store', [ExpenseVoucherController::class, 'store'])->name('store');
+                Route::get('/edit/{id}', [ExpenseVoucherController::class, 'edit'])->name('edit');
+                Route::patch('/update/{id}', [ExpenseVoucherController::class, 'update'])->name('update');
+                Route::delete('/destroy/{id}', [ExpenseVoucherController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::prefix('expense-categories')->name('expense-categories.')->group(function () {
+                Route::get('/', [ExpenseCategoryController::class, 'index'])->name('index');
+                Route::get('/create', [ExpenseCategoryController::class, 'create'])->name('create');
+                Route::post('/store', [ExpenseCategoryController::class, 'store'])->name('store');
+                Route::get('/edit/{id}', [ExpenseCategoryController::class, 'edit'])->name('edit');
+                Route::patch('/update/{id}', [ExpenseCategoryController::class, 'update'])->name('update');
+                Route::delete('/destroy/{id}', [ExpenseCategoryController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::prefix('stock-adjustments')->name('stock-adjustments.')->group(function () {
+                Route::get('/', [StockAdjustmentController::class, 'index'])->name('index');
+                Route::get('/create', [StockAdjustmentController::class, 'create'])->name('create');
+                Route::post('/store', [StockAdjustmentController::class, 'store'])->name('store');
+                Route::get('/show/{id}', [StockAdjustmentController::class, 'show'])->name('show');
+                Route::get('/print/{id}', [StockAdjustmentController::class, 'print'])->name('print');
+                Route::get('/edit/{id}', [StockAdjustmentController::class, 'edit'])->name('edit');
+                Route::patch('/update/{id}', [StockAdjustmentController::class, 'update'])->name('update');
+                Route::delete('/destroy/{id}', [StockAdjustmentController::class, 'destroy'])->name('destroy');
+            });
+
             //Product Price routes
             Route::prefix('product-prices')->name('product-prices.')->group(function () {
                 Route::get('/', [ProductPriceController::class, 'index'])->name('index');
@@ -249,6 +283,8 @@ Route::prefix('admin')->group(function () {
             //Reports Routes
             Route::prefix('reports')->name('reports.')->group(function () {
                 Route::get('/profit', [ReportController::class, 'profitReport'])->name('profit');
+                Route::get('/expense', [ReportController::class, 'expenseReport'])->name('expense');
+                Route::get('/stock-adjustment', [ReportController::class, 'stockAdjustmentReport'])->name('stock-adjustment');
 
             });
 
@@ -259,8 +295,9 @@ Route::prefix('admin')->group(function () {
             // Stock All Route 
             Route::controller(StockController::class)->group(function () {
                 
-                Route::get('/detailed_stock_report', 'DetailedStockReport')->name('stock.detailed_stock_report');
                 Route::get('/stock/report', 'StockReport')->name('stock.report');
+                Route::get('/stock/ledger/report', 'StockLedgerReport')->name('stock.ledger_report');
+                Route::get('/stock/product-trail/report', 'ProductWiseStockTrail')->name('stock.product_trail_report');
                 Route::get('/stock_value', 'StockValue')->name('stock.stock_value');
 
 

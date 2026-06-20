@@ -21,25 +21,7 @@ class StocksDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->addColumn('action', 'stocks.action')
 
-           ->addColumn('buying_total', function($row) {
-                return '<span class="btn btn-sm btn-primary">'
-                    .($row->purchasedetails_sum_buying_qty ?? 0).'</span>';
-            })
-
-            ->addColumn('selling_total', function($row) {
-                return '<span class="btn btn-sm btn-danger">'
-                    .($row->invoicedetails_sum_selling_qty ?? 0).'</span>';
-            })
-
-            ->addColumn('current_stock', function($row) {
-                $buying_total = $row->purchasedetails_sum_buying_qty ?? 0;
-                $selling_total = $row->invoicedetails_sum_selling_qty ?? 0;
-                $stock = $buying_total - $selling_total;
-
-                return '<span class="btn btn-sm btn-info">'.$stock.'</span>';
-            })
-
-            ->rawColumns(['action', 'buying_total', 'selling_total', 'current_stock'])
+            ->rawColumns(['action'])
             ->setRowId('id');
     }
 
@@ -50,8 +32,6 @@ class StocksDataTable extends DataTable
     {
         $query = $model->newQuery()
             ->with(['category', 'brand', 'unit'])
-            ->withSum('purchasedetails', 'buying_qty')
-            ->withSum('invoicedetails', 'selling_qty')
             ->orderBy('products.name', 'asc');
 
         if ($brandId = $this->request()->get('brand_id')) {
@@ -99,15 +79,7 @@ class StocksDataTable extends DataTable
                             return 0;
                         };
 
-                        var totalStockIn = api.column(4, { page: "current" }).data().reduce(function (a, b) {
-                            return intVal(a) + intVal(b);
-                        }, 0);
-
-                        var totalStockOut = api.column(5, { page: "current" }).data().reduce(function (a, b) {
-                            return intVal(a) + intVal(b);
-                        }, 0);
-
-                        var totalCurrentStock = api.column(6, { page: "current" }).data().reduce(function (a, b) {
+                        var totalCurrentStock = api.column(4, { page: "current" }).data().reduce(function (a, b) {
                             return intVal(a) + intVal(b);
                         }, 0);
 
@@ -118,10 +90,8 @@ class StocksDataTable extends DataTable
                             });
                         };
 
-                        $(api.column(3).footer()).html("Totals");
-                        $(api.column(4).footer()).html(formatValue(totalStockIn));
-                        $(api.column(5).footer()).html(formatValue(totalStockOut));
-                        $(api.column(6).footer()).html(formatValue(totalCurrentStock));
+                        $(api.column(3).footer()).html("Current Stock Total");
+                        $(api.column(4).footer()).html(formatValue(totalCurrentStock));
                     }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
@@ -145,9 +115,7 @@ class StocksDataTable extends DataTable
            Column::make('brand.name')->title('Brand'),
             Column::make('category.name')->title('Category'),
             Column::make('unit.name')->title('Unit'),
-            Column::make('buying_total')->title('Stock In'),
-            Column::make('selling_total')->title('Stock Out'),
-            Column::make('current_stock')->title('Current Stock'),
+            Column::make('quantity')->title('Current Stock'),
         ];
     }
 

@@ -1,5 +1,5 @@
 @extends('layout.main')
-@section('title') {{'View Invoice'}} @endsection
+@section('title') {{'View Sales Invoice'}} @endsection
 
 @section('content')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -11,7 +11,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Invoice All</h4>  
+                    <h4 class="mb-sm-0">Sales Invoice All</h4>  
                 </div>
             </div>
         </div>
@@ -27,14 +27,14 @@
                         </a> 
                         <br><br>               
 
-                        <h4 class="card-title">Invoice All Data</h4>      
+                        <h4 class="card-title">Sales Invoice Data</h4>      
 
                         <!-- 🔎 Filter boxes -->
                         <div class="row mb-3">
                             <div class="col-md-3">
                                 <label>Invoice Number</label>
                                 <select id="filter_invoice_id" class="form-control select2">
-                                    <option value="">All Invoices</option>
+                                    <option value="">All Sales Invoices</option>
                                     @foreach($invoices as $invoice)
                                         <option value="{{ $invoice->id }}">{{ $invoice->invoice_no }}</option>
                                     @endforeach

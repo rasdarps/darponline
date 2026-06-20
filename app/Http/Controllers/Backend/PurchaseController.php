@@ -15,6 +15,7 @@ use App\Models\PurchasePaymentDetail;
 use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\StockLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -133,7 +134,10 @@ class PurchaseController extends Controller
 
                 // Update product stock and prices
                 $product = Product::find($request->product_id[$i]);
-                $product->quantity = ((float)$purchase_details->buying_qty) + ((float)$product->quantity);
+                $beforeQty = (float) $product->quantity;
+                $lineQty = (float) $purchase_details->buying_qty;
+                $afterQty = $beforeQty + $lineQty;
+                $product->quantity = $afterQty;
 
                 $priceChanged = false;
 
@@ -163,6 +167,23 @@ class PurchaseController extends Controller
                         'created_by'    => Auth::id(),
                     ]);
                 }
+
+                app(StockLedgerService::class)->record([
+                    'product_id' => $product->id,
+                    'movement_type' => 'purchase',
+                    'reference_type' => 'purchase',
+                    'reference_id' => $purchase->id,
+                    'reference_detail_id' => $purchase_details->id,
+                    'movement_at' => $purchase->date,
+                    'qty_in' => $lineQty,
+                    'qty_out' => 0,
+                    'balance_before' => $beforeQty,
+                    'balance_after' => $afterQty,
+                    'unit_cost' => $purchase_details->unit_cost_price,
+                    'reason' => 'Purchase stock-in',
+                    'notes' => $purchase->description,
+                    'created_by' => Auth::id(),
+                ]);
             }
 
             // Handle supplier creation/selection
@@ -256,7 +277,9 @@ class PurchaseController extends Controller
                 foreach ($purchase->purchase_details as $detail) {
                     $product = Product::find($detail->product_id);
                     if ($product) {
-                        $newQty = ((float) $product->quantity) - ((float) $detail->buying_qty);
+                        $beforeQty = (float) $product->quantity;
+                        $lineQty = (float) $detail->buying_qty;
+                        $newQty = $beforeQty - $lineQty;
                         if ($newQty < 0) {
                             throw ValidationException::withMessages([
                                 'reason' => ['Cannot cancel this purchase because some purchased stock has already been used/sold.'],
@@ -264,6 +287,23 @@ class PurchaseController extends Controller
                         }
                         $product->quantity = $newQty;
                         $product->save();
+
+                        app(StockLedgerService::class)->record([
+                            'product_id' => $product->id,
+                            'movement_type' => 'purchase_cancel',
+                            'reference_type' => 'purchase',
+                            'reference_id' => $purchase->id,
+                            'reference_detail_id' => $detail->id,
+                            'movement_at' => now(),
+                            'qty_in' => 0,
+                            'qty_out' => $lineQty,
+                            'balance_before' => $beforeQty,
+                            'balance_after' => $newQty,
+                            'unit_cost' => $detail->unit_cost_price,
+                            'reason' => 'Purchase cancellation',
+                            'notes' => $validated['reason'],
+                            'created_by' => Auth::id(),
+                        ]);
                     }
                 }
 

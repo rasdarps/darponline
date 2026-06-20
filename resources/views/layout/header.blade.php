@@ -48,6 +48,15 @@
         <a href="{{ route('stock.report') }}" class="btn quick-action-btn header-item waves-effect" title="View Stock Report">
             <i class="ri-bar-chart-box-line align-middle"></i>
         </a>
+        <a href="{{ route('products.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Product">
+            <i class="fa fa-apple-whole align-middle"></i>
+        </a>
+        <a href="{{ route('categories.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Category">
+            <i class="ri-layout-grid-line align-middle"></i>
+        </a>
+        <a href="{{ route('units.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Unit">
+            <i class="ri-ruler-line align-middle"></i>
+        </a>
         <a href="{{ route('admin.logout') }}" class="btn quick-action-btn header-item waves-effect" title="Logout">
             <i class="ri-logout-box-r-line align-middle"></i>
         </a>

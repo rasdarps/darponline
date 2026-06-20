@@ -1,5 +1,5 @@
 @extends('layout.main')
-@section('title') {{'Create Purchase'}} @endsection
+@section('title') {{'Create Purchase Invoice'}} @endsection
 
 @section('content')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -10,10 +10,10 @@
                 <div class="col-12">
                     <div class="card" style="margin-top: 5px;">
                         <div class="card-header with-border">
-                            <span class="card-title" style="font-size:20px;">Create | Purchase</span>
+                            <span class="card-title" style="font-size:20px;">Create | Purchase Invoice</span>
                             <a href="{{route('purchases.index')}}" style="float:right">
                                 <button type="button" class="btn btn-dark modal_btn">
-                                    View Purchases
+                                    View Purchases Invoice
                                 </button>
                             </a>
                             <hr>
@@ -97,7 +97,7 @@
                                                         <th width="10%">Sell Price</th>
                                                         <th width="10%">Per</th>
                                                         <th width="15%">Total Price(Ghc)</th>
-                                                        <th width="7%">Action</th>
+                                                        <th width="5%">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="addRow" class="addRow"></tbody>
@@ -105,7 +105,7 @@
                                                     <tr>
                                                         <td colspan="7">Discount</td>
                                                         <td>
-                                                            <input type="text" name="discount_amount" id="discount_amount" class="form-control estimated_amount" placeholder="Discount Amount">
+                                                            <input type="text" name="discount_amount" id="discount_amount" class="form-control estimated_amount" placeholder="amount">
                                                         </td>
                                                     </tr>
                                                     <tr>

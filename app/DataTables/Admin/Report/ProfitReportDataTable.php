@@ -59,16 +59,16 @@ class ProfitReportDataTable extends DataTable
 
              ->editColumn('date', function($row)
             {
-                return  Carbon::parse($row->date)->format('jS F, Y');
+                return  Carbon::parse($row->date)->format('d-m-Y');
             })
 
               ->editColumn('created_at', function($row)
             {
-                return  Carbon::parse($row->created_at)->format('jS F, Y g:i A');
+                return  Carbon::parse($row->created_at)->format('d-m-Y');
             })
             ->editColumn('updated_at', function($row) {
                 return $row->updated_at
-                    ? Carbon::parse($row->updated_at)->format('jS F, Y g:i A')
+                    ? Carbon::parse($row->updated_at)->format('d-m-Y')
                     : '';
             })
 
@@ -226,7 +226,7 @@ class ProfitReportDataTable extends DataTable
             Column::make('invoice_no'),
             Column::make('customer_name')->title('Customer Name'),
             Column::make('sales_total')->title('Net Sales (Gh¢)'),
-            Column::make('cost_total')->title('COGS Latest Cost (Gh¢)'),
+            Column::make('cost_total')->title('Cost (Gh¢)'),
             Column::make('profit_total')->title('Profit (Gh¢)'),
             Column::make('cancelled_status')->title('Status')
             ->searchable(true)->printable(true)->exportable(true),

@@ -14,6 +14,7 @@ use App\Models\PaymentDetail;
 use App\Models\Product;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\StockLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -162,8 +163,28 @@ class InvoiceController extends Controller
 
                 // stock deduction
                 $product = Product::find($request->product_id[$i]);
-                $product->quantity = ((float)$product->quantity) - ((float)$invoice_details->selling_qty);
+                $beforeQty = (float) $product->quantity;
+                $lineQty = (float) $invoice_details->selling_qty;
+                $afterQty = $beforeQty - $lineQty;
+                $product->quantity = $afterQty;
                 $product->save();
+
+                app(StockLedgerService::class)->record([
+                    'product_id' => $product->id,
+                    'movement_type' => 'sale',
+                    'reference_type' => 'invoice',
+                    'reference_id' => $invoice->id,
+                    'reference_detail_id' => $invoice_details->id,
+                    'movement_at' => $invoice->date,
+                    'qty_in' => 0,
+                    'qty_out' => $lineQty,
+                    'balance_before' => $beforeQty,
+                    'balance_after' => $afterQty,
+                    'unit_price' => $invoice_details->unit_selling_price,
+                    'reason' => 'Sale stock-out',
+                    'notes' => $invoice->description,
+                    'created_by' => Auth::id(),
+                ]);
             }
 
             // Customer handling
@@ -258,8 +279,28 @@ class InvoiceController extends Controller
                 foreach ($invoice->invoice_details as $detail) {
                     $product = Product::find($detail->product_id);
                     if ($product) {
-                        $product->quantity = ((float) $product->quantity) + ((float) $detail->selling_qty);
+                        $beforeQty = (float) $product->quantity;
+                        $lineQty = (float) $detail->selling_qty;
+                        $afterQty = $beforeQty + $lineQty;
+                        $product->quantity = $afterQty;
                         $product->save();
+
+                        app(StockLedgerService::class)->record([
+                            'product_id' => $product->id,
+                            'movement_type' => 'sale_cancel',
+                            'reference_type' => 'invoice',
+                            'reference_id' => $invoice->id,
+                            'reference_detail_id' => $detail->id,
+                            'movement_at' => now(),
+                            'qty_in' => $lineQty,
+                            'qty_out' => 0,
+                            'balance_before' => $beforeQty,
+                            'balance_after' => $afterQty,
+                            'unit_price' => $detail->unit_selling_price,
+                            'reason' => 'Invoice cancellation',
+                            'notes' => $validated['reason'],
+                            'created_by' => Auth::id(),
+                        ]);
                     }
                 }
 

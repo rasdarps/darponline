@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\DataTables\Admin\Report\ExpenseReportDataTable;
 use App\DataTables\Admin\Report\ProfitReportDataTable;
+use App\DataTables\Admin\Report\StockAdjustmentReportDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\ExpenseCategory;
+use App\Models\ExpenseVoucherItem;
 use App\Models\Invoice;
+use App\Models\Product;
+use App\Models\StockAdjustmentItem;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -74,5 +80,41 @@ class ReportController extends Controller
         $customers = Customer::orderBy('name')->get();
         return $dataTable->render('backend.report.profit', compact('invoices', 'users', 'customers'));
 
+    }
+
+    public function expenseReport(ExpenseReportDataTable $dataTable)
+    {
+        $users = User::orderBy('name')->get();
+        $categories = ExpenseCategory::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $monthTotal = ExpenseVoucherItem::query()
+            ->whereHas('voucher', function ($q) {
+                $q->whereMonth('voucher_date', now()->month)
+                    ->whereYear('voucher_date', now()->year);
+            })
+            ->sum('amount');
+
+        $overallTotal = ExpenseVoucherItem::query()->sum('amount');
+
+        return $dataTable->render('backend.Report.expense', compact('users', 'categories', 'monthTotal', 'overallTotal'));
+    }
+
+    public function stockAdjustmentReport(StockAdjustmentReportDataTable $dataTable)
+    {
+        $users = User::orderBy('name')->get(['id', 'name']);
+        $products = Product::orderBy('name')->get(['id', 'name']);
+
+        $monthTotal = StockAdjustmentItem::query()
+            ->whereHas('adjustment', function ($q) {
+                $q->whereMonth('adjustment_date', now()->month)
+                    ->whereYear('adjustment_date', now()->year);
+            })
+            ->sum('amount');
+
+        $overallTotal = StockAdjustmentItem::query()->sum('amount');
+
+        return $dataTable->render('backend.Report.stock_adjustment', compact('users', 'products', 'monthTotal', 'overallTotal'));
     }
 }
