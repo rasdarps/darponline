@@ -79,6 +79,24 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-4 mt-3">
+                                <div class="card border mb-0 summary-card">
+                                    <div class="card-body py-2">
+                                        <small class="text-muted">Cash Adjustment</small>
+                                        <h5 id="summary_cash_adjustment" class="mb-0">0.00</h5>
+                                        <small class="text-muted">Shortage lowers profit, overage raises profit</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mt-3">
+                                <div class="card border mb-0 summary-card">
+                                    <div class="card-body py-2">
+                                        <small class="text-muted">Stock Adjustment</small>
+                                        <h5 id="summary_stock_adjustment" class="mb-0">0.00</h5>
+                                        <small class="text-muted">Shortage lowers profit, overage raises profit</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 🔎 Filter boxes -->
@@ -165,11 +183,15 @@
                         $('#summary_gross_profit').text(formatMoney(res.gross_profit));
                         $('#summary_total_expenses').text(formatMoney(res.total_expenses));
                         $('#summary_net_profit').text(formatMoney(res.net_profit));
+                        $('#summary_cash_adjustment').text(formatMoney(res.cash_net_adjustment));
+                        $('#summary_stock_adjustment').text(formatMoney(res.stock_net_adjustment));
                     })
                     .fail(function() {
                         $('#summary_gross_profit').text('0.00');
                         $('#summary_total_expenses').text('0.00');
                         $('#summary_net_profit').text('0.00');
+                        $('#summary_cash_adjustment').text('0.00');
+                        $('#summary_stock_adjustment').text('0.00');
                     });
             }
 

@@ -7,12 +7,14 @@ use App\DataTables\Admin\Report\ProfitReportDataTable;
 use App\DataTables\Admin\Report\StockAdjustmentReportDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\CashReconciliation;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseVoucherItem;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\PurchasePayment;
+use App\Models\StockLedger;
 use App\Models\StockAdjustmentItem;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -154,12 +156,28 @@ class ReportController extends Controller
         $totalExpenses = (float) $expenseQuery->sum('amount');
         $grossProfit = (float) ($invoiceSummary->gross_profit ?? 0);
 
+        $cashAdjustments = $this->approvedCashAdjustmentTotals($request);
+        $cashShortageLoss = $cashAdjustments['shortage_loss'];
+        $cashOverageGain = $cashAdjustments['overage_gain'];
+        $cashNetAdjustment = $cashOverageGain - $cashShortageLoss;
+
+        $stockAdjustments = $this->stockAdjustmentTotals($request);
+        $stockShortageLoss = $stockAdjustments['shortage_loss'];
+        $stockOverageGain = $stockAdjustments['overage_gain'];
+        $stockNetAdjustment = $stockOverageGain - $stockShortageLoss;
+
         return response()->json([
             'gross_sales' => (float) ($invoiceSummary->gross_sales ?? 0),
             'gross_cost' => (float) ($invoiceSummary->gross_cost ?? 0),
             'gross_profit' => $grossProfit,
             'total_expenses' => $totalExpenses,
-            'net_profit' => $grossProfit - $totalExpenses,
+            'cash_shortage_loss' => $cashShortageLoss,
+            'cash_overage_gain' => $cashOverageGain,
+            'cash_net_adjustment' => $cashNetAdjustment,
+            'stock_shortage_loss' => $stockShortageLoss,
+            'stock_overage_gain' => $stockOverageGain,
+            'stock_net_adjustment' => $stockNetAdjustment,
+            'net_profit' => $grossProfit - $totalExpenses - $cashShortageLoss + $cashOverageGain - $stockShortageLoss + $stockOverageGain,
         ]);
     }
 
@@ -233,7 +251,15 @@ class ReportController extends Controller
             ->first();
 
         $grossProfit = (float) ($grossSummary->gross_profit ?? 0);
-        $netProfit = $grossProfit - $totalExpenses;
+        $cashAdjustments = $this->approvedCashAdjustmentTotals();
+        $cashShortageLoss = $cashAdjustments['shortage_loss'];
+        $cashOverageGain = $cashAdjustments['overage_gain'];
+        $cashNetAdjustment = $cashOverageGain - $cashShortageLoss;
+        $stockAdjustments = $this->stockAdjustmentTotals();
+        $stockShortageLoss = $stockAdjustments['shortage_loss'];
+        $stockOverageGain = $stockAdjustments['overage_gain'];
+        $stockNetAdjustment = $stockOverageGain - $stockShortageLoss;
+        $netProfit = $grossProfit - $totalExpenses - $cashShortageLoss + $cashOverageGain - $stockShortageLoss + $stockOverageGain;
 
         return view('backend.Report.summary_ledger', compact(
             'totalPurchases',
@@ -241,7 +267,81 @@ class ReportController extends Controller
             'totalExpenses',
             'totalSales',
             'grossProfit',
+            'cashShortageLoss',
+            'cashOverageGain',
+            'cashNetAdjustment',
+            'stockShortageLoss',
+            'stockOverageGain',
+            'stockNetAdjustment',
             'netProfit'
         ));
+    }
+
+    private function approvedCashAdjustmentTotals(Request $request = null): array
+    {
+        $query = CashReconciliation::query()->where('status', 'approved');
+
+        if ($request) {
+            if ($fromDate = $request->get('from_date')) {
+                $query->whereDate('business_date', '>=', $fromDate);
+            }
+
+            if ($toDate = $request->get('to_date')) {
+                $query->whereDate('business_date', '<=', $toDate);
+            }
+
+            if ($createdBy = $request->get('created_by')) {
+                $query->where('user_id', $createdBy);
+            }
+        }
+
+        $shortageLoss = (float) (clone $query)
+            ->where('variance', '<', 0)
+            ->sum(DB::raw('ABS(variance)'));
+
+        $overageGain = (float) (clone $query)
+            ->where('variance', '>', 0)
+            ->sum('variance');
+
+        return [
+            'shortage_loss' => round($shortageLoss, 2),
+            'overage_gain' => round($overageGain, 2),
+        ];
+    }
+
+    private function stockAdjustmentTotals(Request $request = null): array
+    {
+        $query = StockLedger::query()
+            ->where('reference_type', 'stock_adjustment')
+            ->whereIn('movement_type', ['adjustment_increase', 'adjustment_decrease']);
+
+        if ($request) {
+            if ($fromDate = $request->get('from_date')) {
+                $query->whereDate('movement_at', '>=', $fromDate);
+            }
+
+            if ($toDate = $request->get('to_date')) {
+                $query->whereDate('movement_at', '<=', $toDate);
+            }
+
+            if ($createdBy = $request->get('created_by')) {
+                $query->where('created_by', $createdBy);
+            }
+        }
+
+        $stockOverageGain = (float) (clone $query)
+            ->where('movement_type', 'adjustment_increase')
+            ->selectRaw('COALESCE(SUM(qty_in * COALESCE(unit_cost, 0)), 0) as total')
+            ->value('total');
+
+        $stockShortageLoss = (float) (clone $query)
+            ->where('movement_type', 'adjustment_decrease')
+            ->selectRaw('COALESCE(SUM(qty_out * COALESCE(unit_cost, 0)), 0) as total')
+            ->value('total');
+
+        return [
+            'shortage_loss' => round($stockShortageLoss, 2),
+            'overage_gain' => round($stockOverageGain, 2),
+        ];
     }
 }

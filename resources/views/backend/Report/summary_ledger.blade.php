@@ -72,12 +72,56 @@
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex justify-content-between">
+                                                <span>Cash Shortage Loss</span>
+                                                <strong>{{ number_format((float) $cashShortageLoss, 2) }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-between">
+                                                <span>Cash Overage Gain</span>
+                                                <strong>{{ number_format((float) $cashOverageGain, 2) }}</strong>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Cash Net Adjustment Impact</span>
+                                                <strong>{{ number_format((float) $cashNetAdjustment, 2) }}</strong>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex justify-content-between">
+                                                <span>Stock Shortage Loss</span>
+                                                <strong>{{ number_format((float) $stockShortageLoss, 2) }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-between">
+                                                <span>Stock Overage Gain</span>
+                                                <strong>{{ number_format((float) $stockOverageGain, 2) }}</strong>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Stock Net Adjustment Impact</span>
+                                                <strong>{{ number_format((float) $stockNetAdjustment, 2) }}</strong>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
 
                         <div class="alert alert-light border mt-3 mb-0">
-                            <strong>Formula:</strong> Net Profit = Gross Profit - All Expenses
+                            <strong>Formula:</strong> Net Profit = Gross Profit - All Expenses - Cash Shortage Loss + Cash Overage Gain - Stock Shortage Loss + Stock Overage Gain
                         </div>
                     </div>
                 </div>
