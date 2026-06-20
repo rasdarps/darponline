@@ -29,9 +29,8 @@ class PurchaseController extends Controller
 {
     function __construct()
     {
-         $this->middleware('permission:purchase-list|purchase-create|purchase-edit|purchase-delete', ['only' => ['index','store']]);
+            $this->middleware('permission:purchase-list|purchase-create|purchase-delete', ['only' => ['index','store']]);
          $this->middleware('permission:purchase-create', ['only' => ['create','store']]);
-         $this->middleware('permission:purchase-edit', ['only' => ['edit','update']]);
          $this->middleware('permission:purchase-delete', ['only' => ['destroy']]);
     }
 
@@ -250,10 +249,6 @@ class PurchaseController extends Controller
     }
 
 
-    public function destroy(){
-        
-    }// End Method
-
     public function cancel(Request $request, $encryptedId)
     {
         try {
@@ -373,22 +368,4 @@ class PurchaseController extends Controller
 
     } // End Method
 
-
-    public function DailyPurchaseReport(){
-        return view('backend.purchase.daily_purchase_report');
-    } // End Method
-
-
-    public function DailyPurchasePdf(Request $request){
-
-        $sdate = date('Y-m-d',strtotime($request->start_date));
-        $edate = date('Y-m-d',strtotime($request->end_date));
-        $allData = Purchase::whereBetween('date',[$sdate,$edate])->get();
-
-
-        $start_date = date('Y-m-d',strtotime($request->start_date));
-        $end_date = date('Y-m-d',strtotime($request->end_date));
-        return view('backend.pdf.daily_purchase_report_pdf',compact('allData','start_date','end_date'));
-    } // End Method
-   
 }

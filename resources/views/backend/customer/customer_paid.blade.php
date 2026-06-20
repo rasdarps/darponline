@@ -26,8 +26,6 @@
             <div class="card">
                 <div class="card-body">
 
-    <a href="{{ route('paid.customer.print.pdf') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;"><i class="fa fa-print"></i> Print Paid Customer </a> <br>  <br>               
-
                     <h4 class="card-title">Paid All Data </h4>
                     
 
@@ -54,9 +52,6 @@
                             <td> {{ date('d-m-Y',strtotime($item['invoice']['date'])) }} </td> 
                             <td class="text-end"> {{ $item->due_amount }} </td> 
                             <td>
-   <a href="{{ route('customer.invoice.details.pdf',$item->invoice_id) }}" class="btn btn-info sm" title="Customer Details">  <i class="fa fa-eye"></i> </a>
- 
-
                             </td>
                            
                         </tr>

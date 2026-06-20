@@ -25,9 +25,9 @@ class InvoiceController extends Controller
 {
     function __construct()
     {
-         $this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['index','store']]);
+         $this->middleware('permission:invoice-list|invoice-create|invoice-delete', ['only' => ['index','store']]);
          $this->middleware('permission:invoice-create', ['only' => ['create','store']]);
-            $this->middleware('permission:invoice-edit|invoice-delete', ['only' => ['edit','update', 'cancel']]);
+            $this->middleware('permission:invoice-delete', ['only' => ['cancel']]);
     }
 
     // public function index(){
@@ -374,27 +374,6 @@ class InvoiceController extends Controller
         return view('backend.invoice.invoice_receipt',compact('invoice','companyInfo'));
 
     } // End Method
-
-
-    public function DailyInvoiceReport(){
-        $companyInfo = Company::first();
-        return view('backend.invoice.daily_invoice_report',compact('companyInfo'));
-    } // End Method
-
-
-    public function DailyInvoicePdf(Request $request){
-
-        $sdate = date('Y-m-d',strtotime($request->start_date));
-        $edate = date('Y-m-d',strtotime($request->end_date));
-        $allData = Invoice::whereBetween('date',[$sdate,$edate])->get();
-
-
-        $start_date = date('Y-m-d',strtotime($request->start_date));
-        $end_date = date('Y-m-d',strtotime($request->end_date));
-        $companyInfo = Company::first();
-        return view('backend.pdf.daily_invoice_report_pdf',compact('allData','start_date','end_date','companyInfo'));
-    } // End Method
-
 
 }
  
