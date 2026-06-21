@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\ClientSide;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\CustomerRegistration;
 use App\Models\Customer;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ShopAuthController extends Controller
 {
@@ -111,7 +111,7 @@ class ShopAuthController extends Controller
 
         } catch(\Throwable $e){ 
 
-            \Log::error('Registration error: ' . $e->getMessage());
+            Log::error('Registration error: ' . $e->getMessage());
 
             return response()->json([
                 'status' => 'error',

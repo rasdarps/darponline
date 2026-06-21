@@ -49,28 +49,38 @@
 
         <script src="{{ asset('notiflix/notiflix-3.2.8.min.js') }}"></script>
 
-
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
 <script>
  @if(Session::has('message'))
- var type = "{{ Session::get('alert-type','info') }}"
- switch(type){
-    case 'info':
-    toastr.info(" {{ Session::get('message') }} ");
-    break;
+ var type = "{{ Session::get('alert-type','info') }}";
+ var message = "{{ Session::get('message') }}";
+ if (window.Notiflix && Notiflix.Notify) {
+     Notiflix.Notify.init({
+         position: 'right-top',
+         timeout: 3000,
+         showOnlyTheLastOne: true
+     });
 
-    case 'success':
-    toastr.success(" {{ Session::get('message') }} ");
-    break;
+     switch(type){
+         case 'info':
+         Notiflix.Notify.info(message);
+         break;
 
-    case 'warning':
-    toastr.warning(" {{ Session::get('message') }} ");
-    break;
+         case 'success':
+         Notiflix.Notify.success(message);
+         break;
 
-    case 'error':
-    toastr.error(" {{ Session::get('message') }} ");
-    break; 
+         case 'warning':
+         Notiflix.Notify.warning(message);
+         break;
+
+         case 'error':
+         Notiflix.Notify.failure(message);
+         break;
+
+         default:
+         Notiflix.Notify.success(message);
+         break;
+     }
  }
  @endif 
  

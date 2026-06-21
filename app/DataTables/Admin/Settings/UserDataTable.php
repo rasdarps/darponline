@@ -31,7 +31,12 @@ class UserDataTable extends DataTable
                 $csrf = csrf_field();
                 $method = method_field('DELETE');
 
+                $showUrl = route('users.show', $encryptedId);
+
                 return '
+                    <a href="'.$showUrl.'" class="btn btn-sm btn-info" title="View">
+                        <i class="fas fa-eye" style="color:#fff;"></i>
+                    </a>
                     <form style="display:inline-block" action="'.$editUrl.'" method="GET">
                         '.$csrf.'
                         <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">

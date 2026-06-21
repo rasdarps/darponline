@@ -254,6 +254,7 @@ Route::prefix('admin')->group(function () {
 
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('/show/{id}', [UserController::class, 'show'])->name('show');
             Route::get('/create', [UserController::class, 'create'])->name('create');
             Route::post('/store', [UserController::class, 'store'])->name('store');
             Route::get('/edit/{id}', [UserController::class, 'edit'])->name('edit');
@@ -264,6 +265,7 @@ Route::prefix('admin')->group(function () {
 
          Route::prefix('roles')->name('roles.')->group(function () {
             Route::get('/', [RoleController::class, 'index'])->name('index');
+            Route::get('/show/{id}', [RoleController::class, 'show'])->where('id', '.*')->name('show');
             Route::get('/create', [RoleController::class, 'create'])->name('create');
             Route::post('/store', [RoleController::class, 'store'])->name('store');
                 Route::get('/edit/{id}', [RoleController::class, 'edit'])->where('id', '.*')->name('edit');

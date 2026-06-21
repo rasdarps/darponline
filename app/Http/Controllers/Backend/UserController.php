@@ -114,7 +114,6 @@ class UserController extends Controller
     public function show($encryptedId)
     {
         try {
-            $encryptedId = str_replace(' ', '+', $encryptedId);
             $id = Crypt::decrypt($encryptedId);
 
             $user = User::find($id);

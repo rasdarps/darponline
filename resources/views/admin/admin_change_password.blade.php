@@ -1,76 +1,65 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'Change Password'}} @endsection
 
-@section('admin')
- 
-
+@section('content')
 <div class="page-content">
-<div class="container-fluid">
+    <div class="container-fluid">
 
-<div class="row">
-<div class="col-12">
-    <div class="card">
-        <div class="card-body">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header with-border">
+                        <span class="card-title" style="font-size:20px;">Update | Password</span>
+                        <a href="{{ route('admin.profile') }}" style="float:right">
+                            <button type="button" class="btn btn-primary modal_btn" style="background-color:#000; color:white;">Back to Profile</button>
+                        </a>
+                    </div>
 
-            <h4 class="card-title">Change Password Page </h4><br><br>
-            
+                    <div class="card-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <ul class="mb-0 pl-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
-            @if(count($errors))
-                @foreach ($errors->all() as $error)
-                <p class="alert alert-danger alert-dismissible fade show"> {{ $error}} </p>
-                @endforeach
+                        <form method="post" action="{{ route('update.password') }}">
+                            @csrf
 
-            @endif
+                            <div class="row">
+                                <div class="col-md-8 mx-auto">
+                                    <div class="form-group mb-3">
+                                        <label for="oldpassword"><strong>Old Password</strong></label>
+                                        <input name="oldpassword" class="form-control" type="password" id="oldpassword" placeholder="Enter old password" required>
+                                    </div>
 
+                                    <div class="form-group mb-3">
+                                        <label for="newpassword"><strong>New Password</strong></label>
+                                        <input name="newpassword" class="form-control" type="password" id="newpassword" placeholder="Enter new password" required>
+                                    </div>
 
-            <form method="post" action="{{ route('update.password') }}" >
-                @csrf
+                                    <div class="form-group mb-3">
+                                        <label for="confirm_password"><strong>Confirm Password</strong></label>
+                                        <input name="confirm_password" class="form-control" type="password" id="confirm_password" placeholder="Confirm new password" required>
+                                    </div>
 
-            <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">Old Password</label>
-                <div class="col-sm-10">
-                    <input name="oldpassword" class="form-control" type="password"   id="oldpassword">
+                                    <div class="text-center mt-4">
+                                        <button type="submit" class="btn btn-success waves-effect waves-light">Change Password</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <!-- end row -->
-
-
-             <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">New Password</label>
-                <div class="col-sm-10">
-                <input name="newpassword" class="form-control" type="password"  id="newpassword">
-                </div>
-            </div>
-            <!-- end row -->
-
-
-
-             <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">Confirm Password</label>
-                <div class="col-sm-10">
-                    <input name="confirm_password" class="form-control" type="password"   id="confirm_password">
-                </div>
-            </div>
-            <!-- end row -->
- 
-
-
-        
-<input type="submit" class="btn btn-info waves-effect waves-light" value="Change Password">
-            </form>
-             
-           
-           
         </div>
     </div>
-</div> <!-- end col -->
-</div>
- 
-
-
-</div>
 </div>
 
-
- 
 @endsection 

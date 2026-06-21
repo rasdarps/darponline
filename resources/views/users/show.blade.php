@@ -1,48 +1,77 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'Show User'}} @endsection
-@section('admin')
+
+@section('content')
 
 <div class="page-content">
     <div class="container-fluid">
 
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2> Show User</h2>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header with-border">
+                        <span class="card-title" style="font-size:20px;">User | Details</span>
+                        <a href="{{ route('users.index') }}" style="float:right">
+                            <button type="button" class="btn btn-primary modal_btn">View All Users</button>
+                        </a>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered mb-0">
+                                <tbody>
+                                    <tr>
+                                        <th style="width:220px;">Full Name</th>
+                                        <td>{{ $user->name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Username</th>
+                                        <td>{{ $user->username ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email Address</th>
+                                        <td>{{ $user->email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone</th>
+                                        <td>{{ $user->phone ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>User Type</th>
+                                        <td>{{ $user->user_type ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Roles</th>
+                                        <td>
+                                            @forelse($user->getRoleNames() as $role)
+                                                <span class="badge badge-success">{{ $role }}</span>
+                                            @empty
+                                                <span class="text-muted">No roles assigned</span>
+                                            @endforelse
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Created</th>
+                                        <td>{{ $user->created_at ? $user->created_at->format('jS F, Y g:i A') : '—' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-3">
+                            <a href="{{ route('users.edit', Illuminate\Support\Facades\Crypt::encrypt($user->id)) }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-edit"></i> Edit User
+                            </a>
+                            <a href="{{ route('users.index') }}" class="btn btn-secondary btn-sm ml-2">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="pull-right">
-            <a class="btn btn-primary" href="{{ route('users.index') }}"> Back</a>
-        </div>
+
     </div>
 </div>
 
-
-<div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12">
-        <div class="form-group">
-            <strong>Name:</strong>
-            {{ $user->name }}
-        </div>
-    </div>
-    <div class="col-xs-12 col-sm-12 col-md-12">
-        <div class="form-group">
-            <strong>Email:</strong>
-            {{ $user->email }}
-        </div>
-    </div>
-    <div class="col-xs-12 col-sm-12 col-md-12">
-        <div class="form-group">
-            <strong>Roles:</strong>
-            @if(!empty($user->getRoleNames()))
-                @foreach($user->getRoleNames() as $v)
-                    <label class="badge badge-success">{{ $v }}</label>
-                @endforeach
-            @endif
-        </div>
-    </div>
-</div>
-
-    </div>
-</div>
-
-</x-layout>
+@endsection

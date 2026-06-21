@@ -1,98 +1,89 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'Edit Profile'}} @endsection
 
-@section('admin')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
+@section('content')
 <div class="page-content">
-<div class="container-fluid">
+    <div class="container-fluid">
 
-<div class="row">
-<div class="col-12">
-    <div class="card">
-        <div class="card-body">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header with-border">
+                        <span class="card-title" style="font-size:20px;">Edit | Profile</span>
+                        <a href="{{ route('admin.profile') }}" style="float:right">
+                            <button type="button" class="btn btn-primary modal_btn">View Profile</button>
+                        </a>
+                    </div>
 
-            <h4 class="card-title">Edit Profile Page </h4>
-            
-            <form method="post" action="{{ route('store.profile') }}" enctype="multipart/form-data">
-                @csrf
+                    <div class="card-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <ul class="mb-0 pl-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
-            <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">Name</label>
-                <div class="col-sm-10">
-                    <input name="name" class="form-control" type="text" value="{{ $editData->name }}"  id="example-text-input">
+                        <form method="post" action="{{ route('store.profile') }}" enctype="multipart/form-data">
+                            @csrf
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group mb-3">
+                                        <label for="name"><strong>Name</strong></label>
+                                        <input id="name" name="name" class="form-control" type="text" value="{{ old('name', $editData->name) }}" placeholder="Enter full name">
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="username"><strong>Username</strong></label>
+                                        <input id="username" name="username" class="form-control" type="text" value="{{ old('username', $editData->username) }}" placeholder="Enter username">
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="email"><strong>Email Address</strong></label>
+                                        <input id="email" name="email" class="form-control" type="email" value="{{ old('email', $editData->email) }}" placeholder="Enter email address">
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="image"><strong>Profile Image</strong></label>
+                                        <input name="profile_image" class="form-control" type="file" id="image" accept="image/*">
+                                        <small class="form-text text-muted">Supported formats: JPG, PNG, JPEG</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 text-center">
+                                    <label class="d-block"><strong>Preview</strong></label>
+                                    <img id="showImage" class="rounded-circle shadow-sm" width="140" height="140" src="{{ (!empty($editData->profile_image)) ? url('upload/admin_images/'.$editData->profile_image) : url('upload/fpm_logo_2.png') }}" alt="Profile Preview">
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-success waves-effect waves-light">Update Profile</button>
+                                <a href="{{ route('admin.profile') }}" class="btn btn-secondary waves-effect waves-light ml-2">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <!-- end row -->
-
-            <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">Username</label>
-                <div class="col-sm-10">
-                    <input name="username" class="form-control" type="text" value="{{ $editData->username }}"  id="example-text-input">
-                </div>
-            </div>
-
-              <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">User Email</label>
-                <div class="col-sm-10">
-                    <input name="email" class="form-control" type="text" value="{{ $editData->email }}"  id="example-text-input">
-                </div>
-            </div>
-            <!-- end row -->
-
-
-             <!-- <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">UserName</label>
-                <div class="col-sm-10">
-                    <input name="username" class="form-control" type="text" value="{{ $editData->username }}"  id="example-text-input">
-                </div>
-            </div>-->
-            <!-- end row -->
-
-
-            <div class="row mb-3">
-                <label for="example-text-input" class="col-sm-2 col-form-label">Profile Image </label>
-                <div class="col-sm-10">
-       <input name="profile_image" class="form-control" type="file"  id="image">
-                </div>
-            </div>
-            <!-- end row -->
-
-              <div class="row mb-3">
-                 <label for="example-text-input" class="col-sm-2 col-form-label">  </label>
-                <div class="col-sm-10">
-                    <img id="showImage" class="rounded avatar-lg" src="{{ (!empty($editData->profile_image))? url('upload/admin_images/'.$editData->profile_image):url('upload/no_image.jpg') }}" alt="Card image cap">
-                </div>
-            </div>
-            <!-- end row -->
-<input type="submit" class="btn btn-info waves-effect waves-light" value="Update Profile">
-            </form>
-             
-           
-           
         </div>
     </div>
-</div> <!-- end col -->
 </div>
- 
-
-
-</div>
-</div>
-
 
 <script type="text/javascript">
-    
-    $(document).ready(function(){
-        $('#image').change(function(e){
+    $(document).ready(function () {
+        $('#image').change(function (e) {
             var reader = new FileReader();
-            reader.onload = function(e){
-                $('#showImage').attr('src',e.target.result);
-            }
+            reader.onload = function (e) {
+                $('#showImage').attr('src', e.target.result);
+            };
             reader.readAsDataURL(e.target.files['0']);
         });
     });
-
 </script>
 
 @endsection 

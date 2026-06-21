@@ -1,4 +1,4 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'Print Invoice'}} @endsection
 @section('admin')
 

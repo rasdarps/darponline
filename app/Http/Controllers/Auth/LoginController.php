@@ -79,4 +79,20 @@ class LoginController extends Controller
         $loginField = request()->input('login');
         return filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
     }
+
+    /**
+     * Maximum number of failed login attempts before lockout.
+     */
+    public function maxAttempts()
+    {
+        return 5;
+    }
+
+    /**
+     * Number of minutes to throttle login attempts.
+     */
+    public function decayMinutes()
+    {
+        return 15;
+    }
 }

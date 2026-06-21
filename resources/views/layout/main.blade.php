@@ -45,7 +45,6 @@
         <!-- App Css-->
         <link href="{{ asset('backend/assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
 
-        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" >
         <link href="{{ asset('uppy/dist/uppy.min.css') }}" rel="stylesheet">
 
         @yield('styles')
