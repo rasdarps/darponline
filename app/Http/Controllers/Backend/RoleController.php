@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Backend;
 
 
+use App\DataTables\Admin\Settings\RoleDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Permission;
@@ -18,7 +20,7 @@ class RoleController extends Controller
      */
     function __construct()
     {
-         $this->middleware('permission:role-list|role-create|role-edit|role-delete', ['only' => ['index','store']]);
+            $this->middleware('permission:role-list', ['only' => ['index','show']]);
          $this->middleware('permission:role-create', ['only' => ['create','store']]);
          $this->middleware('permission:role-edit', ['only' => ['edit','update']]);
          $this->middleware('permission:role-delete', ['only' => ['destroy']]);
@@ -29,13 +31,9 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(RoleDataTable $dataTable)
     {
-        //use whereNotIn to hide a field like admin field
-        //$roles = Role::whereNotIn('name', ['admin'])->orderBy('id','DESC')->paginate(5);
-        $roles = Role::where('name', '!=', 'Super Admin')->orderBy('id','DESC')->paginate(5);
-        return view('roles.index',compact('roles'))
-            ->with('i', ($request->input('page', 1) - 1) * 5);
+        return $dataTable->render('roles.index');
     }
     
     /**
@@ -78,8 +76,9 @@ class RoleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($encryptedId)
     {
+        $id = Crypt::decrypt($encryptedId);
         $role = Role::find($id);
         $rolePermissions = Permission::join("role_has_permissions","role_has_permissions.permission_id","=","permissions.id")
             ->where("role_has_permissions.role_id",$id)
@@ -91,11 +90,12 @@ class RoleController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  string  $encryptedId
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(string $encryptedId)
     {
+        $id = Crypt::decrypt($encryptedId);
         $role = Role::find($id);
         $permission = Permission::get();
         $rolePermissions = DB::table("role_has_permissions")->where("role_has_permissions.role_id",$id)
@@ -112,8 +112,10 @@ class RoleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $encryptedId)
     {
+        $id = Crypt::decrypt($encryptedId);
+
         $this->validate($request, [
             'name' => 'required',
             'permission' => 'required',
@@ -133,13 +135,35 @@ class RoleController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  string  $encryptedId
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(string $encryptedId)
     {
-       // DB::table("roles")->where('id',$id)->delete();
-        Role::find($id)->delete();
+        $id = Crypt::decrypt($encryptedId);
+        $role = Role::find($id);
+
+        if (!$role) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Role not found.',
+                ]);
+            }
+
+            return redirect()->route('roles.index')->with('error', 'Role not found.');
+        }
+
+        $roleName = $role->name;
+        $role->delete();
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'status' => 200,
+                'message' => "Role '{$roleName}' was successfully deleted.",
+            ]);
+        }
+
         return redirect()->route('roles.index')
                         ->with('success','Role deleted successfully');
     }

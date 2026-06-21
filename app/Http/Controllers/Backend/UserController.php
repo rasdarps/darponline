@@ -2,6 +2,7 @@
     
 namespace App\Http\Controllers\Backend;
     
+use App\DataTables\Admin\Settings\UserDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -23,18 +24,15 @@ class UserController extends Controller
     function __construct()
     {
         // Change from role-* to user-*
-        $this->middleware('permission:user-list|user-create|user-edit|user-delete', ['only' => ['index','show']]);
+        $this->middleware('permission:user-list', ['only' => ['index','show']]);
         $this->middleware('permission:user-create', ['only' => ['create','store']]);
         $this->middleware('permission:user-edit', ['only' => ['edit','update']]);
         $this->middleware('permission:user-delete', ['only' => ['destroy']]);
     }
     
-    public function index(Request $request)
+    public function index(UserDataTable $dataTable)
     {
-        $data = User::where('user_type', '!=', 'Super Admin')
-                      ->orderBy('id','DESC')->paginate(5);
-        return view('users.index',compact('data'))
-            ->with('i', ($request->input('page', 1) - 1) * 5);
+        return $dataTable->render('users.index');
     }
     
     /**
@@ -116,7 +114,9 @@ class UserController extends Controller
     public function show($encryptedId)
     {
         try {
+            $encryptedId = str_replace(' ', '+', $encryptedId);
             $id = Crypt::decrypt($encryptedId);
+
             $user = User::find($id);
             
             if (!$user) {
@@ -138,6 +138,7 @@ class UserController extends Controller
     public function edit($encryptedId)
     {
         try {
+            // $encryptedId = str_replace(' ', '+', $encryptedId);
             $id = Crypt::decrypt($encryptedId);
             $user = User::find($id);
             
@@ -165,81 +166,83 @@ class UserController extends Controller
     public function update(Request $request, $encryptedId)
     {
         try {
+            // $encryptedId = str_replace(' ', '+', $encryptedId);
             $id = Crypt::decrypt($encryptedId);
-            $user = User::find($id);
-            
-            if (!$user) {
-                return response()->json([
-                    'status' => 404,
-                    'message' => 'User not found.',
-                ]);
-            }
-
-           $validatedData = $this->validate($request, [
-                'name' => ['required','string', 'max:255'],
-                'username' => ['required','string', 'max:255', 'unique:users,username,' . $id],
-                'email' => 'required|email|unique:users,email,' . $id,
-                'phone' => 'required|digits:10|numeric|unique:users,phone,' . $id,
-                'password' => 'nullable|same:confirm_password',
-                'profile_image'=>'nullable',
-                'roles' => 'required',
-                'user_type' => 'required|in:Admin,User'
-            ], [
-                'name.required' => 'Full Name is required',
-                'username.required' => 'Username is required',
-                'username.unique' => 'Username already exists',
-                'email.required' => 'Email is required',
-                'email.email' => 'Enter valid email',
-                'email.unique' => 'Email already exists',
-                'phone.required' => 'Phone is required',
-                'phone.unique' => 'Phone number already exists',
-                'password.same' => 'Password and Confirm Password must match',
-                'roles.required' => 'At least one role must be selected',
-                'user_type.required' => 'User Type is required',
-                'user_type.in' => 'User Type must be either Admin or User',
-            ]);
-
-            try {
-                
-                //fetch only validated data
-                $data = $validatedData;
-                
-                // Only update password if provided
-                if ($request->filled('password')) {
-                    $data['password'] = Hash::make($data['password']);
-                } else {
-                    $data = Arr::except($data, array('password', 'confirm_password'));
-                }
-                
-                $data['updated_by'] = Auth::id();
-                
-                // Use transaction for data integrity
-                DB::transaction(function () use ($data, $request, $user, $id) {
-                    // Update user
-                    $user->update($data);
-                    
-                    // Remove existing roles and assign new ones
-                    DB::table('model_has_roles')->where('model_id', $id)->delete();
-                    $user->assignRole($request->input('roles'));
-                });
-
-                return response()->json([
-                    'status' => 200,
-                    'message' => "User '{$data['name']}' was successfully updated",
-                    'redirect' => route('users.index')
-                ]);
-
-            } catch(\Throwable $e) {
-                return response()->json([
-                    'status' => 400,
-                    'message' => $e->getMessage(),
-                ]); 
-            }
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 400,
                 'message' => 'Invalid user ID.',
             ]);
+        }
+
+        $user = User::find($id);
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'User not found.',
+            ]);
+        }
+
+       $validatedData = $this->validate($request, [
+            'name' => ['required','string', 'max:255'],
+            'username' => ['required','string', 'max:255', 'unique:users,username,' . $id],
+            'email' => 'required|email|unique:users,email,' . $id,
+            'phone' => 'required|digits:10|numeric|unique:users,phone,' . $id,
+            'password' => 'nullable|same:confirm_password',
+            'profile_image'=>'nullable',
+            'roles' => 'required',
+            'user_type' => 'required|in:Admin,User'
+        ], [
+            'name.required' => 'Full Name is required',
+            'username.required' => 'Username is required',
+            'username.unique' => 'Username already exists',
+            'email.required' => 'Email is required',
+            'email.email' => 'Enter valid email',
+            'email.unique' => 'Email already exists',
+            'phone.required' => 'Phone is required',
+            'phone.unique' => 'Phone number already exists',
+            'password.same' => 'Password and Confirm Password must match',
+            'roles.required' => 'At least one role must be selected',
+            'user_type.required' => 'User Type is required',
+            'user_type.in' => 'User Type must be either Admin or User',
+        ]);
+
+        try {
+            
+            //fetch only validated data
+            $data = $validatedData;
+            
+            // Only update password if provided
+            if ($request->filled('password')) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                $data = Arr::except($data, array('password', 'confirm_password'));
+            }
+            
+            $data['updated_by'] = Auth::id();
+            
+            // Use transaction for data integrity
+            DB::transaction(function () use ($data, $request, $user, $id) {
+                // Update user
+                $user->update($data);
+                
+                // Remove existing roles and assign new ones
+                DB::table('model_has_roles')->where('model_id', $id)->delete();
+                $user->assignRole($request->input('roles'));
+            });
+
+            return response()->json([
+                'status' => 200,
+                'message' => "User '{$data['name']}' was successfully updated",
+                'redirect' => route('users.index')
+            ]);
+
+        } catch(\Throwable $e) {
+            return response()->json([
+                'status' => 400,
+                'message' => $e->getMessage(),
+            ]); 
         }
     }
     
@@ -253,6 +256,7 @@ class UserController extends Controller
     {
         try {
             $id = Crypt::decrypt($encryptedId);
+
             $user = User::find($id);
             
             if (!$user) {

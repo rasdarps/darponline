@@ -16,6 +16,12 @@ class CashReconciliationController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:cash-reconciliation-list|cash-reconciliation-show', ['only' => ['index']]);
+        $this->middleware('permission:cash-reconciliation-create', ['only' => ['create', 'store', 'expected']]);
+        $this->middleware('permission:cash-reconciliation-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:cash-reconciliation-show', ['only' => ['show']]);
+        $this->middleware('permission:cash-reconciliation-approve', ['only' => ['approve']]);
+        $this->middleware('permission:cash-reconciliation-reverse-approval', ['only' => ['reverseApproval']]);
     }
 
     public function index(CashReconciliationDataTable $dataTable)

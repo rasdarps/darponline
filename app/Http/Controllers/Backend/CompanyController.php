@@ -14,6 +14,14 @@ use Illuminate\Validation\ValidationException;
 
 class CompanyController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:company-list', ['only' => ['index', 'show']]);
+        $this->middleware('permission:company-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:company-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:company-delete', ['only' => ['destroy']]);
+    }
+
     /**
      * Display a listing of the resource.
      *

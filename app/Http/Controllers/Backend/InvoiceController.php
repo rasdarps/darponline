@@ -25,9 +25,10 @@ class InvoiceController extends Controller
 {
     function __construct()
     {
-         $this->middleware('permission:invoice-list|invoice-create|invoice-delete', ['only' => ['index','store']]);
-         $this->middleware('permission:invoice-create', ['only' => ['create','store']]);
-            $this->middleware('permission:invoice-delete', ['only' => ['cancel']]);
+    $this->middleware('permission:invoice-list', ['only' => ['index']]);
+    $this->middleware('permission:invoice-create', ['only' => ['create', 'store']]);
+    $this->middleware('permission:invoice-cancel', ['only' => ['cancel']]);
+    $this->middleware('permission:invoice-print', ['only' => ['PrintInvoiceList', 'PrintInvoice']]);
     }
 
     // public function index(){

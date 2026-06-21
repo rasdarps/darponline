@@ -15,6 +15,14 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:category-list', ['only' => ['index']]);
+        $this->middleware('permission:category-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:category-edit', ['only' => ['edit', 'update', 'updateWebsiteStatus', 'bulkUpdateWebsiteStatus']]);
+        $this->middleware('permission:category-delete', ['only' => ['destroy']]);
+    }
+
     // public function index(){
 
     //     $categoris = Category::orderBy('name', 'asc')->get();

@@ -58,10 +58,10 @@ Route::prefix('admin')->group(function () {
     Auth::routes();
 
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-
         Route::middleware('auth')->group(function(){
+          
+            Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        
 
             //UPLOADS ROUTE
 
@@ -79,10 +79,6 @@ Route::prefix('admin')->group(function () {
                 Route::post('/update/password', 'UpdatePassword')->name('update.password');
                 
             });
-
-            // Route::resource('/companies', CompanyController::class);
-            // Route::resource('/roles', RoleController::class);
-            // Route::resource('/users', UserController::class);
 
 
             Route::prefix('suppliers')->name('suppliers.')->group(function () {
@@ -247,7 +243,7 @@ Route::prefix('admin')->group(function () {
                 
             });
         Route::prefix('companies')->name('companies.')->group(function () {
-         route::get('/', [CompanyController::class, 'index'])->name('index');
+            Route::get('/', [CompanyController::class, 'index'])->name('index');
             Route::get('/create', [CompanyController::class, 'create'])->name('create');
             Route::post('/store', [CompanyController::class, 'store'])->name('store');
             Route::get('/edit/{id}', [CompanyController::class, 'edit'])->name('edit');
@@ -256,8 +252,25 @@ Route::prefix('admin')->group(function () {
 
         });
 
-        Route::resource('/roles', RoleController::class);
-        Route::resource('/users', UserController::class);
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('/create', [UserController::class, 'create'])->name('create');
+            Route::post('/store', [UserController::class, 'store'])->name('store');
+            Route::get('/edit/{id}', [UserController::class, 'edit'])->name('edit');
+            Route::patch('/update/{id}', [UserController::class, 'update'])->name('update');
+            Route::delete('/destroy/{id}', [UserController::class, 'destroy'])->name('destroy');
+
+        });
+
+         Route::prefix('roles')->name('roles.')->group(function () {
+            Route::get('/', [RoleController::class, 'index'])->name('index');
+            Route::get('/create', [RoleController::class, 'create'])->name('create');
+            Route::post('/store', [RoleController::class, 'store'])->name('store');
+                Route::get('/edit/{id}', [RoleController::class, 'edit'])->where('id', '.*')->name('edit');
+                Route::patch('/update/{id}', [RoleController::class, 'update'])->where('id', '.*')->name('update');
+                Route::delete('/destroy/{id}', [RoleController::class, 'destroy'])->where('id', '.*')->name('destroy');
+
+        });
 
 
             // Invoice All Route 

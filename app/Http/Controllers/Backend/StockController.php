@@ -15,6 +15,14 @@ use App\Models\User;
  
 class StockController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:stock-report', ['only' => ['StockReport']]);
+        $this->middleware('permission:stock-ledger-report', ['only' => ['StockLedgerReport']]);
+        $this->middleware('permission:stock-product-trail-report', ['only' => ['ProductWiseStockTrail']]);
+        $this->middleware('permission:stock-value-report', ['only' => ['StockValue']]);
+    }
+
     // public function StockReport(){
 
     //     $allData = Product::orderBy('name','asc')->orderBy('category_id','asc')->get();

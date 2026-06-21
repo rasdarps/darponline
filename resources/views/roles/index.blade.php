@@ -1,93 +1,118 @@
-@extends('admin.admin_master')
-@section('title') {{'View Roles'}} @endsection
+@extends('layout.main')
+@section('title') {{ 'View Roles' }} @endsection
 
-@section('admin')
-
-<!--Validator link-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
- 
+@section('content')
 
 <div class="page-content">
-<div class="container-fluid">
+    <div class="container-fluid">
 
-    <!-- start page title -->
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">Role Records</h4>
-
-                 
-
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Role All</h4>
+                </div>
             </div>
         </div>
-    </div>
-    <!-- end page title -->
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
 
-                    @if ($message = Session::get('success'))
-                        <div class="alert alert-success">
-                            <p>{{ $message }}</p>
+                        <a href="{{ route('roles.create') }}" class="btn btn-success" style="float:right;">
+                            <i class="fas fa-plus-circle"></i> Add Role
+                        </a>
+                        <br><br>
+
+                        <h4 class="card-title">Role All Data</h4>
+
+                        <div class="table-responsive">
+                            {!! $dataTable->table() !!}
                         </div>
-                    @endif
-                  
-                <div class="mb-5">
-                   <a href="{{ route('roles.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" 
-                   style="float:right"><i class="fas fa-plus-circle"></i> Add Role</a>
+
+                    </div>
                 </div>
+            </div>
+        </div>
 
-                    <h4 class="card-title">Roles | Data </h4>
-
-<table id="myTable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
-    <thead> 
-    <tr>
-     <th>No</th>
-     <th>Name</th>
-     <th width="280px">Action</th>
-
-    </thead>
-
-    <tbody>
-
-  </tr>
-    @foreach ($roles as $key => $role)
-    <tr>
-        <td>{{ ++$i }}</td>
-        <td>{{ $role->name }}</td>
-        <td>
-            <a class="btn btn-info" href="{{ route('roles.show',$role->id) }}">Show</a>
-            @can('role-edit')
-                <a class="btn btn-primary" href="{{ route('roles.edit',$role->id) }}">Edit</a>
-            @endcan
-            @can('role-delete')
-                {!! Form::open(['method' => 'DELETE','route' => ['roles.destroy', $role->id],'style'=>'display:inline', 'onsubmit'=>'return confirm("Delete?")']) !!}
-                    {!! Form::submit('Delete', ['class' => 'btn btn-danger']) !!}
-                {!! Form::close() !!}
-            @endcan
-        </td>
-    </tr>
-    @endforeach
-
-</tbody>
-
-</table>
-
-
-{!! $roles->render() !!}
-
-
-
-</div>
-</div>
-</div> <!-- end col -->
-</div> <!-- end row -->
-
-
-
-</div> <!-- container-fluid -->
+    </div>
 </div>
 
+@endsection
+
+@section('scripts')
+    {{ $dataTable->scripts() }}
+
+    <script>
+        (function () {
+            var flashSuccess = @json(session('success'));
+
+            if (flashSuccess && typeof Notiflix !== 'undefined' && Notiflix.Notify) {
+                Notiflix.Notify.success(flashSuccess);
+            }
+
+            function submitDelete(form) {
+                var $form = $(form);
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: 'POST',
+                    data: $form.serialize(),
+                    success: function (response) {
+                        var message = (response && response.message) ? response.message : 'Role deleted successfully.';
+
+                        if (typeof Notiflix !== 'undefined' && Notiflix.Notify) {
+                            Notiflix.Notify.success(message);
+                        }
+
+                        setTimeout(function () {
+                            window.location.href = "{{ route('roles.index') }}";
+                        }, 300);
+                    },
+                    error: function (xhr) {
+                        var message = (xhr.responseJSON && xhr.responseJSON.message)
+                            ? xhr.responseJSON.message
+                            : 'Failed to delete role.';
+
+                        if (typeof Notiflix !== 'undefined' && Notiflix.Notify) {
+                            Notiflix.Notify.failure(message);
+                        } else {
+                            alert(message);
+                        }
+                    }
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                var button = e.target.closest('#roles-table .btn-delete, #roles-table .delete-confirm-btn');
+                if (!button) {
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                var form = button.closest('form');
+                if (!form) {
+                    return;
+                }
+
+                if (typeof Notiflix !== 'undefined' && Notiflix.Confirm && typeof Notiflix.Confirm.show === 'function') {
+                    Notiflix.Confirm.show(
+                        'Confirm Delete',
+                        'Are you sure you want to delete this record?',
+                        'Yes, Delete',
+                        'Cancel',
+                        function () {
+                            submitDelete(form);
+                        }
+                    );
+                    return;
+                }
+
+                if (window.confirm('Are you sure you want to delete this record?')) {
+                    submitDelete(form);
+                }
+            }, true);
+        })();
+    </script>
 @endsection

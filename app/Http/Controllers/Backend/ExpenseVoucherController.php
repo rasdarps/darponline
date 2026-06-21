@@ -17,7 +17,7 @@ class ExpenseVoucherController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:expense-list|expense-create|expense-edit|expense-delete', ['only' => ['index', 'show', 'print']]);
+        $this->middleware('permission:expense-list', ['only' => ['index', 'show', 'print']]);
         $this->middleware('permission:expense-create', ['only' => ['create', 'store']]);
         $this->middleware('permission:expense-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:expense-delete', ['only' => ['destroy']]);

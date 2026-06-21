@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\DB;
 
 class ProductPriceController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:product-price-list', ['only' => ['index']]);
+        $this->middleware('permission:product-price-history-list', ['only' => ['ProductPriceHistory']]);
+        $this->middleware('permission:product-price-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:product-price-delete', ['only' => ['destroy']]);
+    }
+
     /**
      * Display a listing of the resource.
      */

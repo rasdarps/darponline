@@ -27,7 +27,7 @@
 
                                 <form action="{{ route('users.update', Crypt::encrypt($user->id)) }}" method="POST" id="myForm" enctype="multipart/form-data">
                                     @csrf
-                                    @method('PUT')
+                                    @method('PATCH')
 
                                     {{-- backend error alerts --}}
                                     <div class="alert alert-danger alert-dismissible fade show" id="errorAlert" style="display: none;">
@@ -91,6 +91,17 @@
                                                             {{ $role }}
                                                         </option>
                                                     @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="user_type"><strong>User Type: <span class="text-danger">*</span></strong></label>
+                                                <select id="user_type" name="user_type" class="form-control">
+                                                    <option value="" disabled {{ old('user_type', $user->user_type) ? '' : 'selected' }}>Select User Type</option>
+                                                    <option value="Admin" {{ old('user_type', $user->user_type) == 'Admin' ? 'selected' : '' }}>Admin</option>
+                                                    <option value="User" {{ old('user_type', $user->user_type) == 'User' ? 'selected' : '' }}>User</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -296,6 +307,11 @@
                     return;
                 }
 
+                if(!$('#user_type').val()) {
+                    Notiflix.Notify.failure('Please select User Type');
+                    return;
+                }
+
                 Notiflix.Loading.standard('Updating user, please wait...');
 
                 $.ajax({
@@ -328,9 +344,12 @@
                                 scrollTop: $('#errorAlert').offset().top - 100
                             }, 500);
                         } else {
+                            var serverMessage = (xhr.responseJSON && xhr.responseJSON.message)
+                                ? xhr.responseJSON.message
+                                : 'An error occurred. Please try again later.';
                             $('#errorAlert').show();
-                            $('#errors').append('<li>An error occurred. Please try again later.</li>');
-                            Notiflix.Notify.failure('An error occurred. Please try again later.');
+                            $('#errors').append('<li>' + serverMessage + '</li>');
+                            Notiflix.Notify.failure(serverMessage);
                         }
                     }
                 });

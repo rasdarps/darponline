@@ -1,93 +1,115 @@
-@extends('admin.admin_master')
-@section('title') {{'View User'}} @endsection
-@section('admin')
+@extends('layout.main')
+@section('title') {{ 'View User' }} @endsection
+
+@section('content')
 
 <div class="page-content">
-  <div class="container-fluid">
+    <div class="container-fluid">
 
-      <!-- start page title -->
-      <div class="row">
-          <div class="col-12">
-              <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                  <h4 class="mb-sm-0">User Records</h4>
+        <!-- start page title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">User All</h4>
+                </div>
+            </div>
+        </div>
+        <!-- end page title -->
 
-                   
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
 
-              </div>
-          </div>
-      </div>
-      <!-- end page title -->
+                        <a href="{{ route('users.create') }}" class="btn btn-success" style="float:right;">
+                            <i class="fas fa-plus-circle"></i> Add User
+                        </a>
+                        <br><br>
 
-      <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    
-                    <!--Success Message-->
-                    @if ($message = Session::get('success'))
-                        <div class="alert alert-success">
-                            <p>{{ $message }}</p>
+                        <h4 class="card-title">User All Data</h4>
+
+                        <div class="table-responsive">
+                            {!! $dataTable->table() !!}
                         </div>
-                    @endif
-                  
-                <div class="mb-5">
-                   <a href="{{ route('users.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" 
-                   style="float:right"><i class="fas fa-plus-circle"></i> Add User</a>
+
+                    </div>
                 </div>
+            </div>
+        </div>
 
-                    <h4 class="card-title">Users | Data </h4>
-                    
+    </div>
+</div>
 
-                    <table id="myTable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
-                        <thead>
-                        <tr>
-                            <th>Sl</th>
-                            
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Roles</th>  
-                            <th>Action</th>
-                            
-                        </thead>
+@endsection
 
+@section('scripts')
+    {{ $dataTable->scripts() }}
 
-                        <tbody>
-                        	 
-                        	@foreach($data as $key => $user)
-                        <tr>
-                          <td> {{ $key+1}} </td>
-                          <td>{{ $user->name }}</td>
-                          <td>{{ $user->email }}</td>
-                          <td>
-                            @if(!empty($user->getRoleNames()))
-                              @foreach($user->getRoleNames() as $v)
-                                 <label class="badge badge-success" style="color:rgb(207, 7, 7)">{{ $v }}</label>
-                              @endforeach
-                            @endif
-                          </td>
-                          <td>
-                            <!--<a href="{{-- route('supplier.show',$user->id) --}}" class="btn btn-info sm" title="Show Data">  <i class="fas fa-eye"></i> </a>-->
-                             <a href="{{ route('users.edit', Crypt::encrypt($user->id)) }}" class="btn btn-info sm" title="Edit Data">  <i class="fas fa-edit"></i> </a>
-                              {!! Form::open(['method' => 'DELETE','route' => ['users.destroy', $user->id],'style'=>'display:inline', 'onsubmit'=>'return confirm("Delete?")' ]) !!}
-                                  {!! Form::submit('Delete', ['class' => 'btn btn-danger btn-sm']) !!}
-                              {!! Form::close() !!}
-                          </td>
-                        </tr>
-                        @endforeach
-                        
-                        </tbody>
-                    </table>
-        
-                                    </div>
-                                </div>
-                            </div> <!-- end col -->
-                        </div> <!-- end row -->
-        
-                     
-                        
-                    </div> <!-- container-fluid -->
-                </div>
-                <!---------------------------------------------------------------------->
+    <script>
+        (function () {
+            function submitDelete(form) {
+                var $form = $(form);
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: 'POST',
+                    data: $form.serialize(),
+                    success: function (response) {
+                        var message = (response && response.message) ? response.message : 'User deleted successfully.';
 
+                        if (typeof Notiflix !== 'undefined' && Notiflix.Notify) {
+                            Notiflix.Notify.success(message);
+                        }
 
+                        setTimeout(function () {
+                            window.location.href = "{{ route('users.index') }}";
+                        }, 300);
+                    },
+                    error: function (xhr) {
+                        var message = (xhr.responseJSON && xhr.responseJSON.message)
+                            ? xhr.responseJSON.message
+                            : 'Failed to delete user.';
+
+                        if (typeof Notiflix !== 'undefined' && Notiflix.Notify) {
+                            Notiflix.Notify.failure(message);
+                        } else {
+                            alert(message);
+                        }
+                    }
+                });
+            }
+
+            // Capture phase interception ensures layout-level delete handler does not submit the form first.
+            document.addEventListener('click', function (e) {
+                var button = e.target.closest('#users-table .btn-delete, #users-table .delete-confirm-btn');
+                if (!button) {
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                var form = button.closest('form');
+                if (!form) {
+                    return;
+                }
+
+                if (typeof Notiflix !== 'undefined' && Notiflix.Confirm && typeof Notiflix.Confirm.show === 'function') {
+                    Notiflix.Confirm.show(
+                        'Confirm Delete',
+                        'Are you sure you want to delete this record?',
+                        'Yes, Delete',
+                        'Cancel',
+                        function () {
+                            submitDelete(form);
+                        }
+                    );
+                    return;
+                }
+
+                if (window.confirm('Are you sure you want to delete this record?')) {
+                    submitDelete(form);
+                }
+            }, true);
+        })();
+    </script>
 @endsection

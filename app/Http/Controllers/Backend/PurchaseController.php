@@ -29,9 +29,10 @@ class PurchaseController extends Controller
 {
     function __construct()
     {
-            $this->middleware('permission:purchase-list|purchase-create|purchase-delete', ['only' => ['index','store']]);
-         $this->middleware('permission:purchase-create', ['only' => ['create','store']]);
-         $this->middleware('permission:purchase-delete', ['only' => ['destroy']]);
+    $this->middleware('permission:purchase-list', ['only' => ['index']]);
+    $this->middleware('permission:purchase-create', ['only' => ['create', 'store']]);
+    $this->middleware('permission:purchase-cancel', ['only' => ['cancel']]);
+    $this->middleware('permission:purchase-print', ['only' => ['PrintPurchaseList', 'PrintPurchase']]);
     }
 
    

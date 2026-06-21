@@ -22,6 +22,14 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:report-profit', ['only' => ['profitReport', 'profitSummary']]);
+        $this->middleware('permission:report-expense', ['only' => ['expenseReport']]);
+        $this->middleware('permission:report-stock-adjustment', ['only' => ['stockAdjustmentReport']]);
+        $this->middleware('permission:report-summary-ledger', ['only' => ['summaryLedger']]);
+    }
+
     /**
      * Display a listing of the resource.
      */

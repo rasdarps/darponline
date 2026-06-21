@@ -16,7 +16,7 @@ class ExpenseCategoryController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:expense-category-list|expense-category-create|expense-category-edit|expense-category-delete', ['only' => ['index', 'show']]);
+        $this->middleware('permission:expense-category-list', ['only' => ['index']]);
         $this->middleware('permission:expense-category-create', ['only' => ['create', 'store']]);
         $this->middleware('permission:expense-category-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:expense-category-delete', ['only' => ['destroy']]);

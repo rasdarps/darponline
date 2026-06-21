@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Product;
@@ -21,6 +22,7 @@ class DashboardController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:dashboard-view');
     }
 
     /**
@@ -63,6 +65,8 @@ class DashboardController extends Controller
             $totals[] = $total;
         }
 
+        $company = Company::first();
+
         return view('admin.index', compact(
             'total_purchase',
             'total_invoice',
@@ -74,7 +78,8 @@ class DashboardController extends Controller
             'products',
             'approved_purchase',
             'months',
-            'totals'
+            'totals',
+            'company'
         ));
     }
 

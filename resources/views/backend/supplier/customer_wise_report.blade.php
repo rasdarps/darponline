@@ -1,8 +1,8 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'View Customer'}} @endsection
 
 
-@section('admin')
+@section('content')
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
  <div class="page-content">
@@ -42,7 +42,7 @@
 
 <!--  /// Customer Credit Wise  -->
     <div class="show_credit" style="display:none">
-        <form method="GET" action="{{ route('customer.wise.credit.report') }}" id="myForm">
+        <form method="GET" action="#" id="myForm">
 
             <div class="row">
                 <div class="col-sm-8 form-group">
@@ -68,7 +68,7 @@
 
 <!--  /// show_paid  -->
 <div class="show_paid" style="display:none">
-        <form method="GET" action="{{ route('customer.wise.paid.report') }}" id="myForm">
+        <form method="GET" action="#" id="myForm">
 
             <div class="row">
                 <div class="col-sm-8 form-group">

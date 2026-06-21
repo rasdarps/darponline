@@ -1,7 +1,7 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'View Credit Customer'}} @endsection
 
-@section('admin')
+@section('content')
 
 
  <div class="page-content">
@@ -24,8 +24,6 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-
-    <a href="{{ route('credit.customer.print.pdf') }}"  class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;"><i class="fa fa-print"></i> Print Credit Customer </a> <br>  <br>               
 
                     <h4 class="card-title">Credit Supplier Data </h4>
                     
@@ -54,9 +52,6 @@
         <td class="text-end"> {{ $item->due_amount }} </td> 
         <td>
    <a href="{{ route('customer.edit.invoice',$item->invoice_id) }}" class="btn btn-info sm" title="Edit Data">  <i class="fas fa-edit"></i> </a>
-
-     <a href="{{ route('customer.invoice.details.pdf',$item->invoice_id) }}" class="btn btn-danger sm" title="Customer Invoice Details">  <i class="fa fa-eye"></i> </a>
-
                             </td>
                            
                         </tr>

@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Storage;
 
 class UploadController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:category-create|category-edit|product-create|product-edit', ['only' => ['store', 'temp_delete']]);
+    }
+
     public static function generateCode()
     {
         return uniqid();

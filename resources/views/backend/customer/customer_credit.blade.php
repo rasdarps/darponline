@@ -1,7 +1,7 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'View Credit Customer'}} @endsection
 
-@section('admin')
+@section('content')
 
 
  <div class="page-content">

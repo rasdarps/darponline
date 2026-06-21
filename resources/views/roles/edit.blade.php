@@ -1,121 +1,151 @@
-@extends('admin.admin_master')
-@section('title') {{'Edit Roles'}} @endsection
+@extends('layout.main')
+@section('title') {{ 'Edit Roles' }} @endsection
 
-@section('admin')
+@section('content')
 
-<!--Validator link-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
- 
+    <!--Validator link-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-<div class="page-content">
-<div class="container-fluid">
+    <div class="page-content">
+        <div class="container-fluid">
 
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2>Edit Role</h2>
-        </div>
-        <div class="pull-right">
-            <a class="btn btn-primary" href="{{ route('roles.index') }}"> Back</a>
-        </div>
-    </div>
-</div>
-
-
-@if (count($errors) > 0)
-    <div class="alert alert-danger">
-        <strong>Whoops!</strong> There were some problems with your input.<br><br>
-        <ul>
-        @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-        @endforeach
-        </ul>
-    </div>
-@endif
-
-
-<form action="{{ route('roles.update', $role->id) }}" method="POST">
-            @csrf
-            @method('PATCH')
             <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12">
-                    <div class="form-group">
-                        <strong>Name:</strong>
-                        <input type="text" name="name" value="{{ old('name', $role->name) }}" class="form-control" placeholder="Name">
-                    </div>
-                </div>
                 <div class="col-12">
-                    <div class="form-group">
-                        <strong>Permission:</strong>
-                        <br/>
-                        
-                        {{-- Group permissions by category --}}
-                        @php
-                            $permissionGroups = [
-                                'User Management' => $permission->filter(function($perm) {
-                                    return str_contains($perm->name, 'user-') || str_contains($perm->name, 'unit-') || str_contains($perm->name, 'category-') || str_contains($perm->name, 'role');
-                                }),
-                                'Product Management' => $permission->filter(function($perm) {
-                                    return str_contains($perm->name, 'product-');
-                                }),
-                                'Supplier Management' => $permission->filter(function($perm) {
-                                    return str_contains($perm->name, 'supplier-');
-                                }),
+                    <div class="card">
+                        <div class="card-header with-border">
+                            <span class="card-title" style="font-size:20px;">Edit | Role </span>
 
-                                'Customer Management' => $permission->filter(function($perm) {
-                                    return str_contains($perm->name, 'customer-');
-                                }),
+                            <a href="{{ route('roles.index') }}" style="float:right">
+                                <button type="button" class="btn btn-primary modal_btn">View Roles</button>
+                            </a>
+                        </div>
 
-                                'Transaction Management' => $permission->filter(function($perm) {
-                                    return str_contains($perm->name, 'transaction-')|| str_contains($perm->name, 'invoice-') || str_contains($perm->name, 'sales-') || str_contains($perm->name, 'purchase-');
-                                }),
-
-                                'Other Permissions' => $permission->filter(function($perm) {
-                                    return !str_contains($perm->name, 'user-') && 
-                                           !str_contains($perm->name, 'role-') &&
-                                           !str_contains($perm->name, 'unit-') &&
-                                           !str_contains($perm->name, 'category-') &&
-                                           !str_contains($perm->name, 'product-') && 
-                                           !str_contains($perm->name, 'supplier-') && 
-                                           !str_contains($perm->name, 'customer-') && 
-                                           !str_contains($perm->name, 'transaction-') && 
-                                           !str_contains($perm->name, 'invoice-') &&
-                                           !str_contains($perm->name, 'sales-') &&
-                                           !str_contains($perm->name, 'purchase-');
-
-                                })
-                            ];
-                        @endphp
-
-                        @foreach($permissionGroups as $groupName => $groupPermissions)
-                            @if($groupPermissions->count() > 0)
-                                <div class="mb-4">
-                                    <h6 class="text-primary fw-bold mb-3">{{ $groupName }}</h6>
-                                    <div class="row">
-                                        @foreach($groupPermissions as $value)
-                                            <div class="col-lg-4 col-md-6 col-12 mb-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="permission[]" value="{{ $value->id }}"
-                                                        id="perm{{ $value->id }}"
-                                                        {{ in_array($value->id, $rolePermissions) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="perm{{ $value->id }}">
-                                                        {{ $value->name }}
-                                                    </label>
-                                                </div>
-                                            </div>
+                        <div class="card-body px-4 py-4">
+                            @if (count($errors) > 0)
+                                <div class="alert alert-danger">
+                                    <strong>Whoops!</strong> There were some problems with your input.<br><br>
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
                                         @endforeach
-                                    </div>
+                                    </ul>
                                 </div>
                             @endif
-                        @endforeach
+
+                            <form action="{{ route('roles.update', Crypt::encrypt($role->id)) }}" method="POST" id="roleForm">
+                                @csrf
+                                @method('PATCH')
+
+                                @php
+                                    $selectedPermissions = old('permission', $rolePermissions);
+                                    $permissionGroups = [
+                                        'User and Role Management' => $permission->filter(function($perm) {
+                                            return str_contains($perm->name, 'user-') || str_contains($perm->name, 'role-');
+                                        }),
+                                        'Settings' => $permission->filter(function($perm) {
+                                            return str_contains($perm->name, 'unit-') || str_contains($perm->name, 'category-') || str_contains($perm->name, 'supplier-')
+                                            || str_contains($perm->name, 'product-') || str_contains($perm->name, 'customer-') || str_contains($perm->name, 'company-');
+                                        }),
+                                        'Transactions' => $permission->filter(function($perm) {
+                                            return str_contains($perm->name, 'invoice-') || str_contains($perm->name, 'purchase-')
+                                            || str_contains($perm->name, 'expense-') || str_contains($perm->name, '-adjustment-')
+                                            || str_contains($perm->name, 'sales-') || str_contains($perm->name, 'cash-');
+                                        }),
+
+                                        'Reports' => $permission->filter(function($perm) {
+                                            return str_contains($perm->name, 'report-') || str_contains($perm->name, 'stock-report-') || str_contains($perm->name, 'stock-ledger-report')
+                                            || str_contains($perm->name, 'report-stock-adjustment') || str_contains($perm->name, 'stock-value-')
+                                            || str_contains($perm->name, 'stock-product-trail-report') || str_contains($perm->name, 'stock-product-trail-report')
+                                            || str_contains($perm->name, 'report-stock-adjustment') || str_contains($perm->name, 'report-stock-adjustment')
+                                            || str_contains($perm->name, 'report-stock-adjustment') || str_contains($perm->name, 'report-stock-adjustment')
+                                            || str_contains($perm->name, 'report-stock-adjustment');
+                                        }),
+
+                                        'Other Permissions' => $permission->filter(function($perm) {
+                                            return
+                                                !str_contains($perm->name, 'user-') &&
+                                                !str_contains($perm->name, 'role-') &&
+                                                !str_contains($perm->name, 'unit-') &&
+                                                !str_contains($perm->name, 'category-') &&
+                                                !str_contains($perm->name, 'supplier-') &&
+                                                !str_contains($perm->name, 'product-') &&
+                                                !str_contains($perm->name, 'customer-') &&
+                                                !str_contains($perm->name, 'invoice-') &&
+                                                !str_contains($perm->name, 'purchase-') &&
+                                                !str_contains($perm->name, 'expense-') &&
+                                                !str_contains($perm->name, 'stock-') &&
+                                                !str_contains($perm->name, 'report-') &&
+                                                !str_contains($perm->name, 'company-') &&
+                                                !str_contains($perm->name, 'cash-') &&
+                                                !str_contains($perm->name, 'sales-');
+                                        })
+                                    ];
+                                @endphp
+
+                                <div class="row gx-3">
+                                    <div class="col-lg-8 col-md-10 mb-3 mx-auto">
+                                        <div class="form-group">
+                                            <label for="name"><strong>Role Name: <span class="text-danger">*</span></strong></label>
+                                            <input type="text" id="name" name="name" class="form-control" placeholder="Enter role name" value="{{ old('name', $role->name) }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row gx-3">
+                                    <div class="col-lg-10 col-12 mb-3 mx-auto">
+                                        <div class="form-group">
+                                            <label><strong>Permissions: <span class="text-danger">*</span></strong></label>
+                                            <small class="text-muted d-block mb-2">Update the permissions for this role</small>
+                                            @foreach($permissionGroups as $groupName => $groupPermissions)
+                                                @if($groupPermissions->count() > 0)
+                                                    <div class="mb-4 permission-group">
+                                                        <h6 class="text-primary fw-bold mb-3">{{ $groupName }}</h6>
+                                                        <div class="row">
+                                                            @foreach($groupPermissions as $value)
+                                                                <div class="col-lg-4 col-md-6 col-12 mb-2">
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="checkbox" name="permission[]" value="{{ $value->id }}" id="perm{{ $value->id }}" {{ in_array($value->id, $selectedPermissions) ? 'checked' : '' }}>
+                                                                        <label class="form-check-label" for="perm{{ $value->id }}">
+                                                                            {{ $value->name }}
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12 text-center">
+                                        <button type="submit" class="btn btn-success mt-3">Submit</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-                <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                </div>
             </div>
-        </form>
 
-</div>
-</div>
+        </div>
+    </div>
+
+@endsection
+
+@section('styles')
+<style>
+    .permission-group {
+        padding: 14px 16px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background-color: #fafbfc;
+    }
+
+    .permission-group .form-check {
+        padding-left: 1.6rem;
+    }
+</style>
 @endsection

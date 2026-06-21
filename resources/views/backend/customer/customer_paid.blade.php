@@ -1,8 +1,8 @@
-@extends('admin.admin_master')
+@extends('layout.main')
 @section('title') {{'View Paid Customer'}} @endsection
 
 
-@section('admin')
+@section('content')
 
 
  <div class="page-content">

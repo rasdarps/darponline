@@ -66,9 +66,9 @@ class PermissionTableSeeder extends Seeder
         }
 
          $transactions_management_permissions = [ 
-            'invoice-list','invoice-create','invoice-edit','invoice-delete',   
-            'sales-list','sales-create','sales-edit','sales-delete',
-            'purchase-list','purchase-create','purchase-edit','purchase-delete',
+                'invoice-list','invoice-create','invoice-cancel','invoice-print',
+                'sales-create',
+                'purchase-list','purchase-create','purchase-cancel','purchase-print',
         ];
 
         $expense_management_permissions = [
@@ -81,6 +81,31 @@ class PermissionTableSeeder extends Seeder
 
         $stock_adjustment_permissions = [
             'stock-adjustment-list','stock-adjustment-create','stock-adjustment-edit','stock-adjustment-delete',
+        ];
+
+        $company_management_permissions = [
+            'company-list','company-create','company-edit','company-delete',
+        ];
+
+        $product_price_permissions = [
+            'product-price-list','product-price-edit','product-price-delete','product-price-history-list',
+        ];
+
+        $cash_reconciliation_permissions = [
+            'cash-reconciliation-list','cash-reconciliation-create','cash-reconciliation-edit','cash-reconciliation-show',
+            'cash-reconciliation-approve','cash-reconciliation-reverse-approval',
+        ];
+
+        $report_permissions = [
+            'report-profit','report-expense','report-stock-adjustment','report-summary-ledger',
+        ];
+
+        $stock_report_permissions = [
+            'stock-report','stock-ledger-report','stock-product-trail-report','stock-value-report',
+        ];
+
+        $dashboard_permissions = [
+            'dashboard-view',
         ];
 
 
@@ -104,11 +129,45 @@ class PermissionTableSeeder extends Seeder
             Permission::firstOrCreate(['name' => $stock_adjustment_permission]);
         }
 
+        // Create company management permissions
+        foreach ($company_management_permissions as $company_permission) {
+            Permission::firstOrCreate(['name' => $company_permission]);
+        }
+
+        // Create product price permissions
+        foreach ($product_price_permissions as $product_price_permission) {
+            Permission::firstOrCreate(['name' => $product_price_permission]);
+        }
+
+        // Create cash reconciliation permissions
+        foreach ($cash_reconciliation_permissions as $cash_reconciliation_permission) {
+            Permission::firstOrCreate(['name' => $cash_reconciliation_permission]);
+        }
+
+        // Create report permissions
+        foreach ($report_permissions as $report_permission) {
+            Permission::firstOrCreate(['name' => $report_permission]);
+        }
+
+        // Create stock report permissions
+        foreach ($stock_report_permissions as $stock_report_permission) {
+            Permission::firstOrCreate(['name' => $stock_report_permission]);
+        }
+
+        // Create dashboard permissions
+        foreach ($dashboard_permissions as $dashboard_permission) {
+            Permission::firstOrCreate(['name' => $dashboard_permission]);
+        }
+
         // Find or retrieve the Super Admin role (must exist)
         $role = Role::findByName('Super Admin');
         
         // Create Manager role if it doesn't exist, or retrieve it if it does
         $manager_role = Role::firstOrCreate(['name' => 'Manager']);
+
+        // Create Cashier and Supervisor roles if they don't exist
+        $cashier_role = Role::firstOrCreate(['name' => 'Cashier']);
+        $supervisor_role = Role::firstOrCreate(['name' => 'Supervisor']);
 
 
          // Assign products permissions to Super Admin and Manager roles
@@ -207,6 +266,68 @@ class PermissionTableSeeder extends Seeder
                 $role->givePermissionTo($permission);
             }
           
+        }
+
+        // Assign additional permissions to Super Admin role only
+        $additional_permissions = array_merge(
+            $company_management_permissions,
+            $product_price_permissions,
+            $cash_reconciliation_permissions,
+            $report_permissions,
+            $stock_report_permissions,
+            $dashboard_permissions
+        );
+
+        foreach ($additional_permissions as $additional_permission) {
+            if (!$role->hasPermissionTo($additional_permission)) {
+                $role->givePermissionTo($additional_permission);
+            }
+        }
+
+        // Assign report, stock report, and dashboard permissions to Manager role
+        $manager_additional_permissions = array_merge(
+            $report_permissions,
+            $stock_report_permissions,
+            $dashboard_permissions,
+            [
+                'cash-reconciliation-show',
+                'cash-reconciliation-approve',
+                'cash-reconciliation-reverse-approval',
+            ]
+        );
+
+        foreach ($manager_additional_permissions as $manager_permission) {
+            if (!$manager_role->hasPermissionTo($manager_permission)) {
+                $manager_role->givePermissionTo($manager_permission);
+            }
+        }
+
+        // Assign cashier flow permissions
+        $cashier_permissions = [
+            'sales-create',
+            'invoice-create',
+            'cash-reconciliation-create',
+            'cash-reconciliation-edit',
+        ];
+
+        foreach ($cashier_permissions as $cashier_permission) {
+            if (!$cashier_role->hasPermissionTo($cashier_permission)) {
+                $cashier_role->givePermissionTo($cashier_permission);
+            }
+        }
+
+        // Assign supervisor approval/view permissions
+        $supervisor_permissions = [
+            'cash-reconciliation-list',
+            'cash-reconciliation-show',
+            'cash-reconciliation-approve',
+            'cash-reconciliation-reverse-approval',
+        ];
+
+        foreach ($supervisor_permissions as $supervisor_permission) {
+            if (!$supervisor_role->hasPermissionTo($supervisor_permission)) {
+                $supervisor_role->givePermissionTo($supervisor_permission);
+            }
         }
 
 

@@ -2,14 +2,13 @@
 
 namespace App\DataTables\Admin\Settings;
 
-use App\Models\Role;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Crypt;
+use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
-use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Html\Editor\Editor;
-use Yajra\DataTables\Html\Editor\Fields;
 use Yajra\DataTables\Services\DataTable;
 
 class RoleDataTable extends DataTable
@@ -22,7 +21,38 @@ class RoleDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
-            ->addColumn('action', 'role.action')
+            ->addColumn('edit_button', function ($row) {
+                $encryptedId = Crypt::encrypt($row->id);
+                $editUrl = route('roles.edit', $encryptedId);
+                $deleteUrl = route('roles.destroy', $encryptedId);
+                $csrf = csrf_field();
+                $method = method_field('DELETE');
+
+                return '
+                    <form style="display:inline-block" action="'.$editUrl.'" method="GET">
+                        '.$csrf.'
+                        <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
+                            <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
+                        </button>
+                    </form>
+                    <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
+                        '.$csrf.'
+                        '.$method.'
+                        <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete delete-confirm-btn btn btn-sm btn-danger">
+                            <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
+                        </button>
+                    </form>
+                ';
+            })
+            ->editColumn('created_at', function ($row) {
+                return Carbon::parse($row->created_at)->format('jS F, Y g:i A');
+            })
+            ->editColumn('updated_at', function ($row) {
+                return $row->updated_at
+                    ? Carbon::parse($row->updated_at)->format('jS F, Y g:i A')
+                    : '';
+            })
+            ->rawColumns(['edit_button'])
             ->setRowId('id');
     }
 
@@ -31,7 +61,9 @@ class RoleDataTable extends DataTable
      */
     public function query(Role $model): QueryBuilder
     {
-        return $model->newQuery();
+        return $model->newQuery()
+            ->where('name', '!=', 'Super Admin')
+            ->orderBy('id', 'DESC');
     }
 
     /**
@@ -40,19 +72,14 @@ class RoleDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         return $this->builder()
-                    ->setTableId('role-table')
+                    ->setTableId('roles-table')
                     ->columns($this->getColumns())
                     ->minifiedAjax()
-                    //->dom('Bfrtip')
                     ->orderBy(1)
                     ->selectStyleSingle()
-                    ->buttons([
-                        Button::make('excel'),
-                        Button::make('csv'),
-                        Button::make('pdf'),
-                        Button::make('print'),
-                        Button::make('reset'),
-                        Button::make('reload')
+                    ->parameters([
+                        'dom' => "<'row'l>Bfrtip",
+                        'buttons' => ['colvis', 'excel', 'csv', 'reset', 'reload'],
                     ]);
     }
 
@@ -62,15 +89,11 @@ class RoleDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::computed('action')
-                  ->exportable(false)
-                  ->printable(false)
-                  ->width(60)
-                  ->addClass('text-center'),
-            Column::make('id'),
-            Column::make('add your columns'),
+            Column::make('name'),
             Column::make('created_at'),
             Column::make('updated_at'),
+            Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false),
         ];
     }
 
