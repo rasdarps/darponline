@@ -60,7 +60,7 @@
                             <div class="flex-grow-1">
                                 <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Total Sales</p>
                                 <h4 class="mb-2" style="color:#fff">{{ number_format($total_sales, 2) }}</h4>
-                                <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Sales</p>
+                                <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Total Sales</p>
                             </div>
                             <div class="avatar-sm">
                                 <span class="avatar-title bg-light text-success rounded-3">
@@ -81,7 +81,7 @@
                             <div class="flex-grow-1">
                                 <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Stock Balance</p>
                                 <h4 class="mb-2" style="color:#fff;">{{ number_format($total_stock_balance, 2) }}</h4>
-                                <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i></span>Sales Order</p>
+                                <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i></span> Stock Balance</p>
                             </div>
                             <div class="avatar-sm">
                                 <span class="avatar-title bg-light text-primary rounded-3">
@@ -102,7 +102,7 @@
                             <div class="flex-grow-1">
                                 <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Total Stock Value</p>
                                 <h4 class="mb-2" style="color:#fff">{{ number_format($total_stock_value, 2) }}</h4>
-                                <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Purchase Order</p>
+                                <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Stock Value</p>
                             </div>
                             <div class="avatar-sm">
                                 <span class="avatar-title bg-light text-success rounded-3">
@@ -191,8 +191,8 @@
             datasets: [{
                 label: 'Sales (Gh¢)',
                 data: @json($totals),
-                backgroundColor: 'rgba(75, 192, 192, 1)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: '#0F172A',
+                borderColor: '#0F172A',
                 borderWidth: 1
             }]
         },

@@ -19,6 +19,9 @@ class CashReconciliationDataTable extends DataTable
             ->addColumn('cashier_name', function ($row) {
                 return $row->user->name ?? '';
             })
+            ->addColumn('approved_by_name', function ($row) {
+                return $row->approvedBy->name ?? '';
+            })
             ->addColumn('created_by_name', function ($row) {
                 return $row->createdBy->name ?? '';
             })
@@ -84,7 +87,7 @@ class CashReconciliationDataTable extends DataTable
     public function query(CashReconciliation $model): QueryBuilder
     {
         $query = $model->newQuery()
-            ->with(['user', 'createdBy'])
+            ->with(['user', 'createdBy', 'approvedBy'])
             ->orderBy('business_date', 'desc')
             ->orderBy('id', 'desc');
 
@@ -125,7 +128,8 @@ class CashReconciliationDataTable extends DataTable
             Column::make('variance')->title('Variance'),
             Column::make('variance_type')->title('Type'),
             Column::make('status')->title('Status'),
-            Column::make('created_by_name')->title('Created By'),
+            Column::make('approved_by_name')->title('Approved By'),
+            // Column::make('created_by_name')->title('Created By'),
             Column::make('action_button')->title('Action')->searchable(false)->printable(false)->exportable(false),
         ];
     }
