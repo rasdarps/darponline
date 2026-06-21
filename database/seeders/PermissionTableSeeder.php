@@ -306,6 +306,7 @@ class PermissionTableSeeder extends Seeder
         $cashier_permissions = [
             'sales-create',
             'invoice-create',
+            'cash-reconciliation-list',
             'cash-reconciliation-create',
             'cash-reconciliation-edit',
         ];

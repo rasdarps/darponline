@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
   
@@ -94,7 +95,7 @@ class PurchaseController extends Controller
             $rules['email'] = ['required', 'email', 'max:255'];
         }
 
-        $validated = $request->validate($rules);
+        $request->validate($rules);
 
         foreach ($request->unit_cost_price as $index => $costPrice) {
             $sellingPrice = $request->unit_selling_price[$index] ?? null;
@@ -105,135 +106,151 @@ class PurchaseController extends Controller
             }
         }
 
-        DB::transaction(function () use ($request) {
+        $attempts = 0;
+        $maxAttempts = 3;
 
-            // Generate next purchase number here
-            $lastPurchase = Purchase::orderBy('id', 'desc')->first();
-            $nextNo = $lastPurchase ? str_pad(((int)$lastPurchase->purchase_no + 1), 2, '0', STR_PAD_LEFT) : '01';
+        while ($attempts < $maxAttempts) {
+            $attempts++;
+            try {
+                DB::transaction(function () use ($request) {
 
-            // Create purchase record with backend-generated number
-            $purchase = Purchase::create([
-                'purchase_no' => $nextNo,
-                'date' => $request->date,
-                'description' => $request->description,
-                'created_by' => Auth::id(),
-            ]);
+                    $maxPurchaseNo = (int) DB::table('purchases')
+                        ->lockForUpdate()
+                        ->selectRaw('COALESCE(MAX(CAST(purchase_no AS UNSIGNED)), 0) as max_no')
+                        ->value('max_no');
+                    $nextNo = str_pad($maxPurchaseNo + 1, 2, '0', STR_PAD_LEFT);
 
-            $count_category = count($request->category_id);
-            for ($i = 0; $i < $count_category; $i++) {
-                $purchase_details = new PurchaseDetail();
-                $purchase_details->date = date('Y-m-d', strtotime($request->date));
-                $purchase_details->purchase_id = $purchase->id;
-                $purchase_details->category_id = $request->category_id[$i];
-                $purchase_details->product_id = $request->product_id[$i];
-                $purchase_details->buying_qty = $request->buying_qty[$i];
-                $purchase_details->unit_cost_price = $request->unit_cost_price[$i];
-                $purchase_details->buying_price = $request->buying_price[$i];
-                $purchase_details->unit_id = $request->unit_id[$i];
-                $purchase_details->save();
-
-                // Update product stock and prices
-                $product = Product::find($request->product_id[$i]);
-                $beforeQty = (float) $product->quantity;
-                $lineQty = (float) $purchase_details->buying_qty;
-                $afterQty = $beforeQty + $lineQty;
-                $product->quantity = $afterQty;
-
-                $priceChanged = false;
-
-                // Update cost_price if changed or missing
-                if (empty($product->cost_price) || $product->cost_price != $purchase_details->unit_cost_price) {
-                    $product->cost_price = $purchase_details->unit_cost_price;
-                    $priceChanged = true;
-                }
-
-                // Update selling_price if provided in request
-                if (!empty($request->unit_selling_price[$i])) {
-                    if (empty($product->selling_price) || $product->selling_price != $request->unit_selling_price[$i]) {
-                        $product->selling_price = $request->unit_selling_price[$i];
-                        $priceChanged = true;
-                    }
-                }
-
-                // Always save product after possible changes
-                $product->save();
-
-                // Save history if either cost or selling price changed
-                if ($priceChanged) {
-                    ProductPrice::create([
-                        'product_id'    => $product->id,
-                        'cost_price'    => $product->cost_price,
-                        'selling_price' => $product->selling_price,
-                        'created_by'    => Auth::id(),
+                    $purchase = Purchase::create([
+                        'purchase_no' => $nextNo,
+                        'date' => $request->date,
+                        'description' => $request->description,
+                        'created_by' => Auth::id(),
                     ]);
+
+                    $count_category = count($request->category_id);
+                    for ($i = 0; $i < $count_category; $i++) {
+                        $purchase_details = new PurchaseDetail();
+                        $purchase_details->date = date('Y-m-d', strtotime($request->date));
+                        $purchase_details->purchase_id = $purchase->id;
+                        $purchase_details->category_id = $request->category_id[$i];
+                        $purchase_details->product_id = $request->product_id[$i];
+                        $purchase_details->buying_qty = $request->buying_qty[$i];
+                        $purchase_details->unit_cost_price = $request->unit_cost_price[$i];
+                        $purchase_details->buying_price = $request->buying_price[$i];
+                        $purchase_details->unit_id = $request->unit_id[$i];
+                        $purchase_details->save();
+
+                        // Lock row to prevent lost updates under concurrent writes.
+                        $product = Product::whereKey($request->product_id[$i])->lockForUpdate()->firstOrFail();
+                        $beforeQty = (float) $product->quantity;
+                        $lineQty = (float) $purchase_details->buying_qty;
+                        $afterQty = $beforeQty + $lineQty;
+                        $product->quantity = $afterQty;
+
+                        $priceChanged = false;
+
+                        if (empty($product->cost_price) || $product->cost_price != $purchase_details->unit_cost_price) {
+                            $product->cost_price = $purchase_details->unit_cost_price;
+                            $priceChanged = true;
+                        }
+
+                        if (!empty($request->unit_selling_price[$i])) {
+                            if (empty($product->selling_price) || $product->selling_price != $request->unit_selling_price[$i]) {
+                                $product->selling_price = $request->unit_selling_price[$i];
+                                $priceChanged = true;
+                            }
+                        }
+
+                        $product->save();
+
+                        if ($priceChanged) {
+                            ProductPrice::create([
+                                'product_id'    => $product->id,
+                                'cost_price'    => $product->cost_price,
+                                'selling_price' => $product->selling_price,
+                                'created_by'    => Auth::id(),
+                            ]);
+                        }
+
+                        app(StockLedgerService::class)->record([
+                            'product_id' => $product->id,
+                            'movement_type' => 'purchase',
+                            'reference_type' => 'purchase',
+                            'reference_id' => $purchase->id,
+                            'reference_detail_id' => $purchase_details->id,
+                            'movement_at' => $purchase->date,
+                            'qty_in' => $lineQty,
+                            'qty_out' => 0,
+                            'balance_before' => $beforeQty,
+                            'balance_after' => $afterQty,
+                            'unit_cost' => $purchase_details->unit_cost_price,
+                            'reason' => 'Purchase stock-in',
+                            'notes' => $purchase->description,
+                            'created_by' => Auth::id(),
+                        ]);
+                    }
+
+                    if ($request->supplier_id == '0') {
+                        $supplier = Supplier::create([
+                            'name' => $request->name,
+                            'mobile_no' => $request->mobile_no,
+                            'email' => $request->email,
+                            'created_by' => Auth::id(),
+                        ]);
+                        $supplier_id = $supplier->id;
+                    } else {
+                        $supplier_id = $request->supplier_id;
+                    }
+
+                    $purchase_payment = new PurchasePayment();
+                    $purchase_payment_details = new PurchasePaymentDetail();
+
+                    $purchase_payment->purchase_id = $purchase->id;
+                    $purchase_payment->supplier_id = $supplier_id;
+                    $purchase_payment->paid_status = $request->paid_status;
+                    $purchase_payment->discount_amount = $request->discount_amount;
+                    $purchase_payment->total_amount = $request->estimated_amount;
+
+                    if ($request->paid_status == 'full_paid') {
+                        $purchase_payment->paid_amount = $request->estimated_amount;
+                        $purchase_payment->due_amount = 0;
+                        $purchase_payment_details->current_paid_amount = $request->estimated_amount;
+                    } elseif ($request->paid_status == 'full_due') {
+                        $purchase_payment->paid_amount = 0;
+                        $purchase_payment->due_amount = $request->estimated_amount;
+                        $purchase_payment_details->current_paid_amount = 0;
+                    } elseif ($request->paid_status == 'partial_paid') {
+                        $purchase_payment->paid_amount = $request->paid_amount;
+                        $purchase_payment->due_amount = $request->estimated_amount - $request->paid_amount;
+                        $purchase_payment_details->current_paid_amount = $request->paid_amount;
+                    }
+                    $purchase_payment->save();
+
+                    $purchase_payment_details->purchase_id = $purchase->id;
+                    $purchase_payment_details->date = date('Y-m-d', strtotime($request->date));
+                    $purchase_payment_details->save();
+                });
+
+                break;
+            } catch (QueryException $e) {
+                $isDuplicatePurchaseNo = (string) ($e->getCode()) === '23000'
+                    && str_contains(strtolower($e->getMessage()), 'purchase_no');
+
+                if ($isDuplicatePurchaseNo && $attempts < $maxAttempts) {
+                    continue;
                 }
 
-                //StockLedgerService record to log stock movement
-                app(StockLedgerService::class)->record([
-                    'product_id' => $product->id,
-                    'movement_type' => 'purchase',
-                    'reference_type' => 'purchase',
-                    'reference_id' => $purchase->id,
-                    'reference_detail_id' => $purchase_details->id,
-                    'movement_at' => $purchase->date,
-                    'qty_in' => $lineQty,
-                    'qty_out' => 0,
-                    'balance_before' => $beforeQty,
-                    'balance_after' => $afterQty,
-                    'unit_cost' => $purchase_details->unit_cost_price,
-                    'reason' => 'Purchase stock-in',
-                    'notes' => $purchase->description,
-                    'created_by' => Auth::id(),
-                ]);
+                throw $e;
             }
-
-            // Handle supplier creation/selection
-            if ($request->supplier_id == '0') {
-                $supplier = Supplier::create([
-                    'name' => $request->name,
-                    'mobile_no' => $request->mobile_no,
-                    'email' => $request->email,
-                    'created_by' => Auth::id(),
-                ]);
-                $supplier_id = $supplier->id;
-            } else {
-                $supplier_id = $request->supplier_id;
-            }
-
-            $purchase_payment = new PurchasePayment();
-            $purchase_payment_details = new PurchasePaymentDetail();
-
-            $purchase_payment->purchase_id = $purchase->id;
-            $purchase_payment->supplier_id = $supplier_id;
-            $purchase_payment->paid_status = $request->paid_status;
-            $purchase_payment->discount_amount = $request->discount_amount;
-            $purchase_payment->total_amount = $request->estimated_amount;
-
-            if ($request->paid_status == 'full_paid') {
-                $purchase_payment->paid_amount = $request->estimated_amount;
-                $purchase_payment->due_amount = 0;
-                $purchase_payment_details->current_paid_amount = $request->estimated_amount;
-            } elseif ($request->paid_status == 'full_due') {
-                $purchase_payment->paid_amount = 0;
-                $purchase_payment->due_amount = $request->estimated_amount;
-                $purchase_payment_details->current_paid_amount = 0;
-            } elseif ($request->paid_status == 'partial_paid') {
-                $purchase_payment->paid_amount = $request->paid_amount;
-                $purchase_payment->due_amount = $request->estimated_amount - $request->paid_amount;
-                $purchase_payment_details->current_paid_amount = $request->paid_amount;
-            }
-            $purchase_payment->save();
-
-            $purchase_payment_details->purchase_id = $purchase->id;
-            $purchase_payment_details->date = date('Y-m-d', strtotime($request->date));
-            $purchase_payment_details->save();
-        });
+        }
 
         // Return JSON for AJAX, redirect for normal
         if ($request->ajax()) {
             // Calculate next number after commit
-            $lastPurchase = Purchase::orderBy('id', 'desc')->first();
-            $nextNo = $lastPurchase ? str_pad(((int)$lastPurchase->purchase_no + 1), 2, '0', STR_PAD_LEFT) : '01';
+            $maxPurchaseNo = (int) DB::table('purchases')
+                ->selectRaw('COALESCE(MAX(CAST(purchase_no AS UNSIGNED)), 0) as max_no')
+                ->value('max_no');
+            $nextNo = str_pad($maxPurchaseNo + 1, 2, '0', STR_PAD_LEFT);
 
             return response()->json([
                 'status' => 200,
@@ -272,7 +289,7 @@ class PurchaseController extends Controller
             DB::transaction(function () use ($purchase, $validated) {
                 // Reverse stock-in for every line item. If stock has been consumed, block cancellation.
                 foreach ($purchase->purchase_details as $detail) {
-                    $product = Product::find($detail->product_id);
+                    $product = Product::whereKey($detail->product_id)->lockForUpdate()->first();
                     if ($product) {
                         $beforeQty = (float) $product->quantity;
                         $lineQty = (float) $detail->buying_qty;

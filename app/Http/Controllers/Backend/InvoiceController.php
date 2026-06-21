@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 
 class InvoiceController extends Controller
 {
@@ -131,119 +132,145 @@ class InvoiceController extends Controller
             $rules['email'] = ['required', 'email', 'max:255'];
         }
 
-        $validated = $request->validate($rules);
+        $request->validate($rules);
 
-        // Capture the invoice returned from the transaction
-        $invoice = DB::transaction(function() use($request, $calculated) {
+        $invoice = null;
+        $attempts = 0;
+        $maxAttempts = 3;
 
-            // Generate next invoice number
-            $lastInvoice = Invoice::orderBy('id', 'desc')->first();
-            $nextNo = $lastInvoice ? str_pad(((int)$lastInvoice->invoice_no + 1), 2, '0', STR_PAD_LEFT) : '01';
+        while ($attempts < $maxAttempts) {
+            $attempts++;
+            try {
+                $invoice = DB::transaction(function() use($request, $calculated) {
 
-            // Create invoice record with backend-generated number
-            $invoice = Invoice::create([
-                'invoice_no' => $nextNo,
-                'date' => $request->date,
-                'description' => $request->description,
-                'sales_source' => 'pos',
-                'created_by' => Auth::id(),
-            ]);
+                    $maxInvoiceNo = (int) DB::table('invoices')
+                        ->lockForUpdate()
+                        ->selectRaw('COALESCE(MAX(CAST(invoice_no AS UNSIGNED)), 0) as max_no')
+                        ->value('max_no');
+                    $nextNo = str_pad($maxInvoiceNo + 1, 2, '0', STR_PAD_LEFT);
 
-            $count_category = count($request->category_id);
-            for ($i = 0; $i < $count_category; $i++) {
-                $invoice_details = new InvoiceDetail();
-                $invoice_details->date = date('Y-m-d', strtotime($request->date));
-                $invoice_details->invoice_id = $invoice->id;
-                $invoice_details->category_id = $request->category_id[$i];
-                $invoice_details->product_id = $request->product_id[$i];
-                $invoice_details->selling_qty = $request->selling_qty[$i];
-                $invoice_details->unit_selling_price = $request->unit_selling_price[$i];
-                $invoice_details->selling_price = $request->selling_price[$i];
-                $invoice_details->unit_id = $request->unit_id[$i];
-                $invoice_details->save();
+                    $invoice = Invoice::create([
+                        'invoice_no' => $nextNo,
+                        'date' => $request->date,
+                        'description' => $request->description,
+                        'sales_source' => 'pos',
+                        'created_by' => Auth::id(),
+                    ]);
 
-                // stock deduction
-                $product = Product::find($request->product_id[$i]);
-                $beforeQty = (float) $product->quantity;
-                $lineQty = (float) $invoice_details->selling_qty;
-                $afterQty = $beforeQty - $lineQty;
-                $product->quantity = $afterQty;
-                $product->save();
+                    $count_category = count($request->category_id);
+                    for ($i = 0; $i < $count_category; $i++) {
+                        $invoice_details = new InvoiceDetail();
+                        $invoice_details->date = date('Y-m-d', strtotime($request->date));
+                        $invoice_details->invoice_id = $invoice->id;
+                        $invoice_details->category_id = $request->category_id[$i];
+                        $invoice_details->product_id = $request->product_id[$i];
+                        $invoice_details->selling_qty = $request->selling_qty[$i];
+                        $invoice_details->unit_selling_price = $request->unit_selling_price[$i];
+                        $invoice_details->selling_price = $request->selling_price[$i];
+                        $invoice_details->unit_id = $request->unit_id[$i];
+                        $invoice_details->save();
 
-                //StockLedgerService record to log stock movement
-                app(StockLedgerService::class)->record([
-                    'product_id' => $product->id,
-                    'movement_type' => 'sale',
-                    'reference_type' => 'invoice',
-                    'reference_id' => $invoice->id,
-                    'reference_detail_id' => $invoice_details->id,
-                    'movement_at' => $invoice->date,
-                    'qty_in' => 0,
-                    'qty_out' => $lineQty,
-                    'balance_before' => $beforeQty,
-                    'balance_after' => $afterQty,
-                    'unit_price' => $invoice_details->unit_selling_price,
-                    'reason' => 'Sale stock-out',
-                    'notes' => $invoice->description,
-                    'created_by' => Auth::id(),
-                ]);
+                        // Lock row to prevent lost updates under concurrent sales.
+                        $product = Product::whereKey($request->product_id[$i])->lockForUpdate()->firstOrFail();
+                        $beforeQty = (float) $product->quantity;
+                        $lineQty = (float) $invoice_details->selling_qty;
+
+                        if ($lineQty <= 0 || $beforeQty < $lineQty) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                'selling_qty.' . $i => 'Insufficient stock for item #' . ($i + 1) . '.',
+                            ]);
+                        }
+
+                        $afterQty = $beforeQty - $lineQty;
+                        $product->quantity = $afterQty;
+                        $product->save();
+
+                        app(StockLedgerService::class)->record([
+                            'product_id' => $product->id,
+                            'movement_type' => 'sale',
+                            'reference_type' => 'invoice',
+                            'reference_id' => $invoice->id,
+                            'reference_detail_id' => $invoice_details->id,
+                            'movement_at' => $invoice->date,
+                            'qty_in' => 0,
+                            'qty_out' => $lineQty,
+                            'balance_before' => $beforeQty,
+                            'balance_after' => $afterQty,
+                            'unit_price' => $invoice_details->unit_selling_price,
+                            'reason' => 'Sale stock-out',
+                            'notes' => $invoice->description,
+                            'created_by' => Auth::id(),
+                        ]);
+                    }
+
+                    if ($request->customer_id == '0') {
+                        $customer = Customer::create([
+                            'name' => $request->name,
+                            'mobile_no' => $request->mobile_no,
+                            'email' => $request->email,
+                        ]);
+                        $customer_id = $customer->id;
+                    } else {
+                        $customer_id = $request->customer_id;
+                    }
+
+                    $payment = new Payment();
+                    $payment_details = new PaymentDetail();
+
+                    $payment->invoice_id = $invoice->id;
+                    $payment->customer_id = $customer_id;
+                    $payment->paid_status = $request->paid_status;
+                    $payment->discount_amount = $calculated['discount_amount'];
+                    $payment->total_amount = $calculated['total_amount'];
+                    $payment->taxable_amount = $calculated['taxable_amount'];
+                    $payment->nhil_amount = $calculated['nhil_amount'];
+                    $payment->getfund_amount = $calculated['getfund_amount'];
+                    $payment->vat_amount = $calculated['vat_amount'];
+                    $payment->cash_tendered = $calculated['cash_tendered'];
+                    $payment->change_due = $calculated['change_due'];
+
+                    if ($request->paid_status == 'full_paid') {
+                        $payment->paid_amount = $calculated['total_amount'];
+                        $payment->due_amount = 0;
+                        $payment_details->current_paid_amount = $calculated['total_amount'];
+                    } elseif ($request->paid_status == 'full_due') {
+                        $payment->paid_amount = 0;
+                        $payment->due_amount = $calculated['total_amount'];
+                        $payment_details->current_paid_amount = 0;
+                    } elseif ($request->paid_status == 'partial_paid') {
+                        $payment->paid_amount = $request->paid_amount;
+                        $payment->due_amount = $calculated['total_amount'] - $request->paid_amount;
+                        $payment_details->current_paid_amount = $request->paid_amount;
+                    }
+                    $payment->save();
+
+                    $payment_details->invoice_id = $invoice->id;
+                    $payment_details->date = date('Y-m-d', strtotime($request->date));
+                    $payment_details->save();
+
+                    return $invoice;
+                });
+
+                break;
+            } catch (QueryException $e) {
+                $isDuplicateInvoiceNo = (string) ($e->getCode()) === '23000'
+                    && str_contains(strtolower($e->getMessage()), 'invoice_no');
+
+                if ($isDuplicateInvoiceNo && $attempts < $maxAttempts) {
+                    continue;
+                }
+
+                throw $e;
             }
-
-            // Customer handling
-            if ($request->customer_id == '0') {
-                $customer = Customer::create([
-                    'name' => $request->name,
-                    'mobile_no' => $request->mobile_no,
-                    'email' => $request->email,
-                ]);
-                $customer_id = $customer->id;
-            } else {
-                $customer_id = $request->customer_id;
-            }
-
-            $payment = new Payment();
-            $payment_details = new PaymentDetail();
-
-            $payment->invoice_id = $invoice->id;
-            $payment->customer_id = $customer_id;
-            $payment->paid_status = $request->paid_status;
-            $payment->discount_amount = $calculated['discount_amount'];
-            $payment->total_amount = $calculated['total_amount'];
-            $payment->taxable_amount = $calculated['taxable_amount'];
-            $payment->nhil_amount = $calculated['nhil_amount'];
-            $payment->getfund_amount = $calculated['getfund_amount'];
-            $payment->vat_amount = $calculated['vat_amount'];
-            $payment->cash_tendered = $calculated['cash_tendered'];
-            $payment->change_due = $calculated['change_due'];
-
-            if ($request->paid_status == 'full_paid') {
-                $payment->paid_amount = $calculated['total_amount'];
-                $payment->due_amount = 0;
-                $payment_details->current_paid_amount = $calculated['total_amount'];
-            } elseif ($request->paid_status == 'full_due') {
-                $payment->paid_amount = 0;
-                $payment->due_amount = $calculated['total_amount'];
-                $payment_details->current_paid_amount = 0;
-            } elseif ($request->paid_status == 'partial_paid') {
-                $payment->paid_amount = $request->paid_amount;
-                $payment->due_amount = $calculated['total_amount'] - $request->paid_amount;
-                $payment_details->current_paid_amount = $request->paid_amount;
-            }
-            $payment->save();
-
-            $payment_details->invoice_id = $invoice->id;
-            $payment_details->date = date('Y-m-d', strtotime($request->date));
-            $payment_details->save();
-
-            // return invoice object so it's available outside
-            return $invoice;
-        });
+        }
 
         // Now $invoice is available here
         if ($request->ajax()) {
             // Calculate next number after commit
-            $lastInvoice = Invoice::orderBy('id', 'desc')->first();
-            $nextNo = $lastInvoice ? str_pad(((int)$lastInvoice->invoice_no + 1), 2, '0', STR_PAD_LEFT) : '01';
+            $maxInvoiceNo = (int) DB::table('invoices')
+                ->selectRaw('COALESCE(MAX(CAST(invoice_no AS UNSIGNED)), 0) as max_no')
+                ->value('max_no');
+            $nextNo = str_pad($maxInvoiceNo + 1, 2, '0', STR_PAD_LEFT);
 
             return response()->json([
                 'status' => 200,
@@ -279,7 +306,7 @@ class InvoiceController extends Controller
             DB::transaction(function () use ($invoice, $validated) {
                 // Restore stock for every line item
                 foreach ($invoice->invoice_details as $detail) {
-                    $product = Product::find($detail->product_id);
+                    $product = Product::whereKey($detail->product_id)->lockForUpdate()->first();
                     if ($product) {
                         $beforeQty = (float) $product->quantity;
                         $lineQty = (float) $detail->selling_qty;

@@ -1,0 +1,133 @@
+CapRover Laravel Production Layout (Git Deploy)
+
+See also: CAPROVER_DEPLOYMENT.md for single-image deployment flow using captain-definition.
+
+Goal:
+- Keep web requests separate from background queue processing.
+- Ensure queues and scheduled tasks run automatically after every deploy.
+
+Apps to create in CapRover:
+1) mall-pos-web
+2) mall-pos-worker
+3) mall-pos-scheduler
+
+All 3 apps should use the same repo/branch and same image build process.
+
+------------------------------------------------------------
+APP 1: WEB
+------------------------------------------------------------
+App Name:
+- mall-pos-web
+
+Public:
+- Yes (attach your domain)
+
+Start command (example if your container already starts php-fpm + nginx/apache):
+- Keep your existing web start command.
+
+Environment variables (minimum):
+- APP_ENV=production
+- APP_DEBUG=false
+- APP_URL=https://your-domain.example
+- DB_CONNECTION=mysql
+- DB_HOST=<db-host>
+- DB_PORT=3306
+- DB_DATABASE=<db-name>
+- DB_USERNAME=<db-user>
+- DB_PASSWORD=<db-pass>
+- CACHE_DRIVER=file
+- SESSION_DRIVER=database
+- QUEUE_CONNECTION=database
+
+Deployment hook (recommended):
+- php artisan migrate --force
+- php artisan config:clear
+- php artisan cache:clear
+- php artisan config:cache
+
+------------------------------------------------------------
+APP 2: QUEUE WORKER
+------------------------------------------------------------
+App Name:
+- mall-pos-worker
+
+Public:
+- No (do not attach a domain)
+
+Instance count:
+- Start with 1
+- Increase to 2+ if queue backlog grows
+
+Start command:
+- php artisan queue:work --tries=3 --timeout=90 --sleep=3 --backoff=5 --max-time=3600
+
+Use same environment variables as web app:
+- APP_ENV=production
+- APP_DEBUG=false
+- DB_* same as web
+- QUEUE_CONNECTION=database
+- SESSION_DRIVER=database
+- APP_KEY same as web
+
+Behavior:
+- On each Git deploy, this worker app should also be redeployed/restarted.
+- If this app is not running, jobs stay pending in jobs table.
+
+------------------------------------------------------------
+APP 3: SCHEDULER
+------------------------------------------------------------
+App Name:
+- mall-pos-scheduler
+
+Public:
+- No (do not attach a domain)
+
+Instance count:
+- Exactly 1
+
+Start command:
+- php artisan schedule:work
+
+Use same environment variables as web app.
+
+Behavior:
+- Runs Laravel scheduler continuously.
+- Ensure only one scheduler instance to avoid duplicate scheduled task runs.
+
+------------------------------------------------------------
+POST-DEPLOY VERIFICATION CHECKLIST
+------------------------------------------------------------
+1) Confirm migrations applied successfully.
+2) Open web app and test login.
+3) Queue test:
+	- Trigger an action that dispatches a job.
+	- Confirm jobs table does not keep growing with pending rows.
+4) Scheduler test:
+	- Add a temporary everyMinute log task.
+	- Confirm it runs once per minute from scheduler app logs.
+5) Confirm logs for all 3 apps are clean after startup.
+
+------------------------------------------------------------
+COMMON FAILURE PATTERNS
+------------------------------------------------------------
+1) Worker app not running:
+- Symptom: jobs table has pending jobs forever.
+
+2) Different APP_KEY across apps:
+- Symptom: auth/session/encryption errors.
+
+3) Different DB config across apps:
+- Symptom: web works but worker/scheduler do nothing.
+
+4) Multiple scheduler instances:
+- Symptom: duplicate scheduled tasks.
+
+------------------------------------------------------------
+MINIMUM SAFE PRODUCTION SETTINGS FOR THIS PROJECT
+------------------------------------------------------------
+- APP_ENV=production
+- APP_DEBUG=false
+- SESSION_DRIVER=database
+- QUEUE_CONNECTION=database
+- Worker app running with queue:work
+- Scheduler app running with schedule:work
