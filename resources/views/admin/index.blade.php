@@ -2,10 +2,10 @@
 @section('title') {{'Dashboard'}} @endsection
 
 <style>
-    .sell-card{ background:#144E4E !important; }
-    .buy-card{ background:#f89d13 !important; }
-    .purchase_count{ background:#5a04e4 !important; }
-    .invoice_count{ background:#d10363 !important; }
+    .sell-card{ background:#D60012 !important; }
+    .buy-card{ background:#8B0000 !important; }
+    .purchase_count{ background:#B22222 !important; }
+    .invoice_count{ background:#DC143C !important; }
 </style>
 
 @section('content')
@@ -79,7 +79,7 @@
                     <div class="card-body">
                         <div class="d-flex">
                             <div class="flex-grow-1">
-                                <p class="text-truncate font-size-14 mb-2">Stock Balance</p>
+                                <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Stock Balance</p>
                                 <h4 class="mb-2" style="color:#fff;">{{ number_format($total_stock_balance, 2) }}</h4>
                                 <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i></span>Sales Order</p>
                             </div>
@@ -100,7 +100,7 @@
                     <div class="card-body">
                         <div class="d-flex">
                             <div class="flex-grow-1">
-                                <p class="text-truncate font-size-14 mb-2">Total Stock Value</p>
+                                <p class="text-truncate font-size-14 mb-2" style="color:#fff;">Total Stock Value</p>
                                 <h4 class="mb-2" style="color:#fff">{{ number_format($total_stock_value, 2) }}</h4>
                                 <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i></span>Purchase Order</p>
                             </div>
