@@ -9,7 +9,7 @@ use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DefaultController;
 use App\Http\Controllers\Backend\ExpenseCategoryController;
 use App\Http\Controllers\Backend\ExpenseVoucherController;
-use App\Http\Controllers\Backend\InvoiceController;
+use App\Http\Controllers\Backend\SaleController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\ProductPriceController;
 use App\Http\Controllers\Backend\PurchaseController;
@@ -20,15 +20,6 @@ use App\Http\Controllers\Backend\StockAdjustmentController;
 use App\Http\Controllers\Backend\SupplierController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Backend\UserController;
-use App\Http\Controllers\ClientSide\OnlineShoppingController;
-use App\Http\Controllers\ClientSide\ShopAuthController;
-use App\Http\Controllers\ClientSide\ShopCartController;
-use App\Http\Controllers\ClientSide\ShopCategoryController;
-use App\Http\Controllers\ClientSide\ShopHomeController;
-use App\Http\Controllers\ClientSide\ShopOrderController;
-use App\Http\Controllers\ClientSide\ShopProductController;
-use App\Http\Controllers\ClientSide\ShopProfileController;
-use App\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -49,7 +40,7 @@ Route::get('/admin/home', function () {
 // });
 
 Route::get('/', function () {
-    return redirect()->route('shop.home');
+    return redirect('/admin/login');
 });
 
 
@@ -61,11 +52,6 @@ Route::prefix('admin')->group(function () {
         Route::middleware('auth')->group(function(){
           
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        
-
-            //UPLOADS ROUTE
-
-            Route::post('uploads', [UploadController::class, 'store'])->name('uploads');  
 
 
              // Admin All Route 
@@ -109,8 +95,8 @@ Route::prefix('admin')->group(function () {
             Route::controller(CustomerController::class)->group(function () {
                 Route::get('/credit/customer', 'CreditCustomer')->name('credit.customer');
 
-                Route::get('/customer/edit/invoice/{invoice_id}', 'CustomerEditInvoice')->name('customer.edit.invoice');
-                Route::post('/customer/update/invoice/{invoice_id}', 'CustomerUpdateInvoice')->name('customer.update.invoice');
+                Route::get('/customer/edit/sale/{sale_id}', 'CustomerEditSale')->name('customer.edit.sale');
+                Route::post('/customer/update/sale/{sale_id}', 'CustomerUpdateSale')->name('customer.update.sale');
 
 
                 Route::get('/paid/customer', 'PaidCustomer')->name('paid.customer');
@@ -139,11 +125,6 @@ Route::prefix('admin')->group(function () {
                 Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('edit');
                 Route::patch('/update/{id}', [CategoryController::class, 'update'])->name('update');
                 Route::delete('/destroy/{id}', [CategoryController::class, 'destroy'])->name('destroy');
-                Route::post('/update-website-status', [CategoryController::class, 'updateWebsiteStatus'])
-                ->name('update-website-status');
-            Route::post('/bulk-update-website', [CategoryController::class, 'bulkUpdateWebsiteStatus'])
-                ->name('bulk-update-website');
-    
 
             });
 
@@ -157,12 +138,8 @@ Route::prefix('admin')->group(function () {
                 Route::patch('/update/{encryptedId}', [ProductController::class, 'update'])->name('update');
                 Route::delete('/destroy/{encryptedId}', [ProductController::class, 'destroy'])->name('destroy');
                 
-                // ✅ New route for barcode lookup
+                // âœ… New route for barcode lookup
                 Route::post('/find-by-barcode', [ProductController::class, 'findByBarcode'])->name('findByBarcode');
-                Route::post('/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
-                Route::post('/toggle-online', [ProductController::class, 'toggleOnline'])->name('toggle-online');
-                Route::post('/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('toggle-featured');
-                Route::delete('/bulk-delete', [ProductController::class, 'bulkDelete'])->name('bulk-delete');
                 Route::post('/update-stock', [ProductController::class, 'updateStock'])->name('update-stock');
                 Route::get('/export', [ProductController::class, 'export'])->name('export');
 
@@ -275,19 +252,19 @@ Route::prefix('admin')->group(function () {
         });
 
 
-            // Invoice All Route 
-            Route::prefix('invoices')->name('invoices.')->group(function () {
-                Route::get('/', [InvoiceController::class, 'index'])->name('index');
-                Route::get('/create', [InvoiceController::class, 'create'])->name('create');
-                Route::post('/store', [InvoiceController::class, 'store'])->name('store');
-                Route::post('/cancel/{id}', [InvoiceController::class, 'cancel'])->name('cancel');
+            // Sale All Route 
+            Route::prefix('sales')->name('sales.')->group(function () {
+                Route::get('/', [SaleController::class, 'index'])->name('index');
+                Route::get('/create', [SaleController::class, 'create'])->name('create');
+                Route::post('/store', [SaleController::class, 'store'])->name('store');
+                Route::post('/cancel/{id}', [SaleController::class, 'cancel'])->name('cancel');
             });
 
 
-            // Invoice All Route 
-            Route::controller(InvoiceController::class)->group(function () {
-                Route::get('/print/invoice/list', 'PrintInvoiceList')->name('print.invoice.list');
-                Route::get('/print/invoice/{id}', 'PrintInvoice')->name('print.invoice');
+            // Sale All Route 
+            Route::controller(SaleController::class)->group(function () {
+                Route::get('/print/sale/list', 'printSaleList')->name('print.sale.list');
+                Route::get('/print/sale/{id}', 'printSale')->name('print.sale');
 
                 
                 
@@ -323,17 +300,6 @@ Route::prefix('admin')->group(function () {
 
 
     }); // End Group Middleware
-
-
-        // This route will trigger the backup process when accessed
-        // Route::get('/backup', function () {
-        //     // Call the backup:run command
-        //     Artisan::call('backup:run');
-        //     // Redirect the user back to the previous page
-        //     return redirect()->back();
-        // })->name('backup');
-
-
   
 });
 
@@ -349,101 +315,6 @@ Route::prefix('admin')->group(function () {
  
 
 
-//Online Shopping
 
-Route::prefix('shop')->name('shop.')->group(function () {
-
-    Route::middleware('guest:customer')->group(function () {
-
-
-        Route::get('login', [ShopAuthController::class, 'login_index'])->name('login_page');
-
-        Route::get('/register', [ShopAuthController::class, 'register_index'])->name('registration_page');
-        Route::post('login', [ShopAuthController::class, 'login'])->name('login');
-        Route::post('/register', [ShopAuthController::class, 'register_post'])->name('register');
-        Route::get('/forgot-password', [ShopAuthController::class, 'showForgotForm'])->name('password.request');
-        Route::post('/forgot-password', [ShopAuthController::class, 'sendResetLink'])->name('password.email');
-        Route::get('/reset-password/{token}', [ShopAuthController::class, 'showResetForm'])->name('password.reset');
-        Route::post('/reset-password', [ShopAuthController::class, 'resetPassword'])->name('password.update');
-    });
-
-
-            Route::middleware('auth:customer')->group(function () {
-
-                Route::post('logout', [ShopAuthController::class, 'logout'])->name('logout');
-                // Profile Management
-                Route::get('/profile', [ShopProfileController::class, 'index'])->name('profile');
-                Route::put('/profile/update', [ShopProfileController::class, 'update'])->name('profile.update');
-                Route::post('/profile/change-password', [ShopProfileController::class, 'changePassword'])->name('profile.change-password');
-
-
-                // Orders
-                Route::get('/orders', [ShopOrderController::class, 'index'])->name('orders');
-                Route::get('/orders/{id}', [ShopOrderController::class, 'show'])->name('orders.show');
-                Route::post('/orders/{id}/cancel', [ShopOrderController::class, 'cancel'])->name('orders.cancel');
-
-                // // Checkout
-                // Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-                // Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
-                        
-                // // Profile
-                // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
-                // Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-                //  // Addresses
-                // Route::get('/addresses', [AddressController::class, 'index'])->name('addresses');
-                // Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
-                // Route::put('/addresses/{id}', [AddressController::class, 'update'])->name('addresses.update');
-                // Route::delete('/addresses/{id}', [AddressController::class, 'destroy'])->name('addresses.destroy');
-
-                Route::get('/wishlist', [OnlineShoppingController::class, 'wishlist_page'])->name('wishlist_page');
-                
-        
-            });
-
-                // Wishlist (Public - Session Based)
-                Route::get('/wishlist', [ShopProductController::class, 'wishlist'])->name('wishlist');
-             Route::post('/wishlist/add/{id}', [ShopProductController::class, 'addToWishlist'])->name('wishlist.add');
-             Route::delete('/wishlist/remove/{id}', [ShopProductController::class, 'removeFromWishlist'])->name('wishlist.remove');
-
-             // Compare (Public - Session Based)
-            // Route::prefix('compare')->name('compare.')->group(function () {
-            //     Route::get('/', [CompareController::class, 'index'])->name('index');
-            //     Route::post('/add', [CompareController::class, 'add'])->name('add');
-            //     Route::delete('/remove', [CompareController::class, 'remove'])->name('remove');
-            // });
-
-            // Shop/Product Routes (Public - No Login Required)
-
-            Route::get('/product/{slug}/quick-view', [OnlineShoppingController::class, 'quickView'])->name('product.quick-view');
-            Route::get('/product/{slug}', [OnlineShoppingController::class, 'productDetails'])->name('product.details');
-            Route::get('/products', [OnlineShoppingController::class, 'products'])->name('products');
-            Route::get('/product', [OnlineShoppingController::class, 'product_page'])->name('product_page');
-
-            
-          // Cart (session-based, works without login)
-          Route::prefix('cart')->name('cart.')->group(function () {
-            Route::get('/', [ShopCartController::class, 'index'])->name('index');
-            Route::post('/add', [ShopCartController::class, 'add'])->name('add');
-            Route::put('/update', [ShopCartController::class, 'update'])->name('update');
-            Route::delete('/remove', [ShopCartController::class, 'remove'])->name('remove');
-            Route::post('/coupon/apply', [ShopCartController::class, 'applyCoupon'])->name('coupon.apply');
-            Route::delete('/coupon/remove', [ShopCartController::class, 'removeCoupon'])->name('coupon.remove');
-            Route::get('/count', [ShopCartController::class, 'count'])->name('count');
-            Route::get('/total', [ShopCartController::class, 'getTotal'])->name('total');
-            Route::get('/items', [ShopCartController::class, 'getItems'])->name('items');
-            Route::post('/clear', [ShopCartController::class, 'clear'])->name('clear');
-        });
-        // Public routes (both guest and authenticated can access)
-        Route::get('/', [OnlineShoppingController::class, 'index'])->name('home');
-        Route::get('/about', [ShopHomeController::class, 'about'])->name('about');
-        Route::get('/contact', [ShopHomeController::class, 'contact'])->name('contact');
-        Route::post('/contact', [ShopHomeController::class, 'submitContact'])->name('contact.submit');
-
-        // Collections/Categories (Public)
-
-        Route::get('/collections', [OnlineShoppingController::class, 'collection_page'])->name('collection_page');
-        Route::get('/collections/{slug}', [ShopCategoryController::class, 'show'])->name('collections.show');
-        Route::get('/collections/all', [ShopCategoryController::class, 'getAllCategories'])->name('collections.all');
-});
 
  

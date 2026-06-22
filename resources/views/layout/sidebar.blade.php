@@ -19,7 +19,7 @@
                             </li>
                         @endcan
                             {{-- transaction menu starts --}}
-                            @canany(['purchase-list', 'purchase-create', 'invoice-list', 'invoice-create', 'expense-list', 'expense-create', 'stock-adjustment-list', 'stock-adjustment-create', 'cash-reconciliation-list', 'cash-reconciliation-create', 'cash-reconciliation-show'])
+                            @canany(['purchase-list', 'purchase-create', 'sale-list', 'sale-create', 'expense-list', 'expense-create', 'stock-adjustment-list', 'stock-adjustment-create', 'cash-reconciliation-list', 'cash-reconciliation-create', 'cash-reconciliation-show'])
                             <li class="menu-title">Transctions</li>
                                 <li><!--Main drop-->
                                     <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -45,18 +45,18 @@
                                             </ul>
                                         </li>
                                      @endcanany
-                                     @canany(['invoice-list', 'invoice-create'])
+                                     @canany(['sale-list', 'sale-create'])
                                         <li>
                                             <a href="javascript: void(0);" class="has-arrow waves-effect">
                                                 <i class="ri-compass-2-fill"></i>
                                                 <span>Sales</span>
                                             </a>
                                             <ul class="sub-menu" aria-expanded="false">
-                                                @can('invoice-create')
-                                                    <li><a href="{{ route('invoices.create') }}">Create</a></li>
+                                                @can('sale-create')
+                                                    <li><a href="{{ route('sales.create') }}">Create</a></li>
                                                 @endcan
-                                                @can('invoice-list')
-                                                    <li><a href="{{ route('invoices.index') }}">All Sales</a></li>
+                                                @can('sale-list')
+                                                    <li><a href="{{ route('sales.index') }}">All Sales</a></li>
                                                 @endcan
                                                 
                                             </ul>

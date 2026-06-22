@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Backend;
 use App\DataTables\Admin\Settings\CategoryDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\Models\TemporaryFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -19,7 +18,7 @@ class CategoryController extends Controller
     {
         $this->middleware('permission:category-list', ['only' => ['index']]);
         $this->middleware('permission:category-create', ['only' => ['create', 'store']]);
-        $this->middleware('permission:category-edit', ['only' => ['edit', 'update', 'updateWebsiteStatus', 'bulkUpdateWebsiteStatus']]);
+        $this->middleware('permission:category-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:category-delete', ['only' => ['destroy']]);
     }
 
@@ -47,13 +46,9 @@ class CategoryController extends Controller
 
         $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->whereNull('deleted_at')],
-            'description' => 'nullable|string',
-            'show_on_homepage' => 'boolean',
-            'category_image' => 'required',
         ], [
             'name.required' => 'Please enter a Category name',
             'name.unique' => 'This category already exists',
-            'category_image.required' => 'Please upload a category image',
         ]);
 
         try {
@@ -62,23 +57,8 @@ class CategoryController extends Controller
             $data['created_by'] = Auth::id();
             
             // Use a transaction to ensure data integrity
-            DB::transaction(function () use ($data, $request) {
-               $category = Category::create($data);
-                if($request->category_image)
-                {
-                   
-                        $tempFile = TemporaryFile::where('folder', $request->category_image)->first();
-                        if ($tempFile) {
-
-                                
-                            $category->addMedia(storage_path('app/public/category/tmp/'. $tempFile->folder . '/' . $tempFile->filename))
-                            ->withResponsiveImages()->toMediaCollection('category_image');
-
-                            rmdir(storage_path('app/public/category/tmp/' . $tempFile->folder));
-                            $tempFile->delete();
-                        }
-                }
-                
+            DB::transaction(function () use ($data) {
+               Category::create($data);
             });
            
             
@@ -126,8 +106,6 @@ class CategoryController extends Controller
 
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255|unique:categories,name,' . $id,
-                'description' => 'nullable|string',
-                'show_on_homepage' => 'boolean',
             ], [
                 'name.required' => 'Please enter a category name',
                 'name.unique' => 'This category already exists',
@@ -220,70 +198,4 @@ class CategoryController extends Controller
         }
 
     } // End Method 
-
-    public function updateWebsiteStatus(Request $request)
-    {
-
-        $request->validate([
-            'id' => 'required|exists:categories,id',
-            'show_on_homepage' => 'required|boolean'
-        ]);
-
-        try {
-            // Decrypt ID if it's encrypted
-            $id = $request->id;
-            if (is_string($id) && strpos($id, 'eyJ') === 0) {
-                $id = Crypt::decrypt($id);
-            }
-            
-            $category = Category::findOrFail($id);
-            $category->show_on_homepage = $request->show_on_homepage;
-            $category->save();
-            
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Category visibility updated successfully',
-                'data' => [
-                    'id' => $category->id,
-                    'show_on_homepage' => $category->show_on_homepage
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update category visibility: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-    
-    /**
-     * Bulk update website visibility
-     */
-    public function bulkUpdateWebsiteStatus(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:categories,id',
-            'show_on_homepage' => 'required|boolean'
-        ]);
-        
-        try {
-            $updatedCount = Category::whereIn('id', $request->ids)
-                ->update(['show_on_homepage' => $request->show_on_homepage]);
-            
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Categories updated successfully',
-                'updated_count' => $updatedCount
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update categories'
-            ], 500);
-        }
-    }
-
 }

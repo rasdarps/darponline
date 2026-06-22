@@ -54,12 +54,12 @@
    }
 
    .btn-primary{
-    background-color:#000 !important;
+    background-color:#0F766E !important;
     border:none !important;
    }
 
    .btn-success{
-    background-color:#000 !important;
+    background-color:#0F766E !important;
     border:none !important;
    }
 
@@ -340,7 +340,7 @@
                         <button class="btn btn-primary">Sales</button>
                     </div>-->
                     <div class="col-10">
-                        <marquee behavior="" direction="left"><h3 style="color:#b7b9cc">WELCOME TO RICT POS SYSTEM..... <span style="color:#b7b9cc">{{ Auth::user()->name }}</span> </h3></marquee>
+                        <marquee behavior="" direction="left"><h3 style="color:#b7b9cc">WELCOME TO DarPOS V 1.0..... <span style="color:#b7b9cc">{{ Auth::user()->name }}</span> </h3></marquee>
                     </div>
 
                     <!-- Topbar Navbar -->

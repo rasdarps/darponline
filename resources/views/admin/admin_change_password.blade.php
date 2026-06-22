@@ -11,7 +11,7 @@
                     <div class="card-header with-border">
                         <span class="card-title" style="font-size:20px;">Update | Password</span>
                         <a href="{{ route('admin.profile') }}" style="float:right">
-                            <button type="button" class="btn btn-primary modal_btn" style="background-color:#000; color:white;">Back to Profile</button>
+                            <button type="button" class="btn btn-primary modal_btn" style="background-color:#0F766E; color:white;">Back to Profile</button>
                         </a>
                     </div>
 

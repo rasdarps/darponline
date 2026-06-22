@@ -10,7 +10,7 @@ class PaymentDetail extends Model
     use HasFactory;
 
     protected $fillable = [
-        'invoice_id',
+        'sale_id',
         'current_paid_amount',
         'date', 
         'updated_by',
@@ -22,9 +22,9 @@ class PaymentDetail extends Model
     ];
 
     // Relationships
-    public function invoice()
+    public function sale()
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo(Sale::class);
     }
 
     public function updatedBy()
@@ -32,3 +32,4 @@ class PaymentDetail extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 }
+

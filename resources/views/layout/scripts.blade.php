@@ -187,9 +187,9 @@
     async function downloadPDF() {
         const { jsPDF } = window.jspdf;
 
-        // Capture invoice area
-        const invoice = document.getElementById("invoiceArea");
-        const canvas = await html2canvas(invoice, { scale: 2 }); // higher scale = better quality
+        // Capture Sale area
+        const Sale = document.getElementById("invoiceArea");
+        const canvas = await html2canvas(Sale, { scale: 2 }); // higher scale = better quality
         const imgData = canvas.toDataURL("image/png");
 
         // Create PDF
@@ -205,7 +205,7 @@
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
 
         // Save file
-        pdf.save("invoice.pdf");
+        pdf.save("Sale.pdf");
     }
 </script>
 
@@ -225,3 +225,4 @@ document.addEventListener('keydown', e => {
     }
 });
 </script>
+

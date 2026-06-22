@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('purchase_no')->unique();
             $table->date('date');
             $table->text('description')->nullable(); 
+            $table->timestamp('cancelled_at')->nullable();
+            $table->unsignedBigInteger('cancelled_by')->nullable();
+            $table->string('cancellation_reason', 500)->nullable();
             
             // Fixed: Proper foreign key relationships to users table
             $table->unsignedBigInteger('created_by')->nullable();

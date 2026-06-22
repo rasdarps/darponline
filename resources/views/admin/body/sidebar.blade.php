@@ -47,14 +47,14 @@
                                         <li>
                                             <a href="javascript: void(0);" class="has-arrow waves-effect">
                                                 <i class="ri-compass-2-fill"></i>
-                                                <span>Invoice</span>
+                                                <span>Sale</span>
                                             </a>
                                             <ul class="sub-menu" aria-expanded="false">
-                                                <li><a href="{{ route('invoices.create') }}">Create</a></li>
-                                                <li><a href="{{ route('invoices.index') }}">All Invoice</a></li>
-                                                {{-- <li><a href="{{ route('invoice.approved.list') }}">Approved List</a></li>
-                                                <li><a href="{{ route('invoice.pending.list') }}">Pending Approval</a></li> --}}
-                                                <li><a href="{{ route('print.invoice.list') }}">Print Invoice List</a></li>
+                                                <li><a href="{{ route('sales.create') }}">Create</a></li>
+                                                <li><a href="{{ route('sales.index') }}">All Sale</a></li>
+                                                {{-- <li><a href="{{ route('Sale.approved.list') }}">Approved List</a></li>
+                                                <li><a href="{{ route('Sale.pending.list') }}">Pending Approval</a></li> --}}
+                                                <li><a href="{{ route('print.sale.list') }}">Print Sale List</a></li>
                                             </ul>
                                         </li>
                                     </ul><!--drop ul ends-->    

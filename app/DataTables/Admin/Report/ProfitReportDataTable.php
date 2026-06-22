@@ -2,7 +2,7 @@
 
 namespace App\DataTables\Admin\Report;
 
-use App\Models\Invoice;
+use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
@@ -80,15 +80,15 @@ class ProfitReportDataTable extends DataTable
     /**
      * Get the query source of dataTable.
      */
-    public function query(Invoice $model): QueryBuilder
+    public function query(Sale $model): QueryBuilder
     {
         $salesSub = DB::table('payments')
-            ->selectRaw('invoice_id, SUM(total_amount) as sales_total')
-            ->groupBy('invoice_id');
+            ->selectRaw('sale_id, SUM(total_amount) as sales_total')
+            ->groupBy('sale_id');
 
-        $costSub = DB::table('invoice_details as idt')
+        $costSub = DB::table('sale_details as idt')
             ->selectRaw(
-                'idt.invoice_id, SUM(idt.selling_qty * COALESCE((
+                'idt.sale_id, SUM(idt.selling_qty * COALESCE((
                     SELECT pd.unit_cost_price
                     FROM purchase_details pd
                     WHERE pd.product_id = idt.product_id
@@ -96,17 +96,17 @@ class ProfitReportDataTable extends DataTable
                     LIMIT 1
                 ), 0)) as cost_total'
             )
-            ->groupBy('idt.invoice_id');
+            ->groupBy('idt.sale_id');
 
         $query = $model->newQuery()
             ->leftJoinSub($salesSub, 'sales', function ($join) {
-                $join->on('sales.invoice_id', '=', 'invoices.id');
+                $join->on('sales.sale_id', '=', 'sales.id');
             })
             ->leftJoinSub($costSub, 'costs', function ($join) {
-                $join->on('costs.invoice_id', '=', 'invoices.id');
+                $join->on('costs.sale_id', '=', 'sales.id');
             })
             ->select(
-                'invoices.*',
+                'sales.*',
                 DB::raw('COALESCE(sales.sales_total, 0) as sales_total'),
                 DB::raw('COALESCE(costs.cost_total, 0) as cost_total'),
                 DB::raw('(COALESCE(sales.sales_total, 0) - COALESCE(costs.cost_total, 0)) as profit_total')
@@ -115,8 +115,8 @@ class ProfitReportDataTable extends DataTable
             ->orderBy('date', 'desc');
 
             // Apply filters
-        if ($invoiceId = $this->request()->get('invoice_id')) {
-            $query->where('invoices.id', $invoiceId);
+        if ($invoiceId = $this->request()->get('sale_id')) {
+            $query->where('sales.id', $invoiceId);
         }
 
         if ($customerId = $this->request()->get('customer_id')) {
@@ -126,7 +126,7 @@ class ProfitReportDataTable extends DataTable
         }
 
         if ($createdBy = $this->request()->get('created_by')) {
-            $query->where('invoices.created_by', $createdBy);
+            $query->where('sales.created_by', $createdBy);
         }
 
         if ($fromDate = $this->request()->get('from_date')) {
@@ -223,11 +223,11 @@ class ProfitReportDataTable extends DataTable
     {
         return [
             Column::make('date'),
-            Column::make('invoice_no'),
+            Column::make('sale_no'),
             Column::make('customer_name')->title('Customer Name'),
-            Column::make('sales_total')->title('Net Sales (Gh¢)'),
-            Column::make('cost_total')->title('Cost (Gh¢)'),
-            Column::make('profit_total')->title('Profit (Gh¢)'),
+            Column::make('sales_total')->title('Net Sales (GhÂ¢)'),
+            Column::make('cost_total')->title('Cost (GhÂ¢)'),
+            Column::make('profit_total')->title('Profit (GhÂ¢)'),
             Column::make('cancelled_status')->title('Status')
             ->searchable(true)->printable(true)->exportable(true),
             Column::make('created_by_name')->title('Created By'),
@@ -245,3 +245,4 @@ class ProfitReportDataTable extends DataTable
         return 'ProfitReport_' . date('YmdHis');
     }
 }
+

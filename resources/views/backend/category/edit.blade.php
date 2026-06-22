@@ -45,22 +45,8 @@ use Illuminate\Support\Facades\Crypt;
                                 <div class="form-group">
                                     <label for="name"><strong>Category Name <span class="text-danger">*</span></strong></label>
                                     <input type="text" id="name" name="name" class="form-control" value="{{ old('name', $category->name) }}" placeholder="enter category name" onkeypress="return isCharKey(event)">
-                                    <small class="text-muted">This will be displayed on the website</small>
+                                    <small class="text-muted">Category name used in POS catalog</small>
 
-                                </div>
-                                <div class="form-group">
-                                    <label>Description</label>
-                                    <textarea name="description" rows="4" class="form-control">{{ old('description', $category->description ?? '') }}</textarea>
-                                    <small class="text-muted">Brief description of the category (optional)</small>
-                                </div>
-
-                                <div class="form-group mt-2">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" name="show_on_homepage" class="custom-control-input" id="show_on_homepage" 
-                                               value="1" {{ isset($category) && $category->show_on_homepage ? 'checked' : '' }}>
-                                        <label class="custom-control-label" for="show_on_homepage">Show on Online Shop Website</label>
-                                    </div>
-                                    <small class="text-muted">Display this category on the homepage of the online shop</small>
                                 </div>
                             </div>
 

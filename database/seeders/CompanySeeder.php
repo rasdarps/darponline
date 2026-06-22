@@ -15,8 +15,8 @@ class CompanySeeder extends Seeder
         //
         //
          $company = array(
-            array('id' => 1, 'name' => 'Factory Price Mall', 'address' => 'Near Tobinco Pharmaceuticals, Tudu-Mall, Accra, Ghana', 
-            'phone' =>'0240795803', 'tin_number' => 'GHA-718909812-9', 'email'=>'factorypricemall@email.com',
+            array('id' => 1, 'name' => 'Rasdarps Enterprise', 'address' => 'Kotobabi Down, Accra, Ghana', 
+            'phone' =>'0242222874', 'tin_number' => 'GHA-000000000-0', 'email'=>'rasdarps@email.com',
             'created_at' => now()),
            
 

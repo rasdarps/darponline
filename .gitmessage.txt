@@ -1,0 +1,12 @@
+# Type: feat|fix|chore|refactor|docs|test
+# Scope: module or area (optional)
+# Summary: short present-tense description
+
+# Why:
+# -
+
+# What changed:
+# -
+
+# Notes:
+# -

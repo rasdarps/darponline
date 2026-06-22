@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-use App\Models\InvoiceDetail;
+use App\Models\SaleDetail;
 use App\Models\Product;
 use Illuminate\Contracts\Validation\InvokableRule;
 
@@ -40,3 +40,4 @@ class ProductStockRule implements InvokableRule
         
     }
 }
+

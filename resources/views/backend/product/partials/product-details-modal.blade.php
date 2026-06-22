@@ -1,47 +1,9 @@
 <div class="product-details">
     <div class="row">
-        <div class="col-md-5">
-            <div class="product-image text-center">
-                @if($product->hasMedia('featured_image'))
-                    {{$product->getFirstMedia('featured_image')->img('thumb')}}
-                @else
-                    <div class="no-image bg-light p-5 text-center rounded">
-                        <i class="fas fa-image fa-4x text-muted"></i>
-                        <p class="text-muted mt-2">No image available</p>
-                    </div>
-                @endif
-            </div>
-            
-            @if($product->hasMedia('gallery_images'))
-            <div class="gallery-images mt-3">
-                <h6>Gallery Images:</h6>
-                <div class="row">
-                    @foreach($product->getMedia('gallery_images') as $image)
-                    <div class="col-6 mb-2">
-
-                        {!! $image->img('thumb')->attributes([
-                            'class' => 'img-fluid rounded',
-                            'style' => 'width: 150px; height: 150px; object-fit: cover; cursor: pointer;',
-                            'onclick' => "window.open(this.src,'_blank')"
-                        ]) !!}
-                        {{-- <img src="{{ asset('storage/' . $image->image) }}" 
-                             class="img-fluid rounded" 
-                             style="height: 60px; width: 60px; object-fit: cover; cursor: pointer;"
-                             onclick="window.open(this.src, '_blank')"> --}}
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-        </div>
-        
-        <div class="col-md-7">
+        <div class="col-md-12">
             <h4>{{ $product->name }}</h4>
             <p class="text-muted">
-                <strong>SKU:</strong> {{ $product->sku ?? 'N/A' }}
-                @if($product->barcode)
-                <br><strong>Barcode:</strong> {{ $product->barcode }}
-                @endif
+                <strong>Barcode:</strong> {{ $product->barcode ?? 'N/A' }}
             </p>
             
             <hr>
@@ -52,12 +14,6 @@
                         <td width="40%"><strong>Category:</strong></td>
                         <td>{{ $product->category->name ?? 'Uncategorized' }}</td>
                     </tr>
-                    @if($product->brand)
-                    <tr>
-                        <td><strong>Brand:</strong></td>
-                        <td>{{ $product->brand->name ?? 'N/A' }}</td>
-                    </tr>
-                    @endif
                     @if($product->unit)
                     <tr>
                         <td><strong>Unit:</strong></td>
@@ -87,63 +43,8 @@
                             @endif
                         </td>
                     </tr>
-                    <tr>
-                        <td><strong>Status:</strong></td>
-                        <td>
-                            @if($product->is_active)
-                                <span class="badge badge-success">Active</span>
-                            @else
-                                <span class="badge badge-secondary">Inactive</span>
-                            @endif
-                            
-                            @if($product->is_online)
-                                <span class="badge badge-info ml-1">Online</span>
-                            @endif
-                            
-                            @if($product->is_featured)
-                                <span class="badge badge-warning ml-1">Featured</span>
-                            @endif
-                            
-                            @if($product->is_new)
-                                <span class="badge badge-primary ml-1">New Arrival</span>
-                            @endif
-                        </td>
-                    </tr>
-                    @if($product->weight || $product->length || $product->width || $product->height)
-                    <tr>
-                        <td><strong>Dimensions:</strong></td>
-                        <td>
-                            @if($product->weight) Weight: {{ $product->weight }} kg<br>@endif
-                            @if($product->length || $product->width || $product->height)
-                                Size: {{ $product->length }} x {{ $product->width }} x {{ $product->height }} cm
-                            @endif
-                        </td>
-                    </tr>
-                    @endif
-                    @if($product->min_order_quantity > 1)
-                    <tr>
-                        <td><strong>Min Order Qty:</strong></td>
-                        <td>{{ $product->min_order_quantity }}</td>
-                    </tr>
-                    @endif
                 </table>
             </div>
-            
-            @if($product->short_description)
-            <hr>
-            <div class="product-short-description">
-                <strong>Short Description:</strong>
-                <p class="mt-1">{{ $product->short_description }}</p>
-            </div>
-            @endif
-            
-            @if($product->description)
-            <hr>
-            <div class="product-description">
-                <strong>Full Description:</strong>
-                <div class="mt-2">{!! nl2br(e($product->description)) !!}</div>
-            </div>
-            @endif
             
             @if($product->tags)
             <hr>
@@ -170,26 +71,11 @@
     .product-details {
         padding: 10px;
     }
-    .product-image img {
-        width: 100%;
-        object-fit: cover;
-        border-radius: 8px;
-    }
-    .no-image {
-        background: #f8f9fa;
-        border-radius: 8px;
-    }
     .product-info table {
         margin-bottom: 0;
     }
     .product-info td {
         padding: 5px 0;
-    }
-    .gallery-images img {
-        transition: transform 0.3s;
-    }
-    .gallery-images img:hover {
-        transform: scale(1.1);
     }
     .product-description {
         max-height: 200px;

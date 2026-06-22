@@ -1,5 +1,5 @@
 @extends('layout.main')
-@section('title') {{'Create Purchase Invoice'}} @endsection
+@section('title') {{'Create Purchase Sale'}} @endsection
 
 @section('content')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -10,10 +10,10 @@
                 <div class="col-12">
                     <div class="card" style="margin-top: 5px;">
                         <div class="card-header with-border">
-                            <span class="card-title" style="font-size:20px;">Create | Purchase Invoice</span>
+                            <span class="card-title" style="font-size:20px;">Create | Purchase Sale</span>
                             <a href="{{route('purchases.index')}}" style="float:right">
                                 <button type="button" class="btn btn-dark modal_btn">
-                                    View Purchases Invoice
+                                    View Purchases Sale
                                 </button>
                             </a>
                             <hr>
@@ -449,7 +449,7 @@
     <script type="text/javascript">
         $(document).ready(function(){
 
-            // 🔹 Handle barcode scan/entry
+            // ðŸ”¹ Handle barcode scan/entry
             $(document).on("change", "#barcode", function(){
                 var barcode = $(this).val();
                 if(!barcode) return;
@@ -463,7 +463,7 @@
                             var date = $('#date').val();
                             var purchase_no = $('#purchase_no').val();
 
-                            // 🔹 Update dropdowns and stock field so barcode flow matches manual flow
+                            // ðŸ”¹ Update dropdowns and stock field so barcode flow matches manual flow
                         $('#category_id').val(product.category_id).trigger('change');
                         $('#product_id').html('<option value="'+product.id+'" selected>'+product.name+'</option>');
                         $('#unit_id').html('<option value="'+product.unit_id+'" selected>'+product.unit.name+'</option>');
@@ -475,7 +475,7 @@
                             var data = {
                                 date: date,
                                 purchase_no: purchase_no,
-                                barcode: product.barcode,          // 🔹 added
+                                barcode: product.barcode,          // ðŸ”¹ added
                                 category_id: product.category_id,
                                 category_name: product.category.name,
                                 product_id: product.id,
@@ -489,7 +489,7 @@
                             // Clear barcode field after scan
                             $('#barcode').val('');
 
-                            // 🔹 Optional: show stock quantity
+                            // ðŸ”¹ Optional: show stock quantity
                             // $('#current_stock_qty').val(product.quantity);
 
                             Notiflix.Notify.success('Product added via barcode');
@@ -552,7 +552,7 @@
                     product_name: product_name,
                     unit_id: unit_id,
                     unit_name: unit_name,
-                    barcode: '' // 🔹 empty if added manually
+                    barcode: '' // ðŸ”¹ empty if added manually
                 };
                 var html = template(data);
                 $("#addRow").append(html);
@@ -685,3 +685,4 @@
 
     </script>  
 @endsection
+

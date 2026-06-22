@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('address');
             $table->string('phone')->unique();
             $table->string('email')->unique();
+            $table->string('tin_number', 20)->nullable()->unique();
             // Fixed: Proper foreign key relationships to users table
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

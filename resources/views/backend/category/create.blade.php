@@ -43,52 +43,9 @@
                                             <div class="form-group">
                                                 <label for="name"><strong>Category <span class="text-danger">*</span></strong></label>
                                                 <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="enter category" onkeypress="return isCharKey(event)">
-                                                <small class="text-muted">This will be displayed on the website</small>
-
+                                                <small class="text-muted">Category name used in POS catalog</small>
                                             </div>
 
-                                            <div class="form-group">
-                                                <label>Description</label>
-                                                <textarea name="description" rows="4" class="form-control">{{ old('description', $category->description ?? '') }}</textarea>
-                                                <small class="text-muted">Brief description of the category (optional)</small>
-                                            </div>
-
-                                            <div class="form-group mt-2">
-                                                <div class="custom-control custom-switch">
-                                                    <input type="checkbox" name="show_on_homepage" class="custom-control-input" id="show_on_homepage" 
-                                                           value="1" {{ isset($category) && $category->show_on_homepage ? 'checked' : '' }}>
-                                                    <label class="custom-control-label" for="show_on_homepage">Show on Online Shop Website</label>
-                                                </div>
-                                                <small class="text-muted">Display this category on the homepage of the online shop</small>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="col-md-6 mx-auto">
-                                            <!-- Category Image -->
-                                            
-                                                <div class="card-body py-16pt text-center card_content">
-                                                  
-                                                    <x-uppy-file-input
-                                                    input-wrapper-class="col-lg-12 col-md-12"
-                                                    name="featured_image"
-                                                    label="Featured Image"
-                                                    :multiple="false"
-                                                    :maxFiles="1"
-                                                    :onlyPdf="false"
-                                                    :onlyImages="true"
-                                                    note="1 image file only, up to 4 MB. Recommended size: 600x600px"
-                                                    :enableWebcam="false"
-                                                    :enableImageEditor="true"
-                                                    :compress="true"
-                                                    :required="false"
-                                                />
-                                                    <p class="card-subtitle text-70 mb-24pt">you can edit the file by clicking on the pen icon</p>
-
-                                                </div>
-                                          
-                                                   
-                                           
                                         </div>
                                     </div>
 
@@ -229,13 +186,6 @@
                         if (data.status === 200) {
                             Notiflix.Notify.success(data.message);
                             $('#myForm')[0].reset();
-                            //reset uppy dashboard
-                            if (typeof uppy_category_image !== 'undefined') {
-                                const files = uppy_category_image.getFiles();
-                                files.forEach(file => {
-                                    uppy_category_image.removeFile(file.id);
-                                });
-                            }
                             if (data.redirect) {
                                 window.location.href = data.redirect;
                             }

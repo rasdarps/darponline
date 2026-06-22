@@ -185,7 +185,7 @@ class CustomerController extends Controller
             }
 
             if ($customer->payments()->count() > 0) {
-                $message = 'Cannot delete customer with associated invoice or payment records.';
+                $message = 'Cannot delete customer with associated Sale or payment records.';
                 if (request()->expectsJson() || request()->ajax()) {
                     return response()->json(['status' => 422, 'message' => $message], 422);
                 }
@@ -235,12 +235,12 @@ class CustomerController extends Controller
         return view('backend.customer.customer_credit',compact('allData'));
     } // End Method
 
-    public function CustomerEditInvoice($invoice_id){
-        $payment = Payment::where('invoice_id',$invoice_id)->first();
-        return view('backend.customer.edit_customer_invoice',compact('payment'));
+    public function CustomerEditSale($sale_id){
+        $payment = Payment::where('sale_id',$sale_id)->first();
+        return view('backend.customer.edit_customer_sale',compact('payment'));
     }// End Method
 
-    public function CustomerUpdateInvoice(Request $request,$invoice_id){
+    public function CustomerUpdateSale(Request $request,$sale_id){
         if ($request->new_paid_amount < $request->paid_amount) {
             $notification = array(
                 'message' => 'Sorry You Paid Maximum Value', 
@@ -248,28 +248,28 @@ class CustomerController extends Controller
             );
             return redirect()->back()->with($notification); 
         } else{
-            $payment = Payment::where('invoice_id',$invoice_id)->first();
+            $payment = Payment::where('sale_id',$sale_id)->first();
             $payment_details = new PaymentDetail();
             $payment->paid_status = $request->paid_status;
 
             if ($request->paid_status == 'full_paid') {
-                 $payment->paid_amount = Payment::where('invoice_id',$invoice_id)->first()['paid_amount']+$request->new_paid_amount;
+                 $payment->paid_amount = Payment::where('sale_id',$sale_id)->first()['paid_amount']+$request->new_paid_amount;
                  $payment->due_amount = '0';
                  $payment_details->current_paid_amount = $request->new_paid_amount;
             } elseif ($request->paid_status == 'partial_paid') {
-                $payment->paid_amount = Payment::where('invoice_id',$invoice_id)->first()['paid_amount']+$request->paid_amount;
-                $payment->due_amount = Payment::where('invoice_id',$invoice_id)->first()['due_amount']-$request->paid_amount;
+                $payment->paid_amount = Payment::where('sale_id',$sale_id)->first()['paid_amount']+$request->paid_amount;
+                $payment->due_amount = Payment::where('sale_id',$sale_id)->first()['due_amount']-$request->paid_amount;
                 $payment_details->current_paid_amount = $request->paid_amount;
             }
 
             $payment->save();
-            $payment_details->invoice_id = $invoice_id;
+            $payment_details->sale_id = $sale_id;
             $payment_details->date = date('Y-m-d',strtotime($request->date));
             $payment_details->updated_by = Auth::user()->id;
             $payment_details->save();
 
             $notification = array(
-                'message' => 'Invoice Update Successfully', 
+                'message' => 'Sale Update Successfully', 
                 'alert-type' => 'success'
             );
             return redirect()->route('credit.customer')->with($notification); 
@@ -282,3 +282,4 @@ class CustomerController extends Controller
     }// End Method
 
 }
+

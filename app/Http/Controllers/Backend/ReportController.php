@@ -10,7 +10,7 @@ use App\Models\Customer;
 use App\Models\CashReconciliation;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseVoucherItem;
-use App\Models\Invoice;
+use App\Models\Sale;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\PurchasePayment;
@@ -87,23 +87,23 @@ class ReportController extends Controller
     }
 
     public function profitReport(ProfitReportDataTable $dataTable){
-        // $allData = Invoice::orderBy('date','desc')->orderBy('id','desc')->get();
-        $invoices = Invoice::orderBy('invoice_no')->get();
+        // $allData = Sale::orderBy('date','desc')->orderBy('id','desc')->get();
+        $sales = Sale::orderBy('sale_no')->get();
         $users = User::orderBy('name')->get();
         $customers = Customer::orderBy('name')->get();
-        return $dataTable->render('backend.report.profit', compact('invoices', 'users', 'customers'));
+        return $dataTable->render('backend.report.profit', compact('sales', 'users', 'customers'));
 
     }
 
     public function profitSummary(Request $request)
     {
         $salesSub = DB::table('payments')
-            ->selectRaw('invoice_id, SUM(total_amount) as sales_total')
-            ->groupBy('invoice_id');
+            ->selectRaw('sale_id, SUM(total_amount) as sales_total')
+            ->groupBy('sale_id');
 
-        $costSub = DB::table('invoice_details as idt')
+        $costSub = DB::table('sale_details as idt')
             ->selectRaw(
-                'idt.invoice_id, SUM(idt.selling_qty * COALESCE((
+                'idt.sale_id, SUM(idt.selling_qty * COALESCE((
                     SELECT pd.unit_cost_price
                     FROM purchase_details pd
                     WHERE pd.product_id = idt.product_id
@@ -111,18 +111,18 @@ class ReportController extends Controller
                     LIMIT 1
                 ), 0)) as cost_total'
             )
-            ->groupBy('idt.invoice_id');
+            ->groupBy('idt.sale_id');
 
-        $invoiceQuery = Invoice::query()
+        $invoiceQuery = Sale::query()
             ->leftJoinSub($salesSub, 'sales', function ($join) {
-                $join->on('sales.invoice_id', '=', 'invoices.id');
+                $join->on('sales.sale_id', '=', 'sales.id');
             })
             ->leftJoinSub($costSub, 'costs', function ($join) {
-                $join->on('costs.invoice_id', '=', 'invoices.id');
+                $join->on('costs.sale_id', '=', 'sales.id');
             });
 
-        if ($invoiceId = $request->get('invoice_id')) {
-            $invoiceQuery->where('invoices.id', $invoiceId);
+        if ($invoiceId = $request->get('sale_id')) {
+            $invoiceQuery->where('sales.id', $invoiceId);
         }
 
         if ($customerId = $request->get('customer_id')) {
@@ -132,7 +132,7 @@ class ReportController extends Controller
         }
 
         if ($createdBy = $request->get('created_by')) {
-            $invoiceQuery->where('invoices.created_by', $createdBy);
+            $invoiceQuery->where('sales.created_by', $createdBy);
         }
 
         if ($fromDate = $request->get('from_date')) {
@@ -233,12 +233,12 @@ class ReportController extends Controller
         $totalExpenses = (float) ExpenseVoucherItem::sum('amount');
 
         $salesSub = DB::table('payments')
-            ->selectRaw('invoice_id, SUM(total_amount) as sales_total')
-            ->groupBy('invoice_id');
+            ->selectRaw('sale_id, SUM(total_amount) as sales_total')
+            ->groupBy('sale_id');
 
-        $costSub = DB::table('invoice_details as idt')
+        $costSub = DB::table('sale_details as idt')
             ->selectRaw(
-                'idt.invoice_id, SUM(idt.selling_qty * COALESCE((
+                'idt.sale_id, SUM(idt.selling_qty * COALESCE((
                     SELECT pd.unit_cost_price
                     FROM purchase_details pd
                     WHERE pd.product_id = idt.product_id
@@ -246,14 +246,14 @@ class ReportController extends Controller
                     LIMIT 1
                 ), 0)) as cost_total'
             )
-            ->groupBy('idt.invoice_id');
+            ->groupBy('idt.sale_id');
 
-        $grossSummary = Invoice::query()
+        $grossSummary = Sale::query()
             ->leftJoinSub($salesSub, 'sales', function ($join) {
-                $join->on('sales.invoice_id', '=', 'invoices.id');
+                $join->on('sales.sale_id', '=', 'sales.id');
             })
             ->leftJoinSub($costSub, 'costs', function ($join) {
-                $join->on('costs.invoice_id', '=', 'invoices.id');
+                $join->on('costs.sale_id', '=', 'sales.id');
             })
             ->selectRaw('COALESCE(SUM(sales.sales_total), 0) - COALESCE(SUM(costs.cost_total), 0) as gross_profit')
             ->first();
@@ -353,3 +353,4 @@ class ReportController extends Controller
         ];
     }
 }
+

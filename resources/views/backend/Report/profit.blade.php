@@ -42,7 +42,7 @@
                 <div class="card">
                     <div class="card-body">
 
-                        <a href="{{ route('invoices.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;">
+                        <a href="{{ route('sales.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;">
                             <i class="fas fa-plus-circle"></i> New Sales
                         </a> 
                         <br><br>               
@@ -99,14 +99,14 @@
                             </div>
                         </div>
 
-                        <!-- 🔎 Filter boxes -->
+                        <!-- ðŸ”Ž Filter boxes -->
                         <div class="row mb-3">
                             <div class="col-md-3">
-                                <label>Invoice Number</label>
+                                <label>Sale Number</label>
                                 <select id="filter_invoice_id" class="form-control select2">
-                                    <option value="">All Invoices</option>
-                                    @foreach($invoices as $invoice)
-                                        <option value="{{ $invoice->id }}">{{ $invoice->invoice_no }}</option>
+                                    <option value="">All sales</option>
+                                    @foreach($sales as $Sale)
+                                        <option value="{{ $Sale->id }}">{{ $Sale->sale_no }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -162,7 +162,7 @@
 
             function currentFilters() {
                 return {
-                    invoice_id: $('#filter_invoice_id').val(),
+                    sale_id: $('#filter_invoice_id').val(),
                     customer_id: $('#filter_customer_id').val(),
                     from_date: $('#filter_from_date').val(),
                     to_date: $('#filter_to_date').val(),
@@ -214,7 +214,7 @@
 
             // Pass filter values into AJAX
             table.on('preXhr.dt', function(e, settings, data) {
-                data.invoice_id = $('#filter_invoice_id').val();
+                data.sale_id = $('#filter_invoice_id').val();
                 data.customer_id = $('#filter_customer_id').val();
                 data.from_date = $('#filter_from_date').val();
                 data.to_date = $('#filter_to_date').val();
@@ -233,3 +233,4 @@
 @endsection
 
 @stack('scripts')
+

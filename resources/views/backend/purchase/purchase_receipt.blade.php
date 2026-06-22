@@ -39,7 +39,7 @@
                                 $purchase_payment = App\Models\PurchasePayment::where('purchase_id',$purchase->id)->first();
                                 @endphp  
                                 <h3>
-                                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> {{ ucfirst($purchase_payment['supplier']['name']) }} - Purchase Invoice
+                                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> {{ ucfirst($purchase_payment['supplier']['name']) }} - Purchase Sale
                                 </h3>
                             </div>
                             <hr> 
@@ -98,9 +98,9 @@
                                         
                                             <td class="text-center"><strong>Quantity</strong>
                                             </td>
-                                            <td class="text-center"><strong>Unit Price (Gh¢) </strong>
+                                            <td class="text-center"><strong>Unit Price (GhÂ¢) </strong>
                                             </td>
-                                            <td class="text-end"><strong>Total Price (Gh¢)</strong>
+                                            <td class="text-end"><strong>Total Price (GhÂ¢)</strong>
                                             </td>
                                             
                                         </tr>
@@ -175,7 +175,7 @@
                                                 <td class="no-line"></td>
                                                 <td class="no-line text-center">
                                                     <strong>Grand Amount</strong></td>
-                                                <td class="no-line text-end"><h4 class="m-0">Gh¢{{ number_format($purchase_payment->total_amount, 2) }}</h4></td>
+                                                <td class="no-line text-end"><h4 class="m-0">GhÂ¢{{ number_format($purchase_payment->total_amount, 2) }}</h4></td>
                                             </tr>
                                         </tbody>
                                     </table>

@@ -23,22 +23,22 @@ return new class extends Migration
         // Payments: index for status lookups
         Schema::table('payments', function (Blueprint $table) {
             $table->index('paid_status');
-            $table->index(['invoice_id', 'paid_status']);
+            $table->index(['sale_id', 'paid_status']);
         });
 
-        // Invoice Details: composite index for line-item lookups
-        Schema::table('invoice_details', function (Blueprint $table) {
-            $table->index(['invoice_id', 'product_id']);
+        // Sale Details: composite index for line-item lookups
+        Schema::table('sale_details', function (Blueprint $table) {
+            $table->index(['sale_id', 'product_id']);
             $table->index('product_id');
         });
 
-        // Invoices: index for user-based queries and date filtering
-        Schema::table('invoices', function (Blueprint $table) {
+        // sales: index for user-based queries and date filtering
+        Schema::table('sales', function (Blueprint $table) {
             $table->index(['created_by', 'date']);
             $table->index('created_by');
         });
 
-        // Purchase Details: same pattern as invoice details for consistency
+        // Purchase Details: same pattern as Sale details for consistency
         if (Schema::hasTable('purchase_details')) {
             Schema::table('purchase_details', function (Blueprint $table) {
                 $table->index(['purchase_id', 'product_id']);
@@ -78,15 +78,15 @@ return new class extends Migration
 
         Schema::table('payments', function (Blueprint $table) {
             $table->dropIndex(['paid_status']);
-            $table->dropIndex(['invoice_id', 'paid_status']);
+            $table->dropIndex(['sale_id', 'paid_status']);
         });
 
-        Schema::table('invoice_details', function (Blueprint $table) {
-            $table->dropIndex(['invoice_id', 'product_id']);
+        Schema::table('sale_details', function (Blueprint $table) {
+            $table->dropIndex(['sale_id', 'product_id']);
             $table->dropIndex(['product_id']);
         });
 
-        Schema::table('invoices', function (Blueprint $table) {
+        Schema::table('sales', function (Blueprint $table) {
             $table->dropIndex(['created_by', 'date']);
             $table->dropIndex(['created_by']);
         });
@@ -113,3 +113,4 @@ return new class extends Migration
         }
     }
 };
+

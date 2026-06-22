@@ -31,12 +31,8 @@ class StocksDataTable extends DataTable
     public function query(Product $model): QueryBuilder
     {
         $query = $model->newQuery()
-            ->with(['category', 'brand', 'unit'])
+            ->with(['category', 'unit'])
             ->orderBy('products.name', 'asc');
-
-        if ($brandId = $this->request()->get('brand_id')) {
-            $query->where('products.brand_id', $brandId);
-        }
 
         if ($categoryId = $this->request()->get('category_id')) {
             $query->where('products.category_id', $categoryId);
@@ -79,7 +75,7 @@ class StocksDataTable extends DataTable
                             return 0;
                         };
 
-                        var totalCurrentStock = api.column(4, { page: "current" }).data().reduce(function (a, b) {
+                        var totalCurrentStock = api.column(3, { page: "current" }).data().reduce(function (a, b) {
                             return intVal(a) + intVal(b);
                         }, 0);
 
@@ -90,8 +86,8 @@ class StocksDataTable extends DataTable
                             });
                         };
 
-                        $(api.column(3).footer()).html("Current Stock Total");
-                        $(api.column(4).footer()).html(formatValue(totalCurrentStock));
+                        $(api.column(2).footer()).html("Current Stock Total");
+                        $(api.column(3).footer()).html(formatValue(totalCurrentStock));
                     }')
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
@@ -112,7 +108,6 @@ class StocksDataTable extends DataTable
     {
         return [
            Column::make('name')->title('Product Name'),
-           Column::make('brand.name')->title('Brand'),
             Column::make('category.name')->title('Category'),
             Column::make('unit.name')->title('Unit'),
             Column::make('quantity')->title('Current Stock'),

@@ -2,10 +2,10 @@
 @section('title') {{'Dashboard'}} @endsection
 
 <style>
-    .sell-card{ background:#D60012 !important; }
-    .buy-card{ background:#8B0000 !important; }
-    .purchase_count{ background:#B22222 !important; }
-    .invoice_count{ background:#DC143C !important; }
+    .sell-card{ background:#0f766e !important; }
+    .buy-card{ background:#0b5f59 !important; }
+    .purchase_count{ background:#14b8a6 !important; }
+    .invoice_count{ background:#0d9488 !important; }
 </style>
 
 @section('content')
@@ -53,7 +53,7 @@
         </div>
 
         <div class="col-xl-3 col-md-6">
-            <a href="{{ route('invoices.index') }}">
+            <a href="{{ route('sales.index') }}">
                 <div class="card invoice_count">
                     <div class="card-body">
                         <div class="d-flex">
@@ -189,10 +189,10 @@
         data: {
             labels: @json($months),
             datasets: [{
-                label: 'Sales (Gh¢)',
+                label: 'Sales (GhÂ¢)',
                 data: @json($totals),
-                backgroundColor: '#0F172A',
-                borderColor: '#0F172A',
+                backgroundColor: '#0F766E',
+                borderColor: '#0F766E',
                 borderWidth: 1
             }]
         },
@@ -203,7 +203,7 @@
                     anchor: 'end',
                     align: 'end',
                     formatter: function(value) {
-                        return 'Gh¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        return 'GhÂ¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     },
                     color: '#000',
                     font: {
@@ -216,7 +216,7 @@
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return 'Gh¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            return 'GhÂ¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                         }
                     }
                 }
@@ -227,3 +227,4 @@
 </script>
 
 @endsection
+

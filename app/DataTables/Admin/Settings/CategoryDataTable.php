@@ -44,60 +44,9 @@ class CategoryDataTable extends DataTable
                         </form>
                     ';
                 })
-
-                ->addColumn('image', function ($row) {
-
-                    $media = $row->getMedia('category_image');
-                    
-                    $mediaArray = $row->getMedia('category_image');
-                    $count = count($mediaArray);
-                    if ($count > 0) {
-                        for ($i = $count - 1; $i >= 0; $i--) {
-                            $media = $mediaArray[$i];
-                            if ($media) {
-                                return '<img src="'. $media->getUrl('thumb') .'" border="0" style="display:block;visibility:visible;" width="100" height="100">';
-                            }
-                        }
-                    }
-                    return '<img src="'. $row->getFirstMediaUrl('category_image', 'thumb') .'" border="0" style="display:block;visibility:visible;" width="100" height="100">';
-                 }) 
-
             ->editColumn('created_at', function($row)
             {
                 return  Carbon::parse($row->created_at)->format('jS F, Y g:i A');
-            })
-            
-            ->addColumn('show_description', function($row) {
-                $description = $row->description ?? 'No description available';
-                $shortDesc = strlen($description) > 50 ? substr($description, 0, 50) . '...' : $description;
-                
-                return '
-                    <div class="description-wrapper">
-                        <span class="description-preview">' . e($shortDesc) . '</span>
-                        <button type="button" class="btn btn-sm btn-info view-description-btn" 
-                                data-id="' . $row->id . '"
-                                data-name="' . e($row->name) . '"
-                                data-description="' . e($description) . '">
-                            <i class="fas fa-eye"></i> View
-                        </button>
-                    </div>
-                ';
-            })
-            ->addColumn('show_on_website', function($row) {
-                $isChecked = $row->show_on_homepage? 'checked' : '';
-                return '
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" 
-                               class="custom-control-input toggle-website-status" 
-                               id="website-toggle-' . $row->id . '" 
-                               data-id="' . $row->id . '"
-                               ' . $isChecked . '>
-                        <label class="custom-control-label" for="website-toggle-' . $row->id . '">
-                            <span class="status-text">' . ($row->show_on_homepage ? 'Visible' : 'Hidden') . '</span>
-                        </label>
-                    </div>
-                ';
-
             })
             ->editColumn('updated_at', function($row) {
                 return $row->updated_at
@@ -105,7 +54,7 @@ class CategoryDataTable extends DataTable
                     : '';
             })
 
-             ->rawColumns(['edit_button', 'show_description', 'show_on_website', 'image'])
+             ->rawColumns(['edit_button'])
             ->setRowId('id');
     }
 
@@ -140,10 +89,6 @@ class CategoryDataTable extends DataTable
                             'lengthMenu' => 'Show _MENU_ entries',
                             'info' => 'Showing _START_ to _END_ of _TOTAL_ categories',
                         ],
-                        'drawCallback' => "function() {
-                            initializeToggles();
-                            initializeDescriptionModals();
-                        }",
                     ]);
     }
 
@@ -154,12 +99,6 @@ class CategoryDataTable extends DataTable
     {
         return [
             Column::make('name'),
-            Column::make('image')->width('100px')->searchable(false)->printable(false)->exportable(false),
-
-            Column::make('description')->title('Description')->width('300px')->visible(false),
-            Column::make('show_description')->title('Description')->width('250px')->searchable(false),
-            Column::make('show_on_website')->title('Website Visibility')->width('150px')->searchable(false),
-
             // Column::make('created_at'),
             // Column::make('updated_at'),
             Column::make('edit_button')->title('Actions')

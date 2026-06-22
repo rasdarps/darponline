@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('invoice_id')
-            ->constrained('invoices')
+            $table->foreignId('sale_id')
+            ->constrained('sales')
             ->unsigned()
             ->onUpdate('cascade')
             ->onDelete('cascade');
@@ -33,6 +33,12 @@ return new class extends Migration
             $table->double('due_amount')->nullable();
             $table->double('total_amount')->nullable();
             $table->double('discount_amount')->nullable();
+            $table->decimal('taxable_amount', 12, 2)->default(0);
+            $table->decimal('nhil_amount', 12, 2)->default(0);
+            $table->decimal('getfund_amount', 12, 2)->default(0);
+            $table->decimal('vat_amount', 12, 2)->default(0);
+            $table->decimal('cash_tendered', 12, 2)->default(0);
+            $table->decimal('change_due', 12, 2)->default(0);
             $table->timestamps();
         });
     }
@@ -47,3 +53,4 @@ return new class extends Migration
         Schema::dropIfExists('payments');
     }
 };
+

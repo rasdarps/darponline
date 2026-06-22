@@ -5,7 +5,7 @@
         
         <meta charset="utf-8" />
         <!--<title>Dashboard | Admin & Dashboard </title>-->
-        <title>Sales and Inventory System | @yield('title')</title>
+        <title>DarPOS Sales and Inventory System | @yield('title')</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta content="Best Sales and Inventory System" name="description" />
         <meta content="Themesdesign" name="author" />
@@ -19,11 +19,6 @@
         <!--select 2-->
         <link href="{{ asset('backend/assets/libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
         
-        <!-- DataTables -->
-        {{-- <link href="{{ asset('backend/assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet" type="text/css" />
-        <link href="{{ asset('backend/assets/libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}" rel="stylesheet" type="text/css" />  
-        <link rel="stylesheet" type="text/css" href="{{asset('datatables/Buttons-2.2.3/css/buttons.dataTables.min.css')}}"/>
-        <link href="{{asset('datatables/dataTables.bootstrap4.min.css')}}" rel="stylesheet"> --}}
         <!-- Yajra DataTables CSS -->
        <link href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css" rel="stylesheet">
        <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -58,7 +53,7 @@
                 --pos-border: #e5e7eb;
                 --pos-primary: #2563eb;
                 --pos-primary-hover: #1d4ed8;
-                --pos-dark-btn: #111827;
+                --pos-dark-btn: #0F766E;
             }
 
             body {
@@ -203,8 +198,8 @@
             }
 
             .btn-dark:hover {
-                background-color: #000 !important;
-                border-color: #000 !important;
+                background-color: #0C5F58 !important;
+                border-color: #0C5F58 !important;
             }
 
             .header-quick-actions {

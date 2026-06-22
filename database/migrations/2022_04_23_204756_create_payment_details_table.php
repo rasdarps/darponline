@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('payment_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('invoice_id')
-            ->constrained('invoices')
+            $table->foreignId('sale_id')
+            ->constrained('sales')
             ->unsigned()
             ->onUpdate('cascade')
             ->onDelete('cascade');
@@ -44,3 +44,4 @@ return new class extends Migration
         Schema::dropIfExists('payment_details');
     }
 };
+

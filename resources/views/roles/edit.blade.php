@@ -47,9 +47,9 @@
                                             || str_contains($perm->name, 'product-') || str_contains($perm->name, 'customer-') || str_contains($perm->name, 'company-');
                                         }),
                                         'Transactions' => $permission->filter(function($perm) {
-                                            return str_contains($perm->name, 'invoice-') || str_contains($perm->name, 'purchase-')
+                                            return str_contains($perm->name, 'sale-') || str_contains($perm->name, 'purchase-')
                                             || str_contains($perm->name, 'expense-') || str_contains($perm->name, '-adjustment-')
-                                            || str_contains($perm->name, 'sales-') || str_contains($perm->name, 'cash-');
+                                            || str_contains($perm->name, 'cash-');
                                         }),
 
                                         'Reports' => $permission->filter(function($perm) {
@@ -70,14 +70,13 @@
                                                 !str_contains($perm->name, 'supplier-') &&
                                                 !str_contains($perm->name, 'product-') &&
                                                 !str_contains($perm->name, 'customer-') &&
-                                                !str_contains($perm->name, 'invoice-') &&
+                                                !str_contains($perm->name, 'sale-') &&
                                                 !str_contains($perm->name, 'purchase-') &&
                                                 !str_contains($perm->name, 'expense-') &&
                                                 !str_contains($perm->name, 'stock-') &&
                                                 !str_contains($perm->name, 'report-') &&
                                                 !str_contains($perm->name, 'company-') &&
-                                                !str_contains($perm->name, 'cash-') &&
-                                                !str_contains($perm->name, 'sales-');
+                                                !str_contains($perm->name, 'cash-');
                                         })
                                     ];
                                 @endphp
@@ -149,3 +148,4 @@
     }
 </style>
 @endsection
+

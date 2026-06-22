@@ -32,6 +32,8 @@ return new class extends Migration
             $table->string('barcode', 50)->nullable()->unique(); // <-- Added for scanning
             $table->double('quantity')->default(0);
             $table->double('stock_level')->default(0);
+            $table->decimal('cost_price', 10, 2)->default(0);
+            $table->decimal('selling_price', 10, 2)->default(0);
             
             // Fixed: Proper foreign key relationships to users table
             $table->unsignedBigInteger('created_by')->nullable();

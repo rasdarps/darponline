@@ -21,9 +21,6 @@ use Illuminate\Support\Facades\Crypt;
                             <a href="{{route('products.create')}}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Create New Product
                             </a>
-                            <button type="button" class="btn btn-danger" id="bulk-delete-btn" style="display: none;">
-                                <i class="fas fa-trash"></i> Bulk Delete
-                            </button>
                         </div>
                     </div>
                     
@@ -44,42 +41,12 @@ use Illuminate\Support\Facades\Crypt;
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label>Status</label>
-                                        <select id="filter-status" class="form-control">
-                                            <option value="">All</option>
-                                            <option value="1">Active</option>
-                                            <option value="0">Inactive</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>Online Status</label>
-                                        <select id="filter-online" class="form-control">
-                                            <option value="">All</option>
-                                            <option value="1">On Website</option>
-                                            <option value="0">Hidden</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
                                         <label>Stock Status</label>
                                         <select id="filter-stock" class="form-control">
                                             <option value="">All</option>
                                             <option value="in_stock">In Stock</option>
                                             <option value="low_stock">Low Stock</option>
                                             <option value="out_of_stock">Out of Stock</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>Featured</label>
-                                        <select id="filter-featured" class="form-control">
-                                            <option value="">All</option>
-                                            <option value="1">Featured</option>
-                                            <option value="0">Not Featured</option>
                                         </select>
                                     </div>
                                 </div>
@@ -148,9 +115,7 @@ use Illuminate\Support\Facades\Crypt;
         // Initialize all toggle functions after DataTable loads
         if (typeof initializeToggles === 'function') {
             initializeToggles();
-            initializeFeaturedToggles();
             initializeDeleteButtons();
-            initializeBulkActions();
         }
         updateFilterSummary();
     };
@@ -174,29 +139,15 @@ use Illuminate\Support\Facades\Crypt;
             
             // Get current filter values
             var categoryId = $('#filter-category').val();
-            var status = $('#filter-status').val();
-            var online = $('#filter-online').val();
             var stock = $('#filter-stock').val();
-            var featured = $('#filter-featured').val();
             
             // Get selected text for display
             var categoryName = $('#filter-category option:selected').text();
-            var statusText = $('#filter-status option:selected').text();
-            var onlineText = $('#filter-online option:selected').text();
             var stockText = $('#filter-stock option:selected').text();
-            var featuredText = $('#filter-featured option:selected').text();
             
             // Build filter badges
             if (categoryId && categoryId !== '') {
                 filters.push('<span class="badge badge-primary mr-1 mb-1">Category: ' + categoryName + '</span>');
-            }
-            if (status && status !== '') {
-                var statusClass = status == '1' ? 'badge-success' : 'badge-danger';
-                filters.push('<span class="badge ' + statusClass + ' mr-1 mb-1">Status: ' + statusText + '</span>');
-            }
-            if (online && online !== '') {
-                var onlineClass = online == '1' ? 'badge-success' : 'badge-secondary';
-                filters.push('<span class="badge ' + onlineClass + ' mr-1 mb-1">Online: ' + onlineText + '</span>');
             }
             if (stock && stock !== '') {
                 var stockClass = '';
@@ -204,10 +155,6 @@ use Illuminate\Support\Facades\Crypt;
                 else if (stock == 'low_stock') stockClass = 'badge-warning';
                 else if (stock == 'out_of_stock') stockClass = 'badge-danger';
                 filters.push('<span class="badge ' + stockClass + ' mr-1 mb-1">Stock: ' + stockText + '</span>');
-            }
-            if (featured && featured !== '') {
-                var featuredClass = featured == '1' ? 'badge-info' : 'badge-secondary';
-                filters.push('<span class="badge ' + featuredClass + ' mr-1 mb-1">Featured: ' + featuredText + '</span>');
             }
             
             // Update the summary display
@@ -230,10 +177,7 @@ use Illuminate\Support\Facades\Crypt;
 
             table.on('preXhr.dt', function(e,settings,data){
                 data.category_id = $('#filter-category').val() || '';
-                data.status = $('#filter-status').val() || '';
-                data.online_status = $('#filter-online').val() || '';
                 data.stock_filter = $('#filter-stock').val() || '';
-                data.featured = $('#filter-featured').val() || '';
             
             });
             
@@ -248,114 +192,7 @@ use Illuminate\Support\Facades\Crypt;
             updateFilterSummary();
         };
         
-        // Initialize status toggles
-        window.initializeToggles = function() {
-            $('.toggle-status').off('change').on('change', function() {
-                var checkbox = $(this);
-                var id = checkbox.data('id');
-                var isChecked = checkbox.is(':checked');
-                
-                Notiflix.Loading.pulse('Updating...');
-                
-                $.ajax({
-                    url: '{{ route("products.toggle-status") }}',
-                    type: 'POST',
-                    data: {
-                        id: id,
-                        status: isChecked ? 1 : 0,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        Notiflix.Loading.remove();
-                        if (response.status === 'success') {
-                            Notiflix.Notify.success('Product status updated');
-                        } else {
-                            checkbox.prop('checked', !isChecked);
-                            Notiflix.Notify.failure(response.message || 'Failed to update');
-                        }
-                    },
-                    error: function() {
-                        Notiflix.Loading.remove();
-                        checkbox.prop('checked', !isChecked);
-                        Notiflix.Notify.failure('Failed to update status');
-                    }
-                });
-            });
-            
-            // Online toggle
-            $('.toggle-online').off('change').on('change', function() {
-                var checkbox = $(this);
-                var id = checkbox.data('id');
-                var isChecked = checkbox.is(':checked');
-                
-                Notiflix.Loading.pulse('Updating...');
-                
-                $.ajax({
-                    url: '{{ route("products.toggle-online") }}',
-                    type: 'POST',
-                    data: {
-                        id: id,
-                        status: isChecked ? 1 : 0,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        Notiflix.Loading.remove();
-                        if (response.status === 'success') {
-                            Notiflix.Notify.success('Online visibility updated');
-                            var icon = checkbox.closest('.custom-control').find('i');
-                            if (isChecked) {
-                                icon.removeClass('fa-eye-slash text-muted').addClass('fa-globe text-success');
-                            } else {
-                                icon.removeClass('fa-globe text-success').addClass('fa-eye-slash text-muted');
-                            }
-                        } else {
-                            checkbox.prop('checked', !isChecked);
-                            Notiflix.Notify.failure(response.message || 'Failed to update');
-                        }
-                    },
-                    error: function() {
-                        Notiflix.Loading.remove();
-                        checkbox.prop('checked', !isChecked);
-                        Notiflix.Notify.failure('Failed to update online status');
-                    }
-                });
-            });
-        };
-        
-        // Initialize featured toggles
-        window.initializeFeaturedToggles = function() {
-            $('.toggle-featured').off('change').on('change', function() {
-                var checkbox = $(this);
-                var id = checkbox.data('id');
-                var isChecked = checkbox.is(':checked');
-                
-                Notiflix.Loading.pulse('Updating...');
-                
-                $.ajax({
-                    url: '{{ route("products.toggle-featured") }}',
-                    type: 'POST',
-                    data: {
-                        id: id,
-                        status: isChecked ? 1 : 0,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        Notiflix.Loading.remove();
-                        if (response.status === 'success') {
-                            Notiflix.Notify.success('Featured status updated');
-                        } else {
-                            checkbox.prop('checked', !isChecked);
-                            Notiflix.Notify.failure(response.message || 'Failed to update');
-                        }
-                    },
-                    error: function() {
-                        Notiflix.Loading.remove();
-                        checkbox.prop('checked', !isChecked);
-                        Notiflix.Notify.failure('Failed to update featured status');
-                    }
-                });
-            });
-        };
+        window.initializeToggles = function() {};
         
         // Initialize delete buttons
         window.initializeDeleteButtons = function() {
@@ -393,76 +230,6 @@ use Illuminate\Support\Facades\Crypt;
                     }
                 );
             });
-        };
-        
-        // Initialize bulk actions
-        window.initializeBulkActions = function() {
-            // Select all checkbox
-            $('#select-all').off('change').on('change', function() {
-                $('.product-checkbox').prop('checked', $(this).is(':checked'));
-                updateBulkDeleteButton();
-            });
-            
-            // Individual checkbox change
-            $(document).on('change', '.product-checkbox', function() {
-                updateBulkDeleteButton();
-            });
-            
-            // Bulk delete button
-            $('#bulk-delete-btn').off('click').on('click', function() {
-                var selectedIds = [];
-                $('.product-checkbox:checked').each(function() {
-                    selectedIds.push($(this).val());
-                });
-                
-                if (selectedIds.length === 0) {
-                    Notiflix.Notify.warning('Please select products to delete');
-                    return;
-                }
-                
-                Notiflix.Confirm.show(
-                    'Bulk Delete',
-                    `Are you sure you want to delete ${selectedIds.length} products? This action cannot be undone.`,
-                    'Yes, Delete',
-                    'Cancel',
-                    function() {
-                        Notiflix.Loading.pulse('Deleting products...');
-                        
-                        $.ajax({
-                            url: '{{ route("products.bulk-delete") }}',
-                            type: 'POST',
-                            data: {
-                                ids: selectedIds,
-                                _token: '{{ csrf_token() }}',
-                                _method: 'DELETE'
-                            },
-                            success: function(response) {
-                                Notiflix.Loading.remove();
-                                if (response.status === 'success') {
-                                    Notiflix.Notify.success(response.message);
-                                    window.LaravelDataTables['products-table'].ajax.reload();
-                                } else {
-                                    Notiflix.Notify.failure(response.message || 'Failed to delete products');
-                                }
-                            },
-                            error: function() {
-                                Notiflix.Loading.remove();
-                                Notiflix.Notify.failure('Failed to delete products');
-                            }
-                        });
-                    }
-                );
-            });
-        };
-        
-        // Update bulk delete button visibility
-        window.updateBulkDeleteButton = function() {
-            var selectedCount = $('.product-checkbox:checked').length;
-            if (selectedCount > 0) {
-                $('#bulk-delete-btn').show().html(`<i class="fas fa-trash"></i> Delete Selected (${selectedCount})`);
-            } else {
-                $('#bulk-delete-btn').hide();
-            }
         };
         
         // Add CSS for filter badges
@@ -559,10 +326,7 @@ use Illuminate\Support\Facades\Crypt;
         // Clear filters button
         $('#clear-filters').on('click', function() {
             $('#filter-category').val('').trigger('change');
-            $('#filter-status').val('');
-            $('#filter-online').val('');
             $('#filter-stock').val('');
-            $('#filter-featured').val('');
             applyFilters();
         });
         
@@ -611,7 +375,6 @@ use Illuminate\Support\Facades\Crypt;
                 initializeToggles();
                 initializeFeaturedToggles();
                 initializeDeleteButtons();
-                initializeBulkActions();
                 updateFilterSummary();
             });
         }
@@ -621,7 +384,6 @@ use Illuminate\Support\Facades\Crypt;
             initializeToggles();
             initializeFeaturedToggles();
             initializeDeleteButtons();
-            initializeBulkActions();
             updateFilterSummary();
         }, 500);
     });

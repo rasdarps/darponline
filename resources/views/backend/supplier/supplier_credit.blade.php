@@ -33,9 +33,9 @@
                         <tr>
                             <th>Sl</th>
                             <th>Customer Name</th> 
-                            <th>Invoice No </th>
+                            <th>Sale No </th>
                             <th>Date</th>
-                            <th class="text-end">Due Amount (Gh¢)</th> 
+                            <th class="text-end">Due Amount (GhÂ¢)</th> 
                             <th>Action</th>
                             
                         </thead>
@@ -47,11 +47,11 @@
     <tr>
         <td> {{ $key+1}} </td>
         <td> {{ $item['customer']['name'] }} </td> 
-        <td> {{ $item['invoice']['invoice_no'] }}   </td> 
-        <td> {{  date('d-m-Y',strtotime($item['invoice']['date'])) }} </td> 
+        <td> {{ $item['sale']['sale_no'] }}   </td> 
+        <td> {{  date('d-m-Y',strtotime($item['sale']['date'])) }} </td> 
         <td class="text-end"> {{ $item->due_amount }} </td> 
         <td>
-   <a href="{{ route('customer.edit.invoice',$item->invoice_id) }}" class="btn btn-info sm" title="Edit Data">  <i class="fas fa-edit"></i> </a>
+    <a href="{{ route('customer.edit.sale',$item->sale_id) }}" class="btn btn-info sm" title="Edit Data">  <i class="fas fa-edit"></i> </a>
                             </td>
                            
                         </tr>

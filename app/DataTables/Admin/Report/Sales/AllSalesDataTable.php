@@ -2,7 +2,7 @@
 
 namespace App\DataTables\Admin\Report\Sales;
 
-use App\Models\Invoice;
+use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
@@ -24,16 +24,16 @@ class AllSalesDataTable extends DataTable
             ->addColumn('action', 'allsales.action')
 
             ->addColumn('edit_button', function($row) {
-                $printUrl = route('print.invoice', Crypt::encrypt($row->id));
+                $printUrl = route('print.sale', Crypt::encrypt($row->id));
 
                 $html = '<a href="' . $printUrl . '" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
 
                 if (!$row->cancelled_at) {
                     $encryptedId = Crypt::encrypt($row->id);
                     $html .= ' <button type="button"
-                        class="btn btn-sm btn-warning btn-cancel-invoice ms-1"
+                        class="btn btn-sm btn-warning btn-cancel-sale ms-1"
                         data-id="' . $encryptedId . '"
-                        data-no="' . e($row->invoice_no) . '">
+                        data-no="' . e($row->sale_no) . '">
                         <i class="fas fa-ban"></i> Cancel
                     </button>';
                 }
@@ -91,15 +91,15 @@ class AllSalesDataTable extends DataTable
     /**
      * Get the query source of dataTable.
      */
-    public function query(Invoice $model): QueryBuilder
+    public function query(Sale $model): QueryBuilder
     {
         $query = $model->newQuery()
             ->with(['payment.customer', 'createdBy', 'cancelledBy'])
             ->orderBy('date', 'ASC');
 
         // Apply filters
-        if ($invoiceId = $this->request()->get('invoice_id')) {
-            $query->where('id', $invoiceId);
+        if ($saleId = $this->request()->get('sale_id')) {
+            $query->where('id', $saleId);
         }
 
         if ($customerId = $this->request()->get('customer_id')) {
@@ -190,10 +190,9 @@ class AllSalesDataTable extends DataTable
     {
         return [
             Column::make('date'),
-            Column::make('invoice_no'),
-            Column::make('sales_source')->title('Sales Source'),
+            Column::make('sale_no'),
             Column::make('customer_name')->title('Customer Name'),
-            Column::make('amount')->title('Amount (Gh¢)'),
+            Column::make('amount')->title('Amount (GhÂ¢)'),
             // Column::make('cancelled_status')->title('Status')
             //     ->searchable(true)->printable(true)->exportable(true),
             Column::make('created_by_name')->title('Created By'),
@@ -212,3 +211,4 @@ class AllSalesDataTable extends DataTable
         return 'AllSales_' . date('YmdHis');
     }
 }
+

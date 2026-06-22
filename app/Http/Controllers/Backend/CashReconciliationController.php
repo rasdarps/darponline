@@ -322,14 +322,10 @@ class CashReconciliationController extends Controller
     private function computeExpectedForUser(int $userId, string $businessDate, float $openingFloat): array
     {
         $expectedCashSales = (float) Payment::query()
-            ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
-            ->where('invoices.created_by', $userId)
-            ->whereDate('invoices.date', $businessDate)
-            ->whereNull('invoices.cancelled_at')
-            ->where(function ($q) {
-                $q->whereNull('invoices.sales_source')
-                    ->orWhere('invoices.sales_source', '!=', 'online');
-            })
+            ->join('sales', 'sales.id', '=', 'payments.sale_id')
+            ->where('sales.created_by', $userId)
+            ->whereDate('sales.date', $businessDate)
+            ->whereNull('sales.cancelled_at')
             ->sum('payments.paid_amount');
 
         $expectedCashExpenses = (float) ExpenseVoucherItem::query()
@@ -348,3 +344,4 @@ class CashReconciliationController extends Controller
         ];
     }
 }
+

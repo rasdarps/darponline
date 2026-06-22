@@ -1,5 +1,5 @@
   <header id="page-topbar">
-                <div class="navbar-header" style="background-color:#0f172a; position: relative;">
+                <div class="navbar-header" style="background-color:#0f766e; position: relative;">
                     <div class="d-flex">
                         <!-- LOGO -->
                         <div class="navbar-brand-box">
@@ -17,7 +17,7 @@
                                     <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo_cart.png-light" height="22">
                                 </span> --}}
                                 <span class="logo-lg">
-                                    <img src="{{ asset('images/fpm_logo_2.png') }}" alt="logo-light" height="60" style="margin-top: 5px; border-radius: 50%;">
+                                    <img src="{{ asset('images/rict_logo.png') }}" alt="logo-light" height="60" style="margin-top: 5px;">
                                 </span>
                             </a>
                         </div>
@@ -30,13 +30,13 @@
         <a href="{{ route('dashboard') }}" class="btn quick-action-btn header-item waves-effect" title="Dashboard">
             <i class="ri-home-4-line align-middle"></i>
         </a>
-        <a href="{{ route('invoices.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Sale">
+        <a href="{{ route('sales.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Sale">
             <i class="ri-shopping-cart-2-line align-middle"></i>
         </a>
         <a href="{{ route('purchases.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Purchase">
             <i class="ri-add-circle-line align-middle"></i>
         </a>
-        <a href="{{ route('invoices.index') }}" class="btn quick-action-btn header-item waves-effect" title="View Sales">
+        <a href="{{ route('sales.index') }}" class="btn quick-action-btn header-item waves-effect" title="View Sales">
             <i class="ri-file-list-3-line align-middle"></i>
         </a>
         <a href="{{ route('purchases.index') }}" class="btn quick-action-btn header-item waves-effect" title="View Purchases">
@@ -92,7 +92,7 @@
     <div class="dropdown d-inline-block user-dropdown">
         <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <img class="rounded-circle header-profile-user" src="{{ (!empty($adminData->profile_image))? url('upload/admin_images/'.$adminData->profile_image):url('upload/fpm_logo_2.png') }}"
+            <img class="rounded-circle header-profile-user" src="{{ (!empty($adminData->profile_image))? url('upload/admin_images/'.$adminData->profile_image):url('upload/rict_logo.png') }}"
                 alt="Header Avatar">
             <span class="d-none d-xl-inline-block ms-1">{{ $adminData->name }}</span>
             <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>

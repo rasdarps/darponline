@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
-use App\Models\Invoice;
+use App\Models\Sale;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Purchase;
@@ -22,7 +22,7 @@ class DashboardController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:dashboard-view');
+        // $this->middleware('permission:dashboard-view');
     }
 
     /**
@@ -34,7 +34,7 @@ class DashboardController extends Controller
     {
         
         $total_purchase = Purchase::get()->count(); 
-        $total_invoice =Invoice::get()->count();
+        $total_invoice =Sale::get()->count();
         $pending_purchase = Purchase::get()->count();
         $approved_purchase =Purchase::get()->count();
         $total_sales = Payment::sum('total_amount');
@@ -45,15 +45,15 @@ class DashboardController extends Controller
        
         $products = DB::select('SELECT * FROM products WHERE quantity < stock_level');
         
-        // Monthly sales distribution using invoice + invoice_details
-        $monthlySales = DB::table('invoices')
-            ->join('payments', 'invoices.id', '=', 'payments.invoice_id')
+        // Monthly sales distribution using Sale + sale_details
+        $monthlySales = DB::table('sales')
+            ->join('payments', 'sales.id', '=', 'payments.sale_id')
             ->select(
-                DB::raw('MONTH(invoices.date) as month'),
+                DB::raw('MONTH(sales.date) as month'),
                 DB::raw('SUM(payments.total_amount) as total')
             )
-            ->groupBy(DB::raw('MONTH(invoices.date)'))
-            ->orderBy(DB::raw('MONTH(invoices.date)'))
+            ->groupBy(DB::raw('MONTH(sales.date)'))
+            ->orderBy(DB::raw('MONTH(sales.date)'))
             ->pluck('total', 'month')
             ->toArray();
 
@@ -85,3 +85,4 @@ class DashboardController extends Controller
 
     
 }
+

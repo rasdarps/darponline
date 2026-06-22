@@ -65,9 +65,8 @@ class PermissionTableSeeder extends Seeder
             Permission::firstOrCreate(['name' => $customer_permission]);
         }
 
-         $transactions_management_permissions = [ 
-                'invoice-list','invoice-create','invoice-cancel','invoice-print',
-                'sales-create',
+          $transactions_management_permissions = [ 
+              'sale-list','sale-create','sale-cancel','sale-print',
                 'purchase-list','purchase-create','purchase-cancel','purchase-print',
         ];
 
@@ -304,8 +303,7 @@ class PermissionTableSeeder extends Seeder
 
         // Assign cashier flow permissions
         $cashier_permissions = [
-            'sales-create',
-            'invoice-create',
+            'sale-create',
             'cash-reconciliation-list',
             'cash-reconciliation-create',
             'cash-reconciliation-edit',
@@ -335,3 +333,4 @@ class PermissionTableSeeder extends Seeder
 
     }
 }
+

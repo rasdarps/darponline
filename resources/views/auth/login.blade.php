@@ -217,7 +217,7 @@
 </style>
 
 <div class="auth-shell">
-    <p class="auth-welcome">Welcome to Factory Mall Price POS System</p>
+    <p class="auth-welcome">Welcome to Rasdarps Enterprise POS System</p>
     <div class="auth-card">
         <div class="auth-header">
             <h5>{{ __('Admin Login') }}</h5>
@@ -274,7 +274,7 @@
                 </div>
 
                 <div class="text-center mt-3" style="font-size:12px; color:#64748b; font-weight:600;">
-                    RICT POS V 1.0
+                    DarPOS V 1.0
                 </div>
             </form>
         </div>

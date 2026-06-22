@@ -39,7 +39,7 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="reference_no"><strong>Reference No</strong></label>
-                                            <input type="text" id="reference_no" name="reference_no" class="form-control" value="{{ old('reference_no') }}" placeholder="receipt/invoice number">
+                                            <input type="text" id="reference_no" name="reference_no" class="form-control" value="{{ old('reference_no') }}" placeholder="receipt/Sale number">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -233,3 +233,4 @@
     });
 </script>
 @endsection
+

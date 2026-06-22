@@ -1,5 +1,5 @@
-# Factory Price Mall
-## RICT POS System V 1.0
+# Rasdarps Enterprise
+## DarPOS V 1.0
 ### Activity Logging Implementation Design (No-Code Blueprint)
 
 Date: 2026-06-21
@@ -291,5 +291,5 @@ Mask in logs:
 
 ---
 
-Prepared for future implementation in Factory Price Mall, RICT POS System V 1.0.
+Prepared for future implementation in Rasdarps Enterprise, DarPOS V 1.0.
 This is a no-code planning artifact.

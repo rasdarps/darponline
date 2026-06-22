@@ -15,9 +15,9 @@ class Payment extends Model
         return $this->belongsTo(Customer::class,'customer_id','id');
     } 
 
-    public function invoice()
+    public function sale()
     {
-        return $this->belongsTo(Invoice::class, 'invoice_id', 'id');
+        return $this->belongsTo(Sale::class, 'sale_id', 'id');
     }
 } 
  

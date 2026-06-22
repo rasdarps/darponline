@@ -5,17 +5,13 @@ namespace App\Http\Controllers\Backend;
 use App\DataTables\Admin\Settings\ProductDataTable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductCreationRequest;
-use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductColor;
-use App\Models\TemporaryFile;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -23,8 +19,8 @@ class ProductController extends Controller
     {
             $this->middleware('permission:product-list', ['only' => ['index','show', 'export']]);
          $this->middleware('permission:product-create', ['only' => ['create','store']]);
-            $this->middleware('permission:product-edit', ['only' => ['edit','update', 'findByBarcode', 'toggleStatus', 'toggleOnline', 'toggleFeatured', 'updateStock']]);
-            $this->middleware('permission:product-delete', ['only' => ['destroy', 'bulkDelete']]);
+            $this->middleware('permission:product-edit', ['only' => ['edit','update', 'findByBarcode', 'updateStock']]);
+            $this->middleware('permission:product-delete', ['only' => ['destroy']]);
     }
 
     public function index(ProductDataTable $dataTable){
@@ -55,16 +51,12 @@ class ProductController extends Controller
     public function create(){
         $units = Unit::orderBy('name', 'asc')->get();
         $categories = Category::orderBy('name', 'asc')->get();
-        $brands = Brand::where('is_active', true)->orderBy('name', 'asc')->get();
-        $colors = ProductColor::orderBy('color_name', 'asc')->get();
 
-        return view('backend.product.create', compact('units', 'categories', 'brands', 'colors'));
+        return view('backend.product.create', compact('units', 'categories'));
     } // End Method 
 
     public function store(ProductCreationRequest $request){
-             // Generate SKU and Barcode
-            $sku = $this->generateUniqueSKU($request->name);
-            $productData = $request->getProductData($sku);
+            $productData = $request->getProductData();
 
             
         try {
@@ -76,58 +68,6 @@ class ProductController extends Controller
                     $barcode = Product::generateBarcode($product->name, $product->id, $product->created_at);
                     $product->barcode = $barcode;
                     $product->saveQuietly();
-                }
-
-                if($request->has('featured_image') && $request->featured_image)
-                {
-                
-                
-                    
-                            $tempFile = TemporaryFile::where('folder', $request->featured_image)->first();
-                        if ($tempFile) {
-
-                                
-                            $product->addMedia(storage_path('app/public/featured_image/tmp/'. $tempFile->folder . '/' . $tempFile->filename))
-                            ->toMediaCollection('featured_image');
-
-                            rmdir(storage_path('app/public/featured_image/tmp/' . $tempFile->folder));
-                            $tempFile->delete();
-                        }
-                
-
-                }
-
-                if($request->has('gallery_images') && $request->gallery_images)
-                {
-                
-                
-                    
-                            $tempFiles = TemporaryFile::where('folder', $request->gallery_images)->get();
-                            $temp_file = TemporaryFile::where('folder', $request->gallery_images)->first();
-
-                            if ($tempFiles) {
-
-                                foreach($tempFiles as $tempFile)
-                                {
-
-                                    $product
-                                        ->addMedia(storage_path('app/public/gallery_images/tmp/'. $tempFile->folder . '/' . $tempFile->filename))
-                                        ->toMediaCollection('gallery_images');
-                                        
-
-                                        if(file_exists(storage_path('app/public/gallery_images/tmp/'. $tempFile->folder . '/' . $tempFile->filename))) {
-                                            unlink(storage_path('app/public/gallery_images/tmp/'. $tempFile->folder . '/' . $tempFile->filename));
-                                        }
-                                    
-                                        $tempFile->delete();
-                                }
-                                rmdir(storage_path('app/public/gallery_images/tmp/'. $temp_file->folder ));
-
-
-                            }
-                    
-                
-
                 }
             });
             return response()->json([
@@ -152,23 +92,6 @@ class ProductController extends Controller
             ]); 
         }
     } // End Method 
-
-      /**
-     * Generate a unique SKU for the product.
-     */
-    private function generateUniqueSKU(string $productName)
-    {
-        $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $productName), 0, 3));
-        $random = strtoupper(Str::random(6));
-        $sku = $prefix . '-' . $random;
-        
-        while (Product::where('sku', $sku)->exists()) {
-            $random = strtoupper(Str::random(6));
-            $sku = $prefix . '-' . $random;
-        }
-        
-        return $sku;
-    }
     
     /**
      * Generate a unique barcode for the product.
@@ -241,9 +164,7 @@ class ProductController extends Controller
             
           $units = Unit::orderBy('name', 'asc')->get();
             $categories = Category::orderBy('name', 'asc')->get();
-            $brands = Brand::where('is_active', true)->orderBy('name', 'asc')->get();
-            $colors = ProductColor::orderBy('color_name', 'asc')->get();
-            return view('backend.product.edit', compact('product', 'units', 'categories', 'brands', 'colors', 'encryptedId'));
+                                                return view('backend.product.edit', compact('product', 'units', 'categories', 'encryptedId'));
         } catch (\Exception $e) {
             return redirect()->route('products.index')->with('error', 'Invalid product ID.');
         }
@@ -319,66 +240,6 @@ class ProductController extends Controller
             ]);
         }
     }// End Method 
-
-    /**
-     * Toggle product status (active/inactive)
-     */
-    public function toggleStatus(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|exists:products,id',
-            'status' => 'required|boolean'
-        ]);
-        
-        $product = Product::find($request->id);
-        $product->is_active = $request->status;
-        $product->save();
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Product status updated successfully'
-        ]);
-    }
-
-    /**
-     * Toggle online visibility
-     */
-    public function toggleOnline(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|exists:products,id',
-            'status' => 'required|boolean'
-        ]);
-        
-        $product = Product::find($request->id);
-        $product->is_online = $request->status;
-        $product->save();
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Online visibility updated successfully'
-        ]);
-    }
-
-    /**
-     * Toggle featured status
-     */
-    public function toggleFeatured(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|exists:products,id',
-            'status' => 'required|boolean'
-        ]);
-        
-        $product = Product::find($request->id);
-        $product->is_featured = $request->status;
-        $product->save();
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Featured status updated successfully'
-        ]);
-    }
 
     public function destroy($encryptedId){
         try {
