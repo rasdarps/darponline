@@ -1,0 +1,41 @@
+🎯 RECOMMENDED REFINEMENTS
+Add "Last Sent" info on button
+
+Shows timestamp of last successful send
+Users know if auto-send happened
+Add configuration section in Settings
+
+Enable/disable auto-send
+Set auto-send time
+Email recipients list
+Add send history (optional)
+
+Track all sends with timestamps
+Useful for auditing/debugging
+Test email feature
+
+Button to send test email immediately
+Helps verify recipients and formatting
+Error notifications
+
+Toast/Notiflix feedback if manual send fails
+Don't silently fail
+
+YOUR REFINEMENTS ARE SMART
+Send same day after closing ✓
+
+Data is fresh and accurate (right after reconciliation)
+No next-day delays
+Aligns with end-of-day workflow
+Company email from company table ✓
+
+Simple, centralized
+Works for multi-company setups
+Single source of truth
+Consistent with existing patterns
+Idempotency (once sent = no re-send) ✓
+
+This is crucial for data integrity
+Prevents accidental duplicate emails
+Clear audit trail
+No confusion about which data was sent when

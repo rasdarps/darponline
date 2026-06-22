@@ -90,6 +90,11 @@ class UserController extends Controller
                 
                 // Assign roles to user
                 $user->assignRole($request->input('roles'));
+                
+                // Mark for password change only if NOT Super Admin
+                if (! $user->hasRole('Super Admin')) {
+                    $user->update(['must_change_password' => true]);
+                }
             });
 
             return response()->json([
@@ -215,6 +220,10 @@ class UserController extends Controller
             // Only update password if provided
             if ($request->filled('password')) {
                 $data['password'] = Hash::make($data['password']);
+                // Mark for password change only if NOT Super Admin
+                if (! $user->hasRole('Super Admin')) {
+                    $data['must_change_password'] = true;
+                }
             } else {
                 $data = Arr::except($data, array('password', 'confirm_password'));
             }

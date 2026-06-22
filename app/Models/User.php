@@ -25,6 +25,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'must_change_password',
         'user_type',
         'created_by',
         'updated_by',
@@ -48,6 +49,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'must_change_password' => 'boolean',
         'created_by' => 'integer',
         'updated_by' => 'integer',
         'deleted_by' => 'integer',

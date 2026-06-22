@@ -5,6 +5,7 @@ use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CashReconciliationController;
 use App\Http\Controllers\Backend\CompanyController;
 use App\Http\Controllers\Backend\CustomerController;
+use App\Http\Controllers\Backend\DailyTransactionEmailController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DefaultController;
 use App\Http\Controllers\Backend\ExpenseCategoryController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\StockController;
 use App\Http\Controllers\Backend\StockAdjustmentController;
 use App\Http\Controllers\Backend\SupplierController;
+use App\Http\Controllers\Backend\SettingsController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Backend\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -49,7 +51,7 @@ Route::prefix('admin')->group(function () {
     Auth::routes();
 
 
-        Route::middleware('auth')->group(function(){
+        Route::middleware(['auth', 'force.password.change'])->group(function(){
           
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -227,6 +229,16 @@ Route::prefix('admin')->group(function () {
             Route::patch('/update/{id}', [CompanyController::class, 'update'])->name('update');
             Route::delete('/destroy/{id}', [CompanyController::class, 'destroy'])->name('destroy');
 
+        });
+
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('/', [SettingsController::class, 'index'])->name('index');
+            Route::patch('/update', [SettingsController::class, 'update'])->name('update');
+        });
+
+        Route::prefix('daily-transaction-email')->name('daily-transaction-email.')->group(function () {
+            Route::post('/send', [DailyTransactionEmailController::class, 'sendManual'])->name('send');
+            Route::get('/status', [DailyTransactionEmailController::class, 'getStatus'])->name('status');
         });
 
         Route::prefix('users')->name('users.')->group(function () {

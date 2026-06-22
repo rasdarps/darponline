@@ -14,6 +14,7 @@ use App\Models\PaymentDetail;
 use App\Models\Product;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\CashReconciliation;
 use App\Services\StockLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
@@ -43,6 +45,12 @@ class SaleController extends Controller
 
     public function create(){ 
 
+        if ($gate = $this->previousDayReconciliationGate()) {
+            return redirect()->route('cash-reconciliations.create')
+                ->with('error', $gate['message'])
+                ->with('info', $gate['action']);
+        }
+
         $unit = Unit::all();
         $category = Category::all();
         $costomer = Customer::all();
@@ -56,7 +64,20 @@ class SaleController extends Controller
         }
 
         $date = Carbon::now()->format('Y-m-d');        
-        return view('backend.sale.create',compact('sale_no','category','date','costomer','unit'));
+        $allowNegativeStock = (bool) config('pos.allow_negative_stock', false);
+        $preventBackdatedInvoices = (bool) config('pos.prevent_backdated_invoices', false);
+        $allowManualDiscountEntryByStaff = (bool) config('pos.allow_manual_discount_entry_by_staff', true);
+
+        return view('backend.sale.create',compact(
+            'sale_no',
+            'category',
+            'date',
+            'costomer',
+            'unit',
+            'allowNegativeStock',
+            'preventBackdatedInvoices',
+            'allowManualDiscountEntryByStaff'
+        ));
 
     } // End Method
 
@@ -64,11 +85,24 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
+        if ($gate = $this->previousDayReconciliationGate()) {
+            throw ValidationException::withMessages([
+                'reconciliation' => $gate['message'] . ' ' . $gate['action'],
+            ]);
+        }
+
+        $allowNegativeStock = (bool) config('pos.allow_negative_stock', false);
+        $preventBackdatedInvoices = (bool) config('pos.prevent_backdated_invoices', false);
+        $allowManualDiscountEntryByStaff = (bool) config('pos.allow_manual_discount_entry_by_staff', true);
+
         $grossTotal = collect($request->selling_price ?? [])->sum(function ($value) {
             return (float) $value;
         });
 
-        $discountAmount = (float) ($request->discount_amount ?? 0);
+        $discountAmount = $allowManualDiscountEntryByStaff
+            ? (float) ($request->discount_amount ?? 0)
+            : 0;
+
         if ($discountAmount < 0) {
             $discountAmount = 0;
         }
@@ -129,14 +163,21 @@ class SaleController extends Controller
 
         $request->validate($rules);
 
+        if ($preventBackdatedInvoices && Carbon::parse($request->date)->isBefore(Carbon::today())) {
+            throw ValidationException::withMessages([
+                'date' => 'Backdated invoices are disabled. Please use today\'s date.',
+            ]);
+        }
+
         $Sale = null;
         $attempts = 0;
         $maxAttempts = 3;
+        $saleNoClashDetected = false;
 
         while ($attempts < $maxAttempts) {
             $attempts++;
             try {
-                $Sale = DB::transaction(function() use($request, $calculated) {
+                $Sale = DB::transaction(function() use($request, $calculated, $allowNegativeStock) {
 
                     $maxInvoiceNo = (int) DB::table('sales')
                         ->lockForUpdate()
@@ -169,9 +210,15 @@ class SaleController extends Controller
                         $beforeQty = (float) $product->quantity;
                         $lineQty = (float) $sale_details->selling_qty;
 
-                        if ($lineQty <= 0 || $beforeQty < $lineQty) {
+                        if ($lineQty <= 0) {
                             throw \Illuminate\Validation\ValidationException::withMessages([
-                                'selling_qty.' . $i => 'Insufficient stock for item #' . ($i + 1) . '.',
+                                'selling_qty.' . $i => 'Quantity for item #' . ($i + 1) . ' must be greater than zero.',
+                            ]);
+                        }
+
+                        if (! $allowNegativeStock && $beforeQty < $lineQty) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                'selling_qty.' . $i => 'One of the selected items has negative stock so remove from invoice',
                             ]);
                         }
 
@@ -250,12 +297,41 @@ class SaleController extends Controller
                 $isDuplicateInvoiceNo = (string) ($e->getCode()) === '23000'
                     && str_contains(strtolower($e->getMessage()), 'sale_no');
 
-                if ($isDuplicateInvoiceNo && $attempts < $maxAttempts) {
-                    continue;
+                if ($isDuplicateInvoiceNo) {
+                    if ($attempts < $maxAttempts) {
+                        continue;
+                    }
+
+                    $saleNoClashDetected = true;
+                    break;
                 }
 
                 throw $e;
             }
+        }
+
+        if (!$Sale && $saleNoClashDetected) {
+            $maxInvoiceNo = (int) DB::table('sales')
+                ->selectRaw('COALESCE(MAX(CAST(sale_no AS UNSIGNED)), 0) as max_no')
+                ->value('max_no');
+            $nextNo = str_pad($maxInvoiceNo + 1, 2, '0', STR_PAD_LEFT);
+
+            $message = 'Sale number clash detected. Another checkout used the same Sale number.';
+            $action = 'Action: click Save Sale again to continue with Sale #' . $nextNo . '.';
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'status' => 409,
+                    'error_code' => 'SALE_NO_CLASH',
+                    'message' => $message,
+                    'action' => $action,
+                    'next_no' => $nextNo,
+                ], 409);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['sale_no' => $message . ' ' . $action]);
         }
 
         // Now $Sale is available here
@@ -379,6 +455,45 @@ class SaleController extends Controller
             ], 400);
         }
     } // End Method
+
+    private function previousDayReconciliationGate(): ?array
+    {
+        if (! config('pos.enforce_previous_day_reconciliation', false)) {
+            return null;
+        }
+
+        $userId = (int) Auth::id();
+        if ($userId <= 0) {
+            return null;
+        }
+
+        $previousDate = Carbon::yesterday()->toDateString();
+
+        // Gate only applies if the cashier actually sold yesterday.
+        $hadSalesYesterday = Sale::query()
+            ->whereDate('date', $previousDate)
+            ->where('created_by', $userId)
+            ->exists();
+
+        if (! $hadSalesYesterday) {
+            return null;
+        }
+
+        $hasReconciliation = CashReconciliation::query()
+            ->whereDate('business_date', $previousDate)
+            ->where('user_id', $userId)
+            ->whereIn('status', ['submitted', 'approved'])
+            ->exists();
+
+        if ($hasReconciliation) {
+            return null;
+        }
+
+        return [
+            'message' => 'Yesterday cash reconciliation is missing for your account.',
+            'action' => 'Action: submit yesterday reconciliation before creating today\'s Sale.',
+        ];
+    }
 
     public function printSaleList(){
 

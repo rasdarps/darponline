@@ -86,6 +86,26 @@
  
 </script>
 
+<script>
+    // Show a clear, actionable message when session/auth expires on any AJAX call.
+    $(document).ajaxError(function(event, xhr) {
+        if (!xhr) {
+            return;
+        }
+
+        if (xhr.status === 419 || xhr.status === 401) {
+            const message = 'Your login session has expired due to inactivity.';
+            const action = 'Action: refresh this page and sign in again.';
+
+            if (window.Notiflix && Notiflix.Notify) {
+                Notiflix.Notify.failure(message + ' ' + action);
+            } else {
+                alert(message + ' ' + action);
+            }
+        }
+    });
+</script>
+
  <!-- field Validation -->
  <script src="{{ asset('backend/assets/js/validate.min.js') }}"></script>
 

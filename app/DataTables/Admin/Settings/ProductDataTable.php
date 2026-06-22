@@ -165,7 +165,8 @@ class ProductDataTable extends DataTable
         return [
             Column::make('product_info')->title('Product')->width(250),
             Column::make('category')->title('Category')->width(120),
-            Column::make('price')->title('Price')->width(120),
+            Column::make('cost_price')->title('Cost_Price')->width(120),
+            Column::make('selling_price')->title('Celling_Price')->width(120),
             Column::make('stock')->title('Stock')->width(100),
             Column::make('created_at')->title('Added')->width(100),
             Column::make('actions')->title('Actions')->width(120)

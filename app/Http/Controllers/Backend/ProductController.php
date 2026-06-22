@@ -210,6 +210,7 @@ class ProductController extends Controller
                         'barcode'     => $validatedData['barcode'] ?? $product->barcode,
                         'unit_id' => $validatedData['unit_id'],
                         'category_id' => $validatedData['category_id'],
+                        'stock_level' => $validatedData['stock_level'],
                         'updated_by' => Auth::id(),
                     ];
                     
@@ -241,7 +242,7 @@ class ProductController extends Controller
         }
     }// End Method 
 
-    public function destroy($encryptedId){
+    public function destroy(string $encryptedId){
         try {
             $id = Crypt::decrypt($encryptedId);
             $product = Product::find($id);
@@ -251,6 +252,14 @@ class ProductController extends Controller
                     'status' => 404,
                     'message' => 'Product not found.',
                 ]);
+            }
+
+            // Prevent deleting products that were already sold.
+            if ($product->invoicedetails()->exists()) {
+                return response()->json([
+                    'status' => 422,
+                    'message' => "Product '{$product->name}' cannot be deleted because it has sales records.",
+                ], 422);
             }
             
             $productName = $product->name;

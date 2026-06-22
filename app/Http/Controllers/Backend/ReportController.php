@@ -114,11 +114,11 @@ class ReportController extends Controller
             ->groupBy('idt.sale_id');
 
         $invoiceQuery = Sale::query()
-            ->leftJoinSub($salesSub, 'sales', function ($join) {
-                $join->on('sales.sale_id', '=', 'sales.id');
+            ->leftJoinSub($salesSub, 'sales_agg', function ($join) {
+                $join->on('sales_agg.sale_id', '=', 'sales.id');
             })
-            ->leftJoinSub($costSub, 'costs', function ($join) {
-                $join->on('costs.sale_id', '=', 'sales.id');
+            ->leftJoinSub($costSub, 'costs_agg', function ($join) {
+                $join->on('costs_agg.sale_id', '=', 'sales.id');
             });
 
         if ($invoiceId = $request->get('sale_id')) {
@@ -136,17 +136,17 @@ class ReportController extends Controller
         }
 
         if ($fromDate = $request->get('from_date')) {
-            $invoiceQuery->whereDate('date', '>=', $fromDate);
+            $invoiceQuery->whereDate('sales.date', '>=', $fromDate);
         }
 
         if ($toDate = $request->get('to_date')) {
-            $invoiceQuery->whereDate('date', '<=', $toDate);
+            $invoiceQuery->whereDate('sales.date', '<=', $toDate);
         }
 
         $invoiceSummary = $invoiceQuery->selectRaw('
-                COALESCE(SUM(sales.sales_total), 0) as gross_sales,
-                COALESCE(SUM(costs.cost_total), 0) as gross_cost,
-                COALESCE(SUM(sales.sales_total), 0) - COALESCE(SUM(costs.cost_total), 0) as gross_profit
+                COALESCE(SUM(sales_agg.sales_total), 0) as gross_sales,
+                COALESCE(SUM(costs_agg.cost_total), 0) as gross_cost,
+                COALESCE(SUM(sales_agg.sales_total), 0) - COALESCE(SUM(costs_agg.cost_total), 0) as gross_profit
             ')
             ->first();
 

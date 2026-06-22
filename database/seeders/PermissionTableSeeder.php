@@ -107,6 +107,11 @@ class PermissionTableSeeder extends Seeder
             'dashboard-view',
         ];
 
+        $settings_permissions = [
+            'settings-manage',
+            'daily-transaction-email-send',
+        ];
+
 
         // Create transactions management permissions in the database if they don't already exist
         foreach ($transactions_management_permissions as $transaction_permission) {
@@ -156,6 +161,11 @@ class PermissionTableSeeder extends Seeder
         // Create dashboard permissions
         foreach ($dashboard_permissions as $dashboard_permission) {
             Permission::firstOrCreate(['name' => $dashboard_permission]);
+        }
+
+        // Create settings permissions
+        foreach ($settings_permissions as $settings_permission) {
+            Permission::firstOrCreate(['name' => $settings_permission]);
         }
 
         // Find or retrieve the Super Admin role (must exist)
@@ -274,7 +284,8 @@ class PermissionTableSeeder extends Seeder
             $cash_reconciliation_permissions,
             $report_permissions,
             $stock_report_permissions,
-            $dashboard_permissions
+            $dashboard_permissions,
+            $settings_permissions
         );
 
         foreach ($additional_permissions as $additional_permission) {
@@ -288,6 +299,7 @@ class PermissionTableSeeder extends Seeder
             $report_permissions,
             $stock_report_permissions,
             $dashboard_permissions,
+            $settings_permissions,
             [
                 'cash-reconciliation-show',
                 'cash-reconciliation-approve',

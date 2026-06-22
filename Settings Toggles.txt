@@ -1,0 +1,46 @@
+Based on your POS system structure, here are practical toggle settings you could add:
+
+Inventory & Stock:
+
+Auto-deduct stock on invoice creation
+Allow negative stock (overselling)
+Enable low stock email alerts
+Require stock verification before sale
+Sales & Invoicing:
+
+Allow manual discount entry by staff
+Require customer email on invoices
+Print receipt automatically after sale
+Enable partial/installment payments
+Prevent backdated invoices
+Products & Catalog:
+
+Enable online shop visibility
+Show product cost to staff
+Allow product returns/exchanges
+Require barcode scanning
+Customers:
+
+Require customer creation before sale
+Enable loyalty/rewards program
+Auto-create customer on first sale
+Business Rules:
+
+Enable activity logging (audit trail)
+Require manager approval for large discounts
+Enable email daily sales summary
+Security:
+
+Require password change on first login
+Enable two-factor authentication
+Enforce strong password policy
+Tax & Pricing:
+
+Show tax separately in receipts
+Auto-calculate tax
+Include tax in displayed prices
+General:
+
+Enable maintenance mode
+Enable demo/test mode
+Freeze pricing changes

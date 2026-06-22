@@ -158,7 +158,7 @@
                         @endcanany
 
                         {{-- setup menu starts --}}
-                         @canany(['company-list', 'company-create', 'supplier-list', 'supplier-create', 'customer-list', 'customer-create', 'category-list', 'category-create', 'unit-list', 'unit-create', 'expense-category-list', 'expense-category-create', 'product-list', 'product-create', 'product-price-list'])
+                         @canany(['company-list', 'company-create', 'supplier-list', 'supplier-create', 'customer-list', 'customer-create', 'category-list', 'category-create', 'unit-list', 'unit-create', 'expense-category-list', 'expense-category-create', 'product-list', 'product-create', 'product-price-list', 'settings-manage'])
                          <li class="menu-title">Setups</li>
                           <li><!--Main drop-->
                             <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -303,6 +303,15 @@
                                         <li><a href="{{ route('product-prices.index') }}">All Product Prices</a></li>
                                     
                                     </ul>
+                                </li>
+                                @endcan
+
+                                @can('settings-manage')
+                                <li>
+                                    <a href="{{ route('settings.index') }}" class="waves-effect">
+                                        <i class="fa fa-sliders-h"></i>
+                                        <span>Settings</span>
+                                    </a>
                                 </li>
                                 @endcan
                             </ul><!--drop ul ends-->    

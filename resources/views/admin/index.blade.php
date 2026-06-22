@@ -116,6 +116,55 @@
         </div>
     </div><!-- end row -->
 
+    <!-- Daily Transaction Email Widget -->
+    @if(config('pos.enable_daily_email_report', false))
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card" style="background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); border: none;">
+                <div class="card-header" style="background: rgba(0, 0, 0, 0.1); border: none;">
+                    <h5 class="mb-0" style="color: #fff;">
+                        <i class="ri-mail-send-line me-2"></i>Daily Transaction Report
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="mb-2" style="color: #fff;"><small><strong>Status:</strong></small></p>
+                            <div id="emailStatus">
+                                <span class="badge" style="background: rgba(255, 255, 255, 0.25); color: #fff;">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="mb-2" style="color: #fff;"><small><strong>Quick Actions:</strong></small></p>
+                            <button 
+                                type="button" 
+                                class="btn btn-sm"
+                                id="sendEmailBtn"
+                                onclick="sendDailyTransactionEmail()"
+                                style="background: #fff; color: #0f766e; border: none; font-weight: 600;"
+                            >
+                                <i class="ri-mail-send-line me-1"></i>Send Email Now
+                            </button>
+                            <small style="color: rgba(255, 255, 255, 0.8);" class="d-block mt-2">
+                                Scheduled time: {{ str_pad(config('pos.daily_email_report_time', 18), 2, '0', STR_PAD_LEFT) }}:00
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Monthly Sales Distribution</h4>
+                    <canvas id="salesChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    @else
     <!--chart-->
     <!-- Monthly Sales Chart -->
     <div class="row mt-4">
@@ -128,6 +177,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Re-Stock Alert -->
     <div class="row">
@@ -189,7 +239,7 @@
         data: {
             labels: @json($months),
             datasets: [{
-                label: 'Sales (GhÂ¢)',
+                label: 'Sales (Gh¢)',
                 data: @json($totals),
                 backgroundColor: '#0F766E',
                 borderColor: '#0F766E',
@@ -203,7 +253,7 @@
                     anchor: 'end',
                     align: 'end',
                     formatter: function(value) {
-                        return 'GhÂ¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        return 'Gh¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     },
                     color: '#000',
                     font: {
@@ -216,7 +266,7 @@
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return 'GhÂ¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            return 'Gh¢ ' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                         }
                     }
                 }
@@ -224,6 +274,71 @@
         },
         plugins: [ChartDataLabels]
     });
+
+    // Daily Transaction Email Functions
+    function checkEmailStatus() {
+        fetch('{{ route("daily-transaction-email.status") }}')
+            .then(response => response.json())
+            .then(data => {
+                const statusDiv = document.getElementById('emailStatus');
+                const sendBtn = document.getElementById('sendEmailBtn');
+                
+                if (!data.enabled) {
+                    statusDiv.innerHTML = '<span class="badge bg-secondary">Feature Disabled</span>';
+                    sendBtn.disabled = true;
+                } else if (data.already_sent_today) {
+                    statusDiv.innerHTML = `<span class="badge bg-success">✓ Sent at ${data.last_sent}</span>`;
+                    sendBtn.disabled = true;
+                    sendBtn.classList.add('disabled');
+                } else {
+                    statusDiv.innerHTML = '<span class="badge bg-warning">Not sent today</span>';
+                    sendBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error checking email status:', error);
+                document.getElementById('emailStatus').innerHTML = '<span class="badge bg-danger">Error checking status</span>';
+            });
+    }
+
+    function sendDailyTransactionEmail() {
+        const btn = document.getElementById('sendEmailBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ri-loader-4-line me-1 spinner"></i>Sending...';
+
+        fetch('{{ route("daily-transaction-email.send") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 200) {
+                Notiflix.Notify.success(data.message, {timeout: 4000});
+                setTimeout(() => {
+                    checkEmailStatus();
+                }, 1000);
+            } else {
+                Notiflix.Notify.failure(data.message, {timeout: 4000});
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Notiflix.Notify.failure('Error sending email. Please try again.', {timeout: 4000});
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+
+    // Check email status on page load if feature is enabled
+    @if(config('pos.enable_daily_email_report', false))
+        checkEmailStatus();
+    @endif
 </script>
 
 @endsection

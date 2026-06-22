@@ -28,7 +28,6 @@ class ProductCreationRequest extends FormRequest
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'unit_id' => 'required|exists:units,id',
-            'tags' => 'nullable|string|max:500',
  
              // Stock Information
              'stock_level' => 'nullable|integer|min:0',
@@ -44,7 +43,6 @@ class ProductCreationRequest extends FormRequest
             'name' => $validated['name'],
             'category_id' => $validated['category_id'],
             'unit_id' => $validated['unit_id'],
-            'tags' => $validated['tags'] ?? null,
             
             // Stock Information
             'stock_level' => $validated['stock_level'] ?? 0,

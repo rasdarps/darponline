@@ -1,0 +1,240 @@
+<?php
+
+namespace App\Http\Controllers\Backend;
+
+use App\Http\Controllers\Controller;
+use App\Mail\DailyTransactionMail;
+use App\Models\Company;
+use App\Models\DailyTransactionEmail;
+use App\Models\ExpenseVoucherItem;
+use App\Models\Payment;
+use App\Models\AppSetting;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Carbon;
+
+class DailyTransactionEmailController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:daily-transaction-email-send', ['only' => ['sendManual']]);
+    }
+
+    /**
+     * Send daily transaction email manually
+     */
+    public function sendManual()
+    {
+        // Check if feature is enabled
+        if (!$this->isEmailFeatureEnabled()) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Daily transaction email feature is not enabled.',
+            ]);
+        }
+
+        try {
+            $company = Company::first();
+            if (!$company) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'No company found.',
+                ]);
+            }
+
+            // Check if already sent today
+            if (DailyTransactionEmail::alreadySentToday($company->id)) {
+                $lastSent = DailyTransactionEmail::lastSent($company->id);
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'Email already sent today at ' . $lastSent->sent_at->format('H:i:s') . '. Cannot send duplicate.',
+                ]);
+            }
+
+            // Calculate totals
+            $businessDate = today();
+            $totals = $this->calculateDailyTotals($businessDate);
+
+            // Create email record
+            $emailRecord = DailyTransactionEmail::create([
+                'company_id' => $company->id,
+                'business_date' => $businessDate,
+                'sales_total' => $totals['sales'],
+                'expenses_total' => $totals['expenses'],
+                'cash_shortage' => $totals['shortage'],
+                'recipient_email' => $company->email,
+                'sent_at' => now(),
+                'sent_by' => Auth::id(),
+                'type' => 'manual',
+            ]);
+
+            // Send email
+            try {
+                Mail::to($company->email)->send(new DailyTransactionMail($emailRecord, $company->name));
+            } catch (\Throwable $mailError) {
+                \Log::error('Email send failed: ' . $mailError->getMessage(), [
+                    'exception' => $mailError,
+                    'company_email' => $company->email,
+                    'line' => $mailError->getLine(),
+                    'file' => $mailError->getFile(),
+                ]);
+                throw $mailError;
+            }
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Daily transaction email sent successfully to ' . $company->email . '.',
+                'data' => [
+                    'sales_total' => $totals['sales'],
+                    'expenses_total' => $totals['expenses'],
+                    'cash_shortage' => $totals['shortage'],
+                    'sent_at' => $emailRecord->sent_at,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('DailyTransactionEmail error: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json([
+                'status' => 500,
+                'message' => 'Error sending email: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Send daily transaction email automatically (called by scheduler)
+     * This is called by the scheduled task in Kernel.php
+     */
+    public function sendAuto()
+    {
+        // Check if feature is enabled
+        if (!$this->isEmailFeatureEnabled()) {
+            \Log::info('Daily transaction email feature is disabled.');
+            return;
+        }
+
+        try {
+            $company = Company::first();
+            if (!$company) {
+                \Log::warning('No company found for auto-send.');
+                return;
+            }
+
+            // Check if already sent today
+            if (DailyTransactionEmail::alreadySentToday($company->id)) {
+                \Log::info('Email already sent today for company: ' . $company->id);
+                return;
+            }
+
+            // Calculate totals
+            $businessDate = today();
+            $totals = $this->calculateDailyTotals($businessDate);
+
+            // Create email record
+            $emailRecord = DailyTransactionEmail::create([
+                'company_id' => $company->id,
+                'business_date' => $businessDate,
+                'sales_total' => $totals['sales'],
+                'expenses_total' => $totals['expenses'],
+                'cash_shortage' => $totals['shortage'],
+                'recipient_email' => $company->email,
+                'sent_at' => now(),
+                'sent_by' => null, // Auto-send, no user
+                'type' => 'auto',
+            ]);
+
+            // Send email
+            Mail::to($company->email)->send(new DailyTransactionMail($emailRecord, $company->name));
+
+            \Log::info('Auto-send daily transaction email sent successfully to ' . $company->email);
+        } catch (\Throwable $e) {
+            \Log::error('Error auto-sending daily transaction email: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get status of last sent email
+     */
+    public function getStatus()
+    {
+        $enabled = $this->isEmailFeatureEnabled();
+
+        try {
+            $company = Company::first();
+            if (!$company) {
+                return response()->json([
+                    'status' => 200,
+                    'enabled' => $enabled,
+                    'already_sent_today' => false,
+                    'last_sent' => null,
+                    'send_type' => null,
+                    'message' => 'No company found.',
+                ]);
+            }
+
+            $lastSent = DailyTransactionEmail::lastSent($company->id);
+            $alreadySentToday = DailyTransactionEmail::alreadySentToday($company->id);
+
+            return response()->json([
+                'status' => 200,
+                'enabled' => $enabled,
+                'already_sent_today' => $alreadySentToday,
+                'last_sent' => $lastSent ? $lastSent->sent_at->format('Y-m-d H:i:s') : null,
+                'send_type' => $lastSent?->type,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 500,
+                'enabled' => $enabled,
+                'already_sent_today' => false,
+                'last_sent' => null,
+                'send_type' => null,
+                'message' => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Calculate daily totals: sales, expenses, and cash shortage
+     */
+    private function calculateDailyTotals($date)
+    {
+        $date = Carbon::parse($date);
+
+        // Calculate total sales from payments (full or partial paid)
+        $salesTotal = (float) Payment::whereDate('created_at', $date)->sum('total_amount');
+
+        // Calculate total expenses from expense voucher items
+        $expensesTotal = (float) ExpenseVoucherItem::whereDate('created_at', $date)->sum('amount');
+
+        // Calculate cash shortage from cash reconciliations
+        // Shortage = negative variance (physical cash < expected)
+        $cashShortage = (float) \App\Models\CashReconciliation::whereDate('business_date', $date)
+            ->where('variance', '<', 0) // Only negative variances
+            ->sum('variance');
+        $cashShortage = abs($cashShortage); // Make it positive for display
+
+        return [
+            'sales' => round($salesTotal, 2),
+            'expenses' => round($expensesTotal, 2),
+            'shortage' => round($cashShortage, 2),
+        ];
+    }
+
+    /**
+     * Check if email feature is enabled
+     */
+    private function isEmailFeatureEnabled()
+    {
+        // Prefer runtime config when available, but fall back to DB value to avoid
+        // stale config states when cache/middleware timing differs across requests.
+        $configEnabled = filter_var(config('pos.enable_daily_email_report', false), FILTER_VALIDATE_BOOLEAN);
+
+        $raw = AppSetting::getValue('enable_daily_email_report');
+        if ($raw === null) {
+            return (bool) $configEnabled;
+        }
+
+        return filter_var($raw, FILTER_VALIDATE_BOOLEAN);
+    }
+}

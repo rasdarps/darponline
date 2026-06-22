@@ -99,20 +99,20 @@ class ProfitReportDataTable extends DataTable
             ->groupBy('idt.sale_id');
 
         $query = $model->newQuery()
-            ->leftJoinSub($salesSub, 'sales', function ($join) {
-                $join->on('sales.sale_id', '=', 'sales.id');
+            ->leftJoinSub($salesSub, 'sales_agg', function ($join) {
+                $join->on('sales_agg.sale_id', '=', 'sales.id');
             })
-            ->leftJoinSub($costSub, 'costs', function ($join) {
-                $join->on('costs.sale_id', '=', 'sales.id');
+            ->leftJoinSub($costSub, 'costs_agg', function ($join) {
+                $join->on('costs_agg.sale_id', '=', 'sales.id');
             })
             ->select(
                 'sales.*',
-                DB::raw('COALESCE(sales.sales_total, 0) as sales_total'),
-                DB::raw('COALESCE(costs.cost_total, 0) as cost_total'),
-                DB::raw('(COALESCE(sales.sales_total, 0) - COALESCE(costs.cost_total, 0)) as profit_total')
+                DB::raw('COALESCE(sales_agg.sales_total, 0) as sales_total'),
+                DB::raw('COALESCE(costs_agg.cost_total, 0) as cost_total'),
+                DB::raw('(COALESCE(sales_agg.sales_total, 0) - COALESCE(costs_agg.cost_total, 0)) as profit_total')
             )
             ->with(['payment.customer', 'createdBy', 'cancelledBy'])
-            ->orderBy('date', 'desc');
+            ->orderBy('sales.date', 'desc');
 
             // Apply filters
         if ($invoiceId = $this->request()->get('sale_id')) {
@@ -130,11 +130,11 @@ class ProfitReportDataTable extends DataTable
         }
 
         if ($fromDate = $this->request()->get('from_date')) {
-            $query->whereDate('date', '>=', $fromDate);
+            $query->whereDate('sales.date', '>=', $fromDate);
         }
 
         if ($toDate = $this->request()->get('to_date')) {
-            $query->whereDate('date', '<=', $toDate);
+            $query->whereDate('sales.date', '<=', $toDate);
         }
 
         return $query;
@@ -225,9 +225,9 @@ class ProfitReportDataTable extends DataTable
             Column::make('date'),
             Column::make('sale_no'),
             Column::make('customer_name')->title('Customer Name'),
-            Column::make('sales_total')->title('Net Sales (GhÂ¢)'),
+            Column::make('sales_total')->title('Net Sales (Gh¢)'),
             Column::make('cost_total')->title('Cost (GhÂ¢)'),
-            Column::make('profit_total')->title('Profit (GhÂ¢)'),
+            Column::make('profit_total')->title('Profit (Gh¢)'),
             Column::make('cancelled_status')->title('Status')
             ->searchable(true)->printable(true)->exportable(true),
             Column::make('created_by_name')->title('Created By'),

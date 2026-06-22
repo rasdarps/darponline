@@ -89,6 +89,7 @@ class AdminController extends Controller
         if (Hash::check($request->oldpassword,$hashedPassword )) {
             $users = User::find(Auth::id());
             $users->password = bcrypt($request->newpassword);
+            $users->must_change_password = false;
             $users->save();
 
             session()->flash('message','Password Updated Successfully');

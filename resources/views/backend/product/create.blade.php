@@ -57,14 +57,13 @@
 <div class="page-content">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-12">
+            <div class="col-12 col-xl-10 mx-auto">
                 <div class="card">
-                    <div class="card-header with-border">
+                    <div class="card-header with-border d-flex align-items-center justify-content-between">
                         <span class="card-title" style="font-size:20px;">Create | Product</span>
-                        <a href="{{ route('products.index') }}" style="float:right">
+                        <a href="{{ route('products.index') }}">
                             <button type="button" class="btn btn-primary modal_btn">View Products</button>
                         </a>
-                        <hr>
                     </div>
                     
                     <div class="form-div card-body">
@@ -77,57 +76,58 @@
                                 <ul id="errors"></ul>
                             </div>
                             
-                            <div class="row">
+                            <div class="row g-3">
                                 <div class="col-md-6">
-                                    <x-form.input 
-                                        name="name" 
-                                        label="Product Name" 
-                                        :required="true"
-                                        placeholder="Enter product name"
-                                    />
+                                    <div class="form-group">
+                                        <label for="name"><strong>Product Name <span class="text-danger">*</span></strong></label>
+                                        <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="Enter product name">
+                                        <span class="text-danger error-text" data-field="name"></span>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <x-form.select 
-                                        name="category_id" 
-                                        label="Category"
-                                        :options="$categories->pluck('name', 'id')->toArray()"
-                                        placeholder="Select Category"
-                                        :required="true"
-                                    />
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <x-form.select 
-                                        name="unit_id" 
-                                        label="Unit"
-                                        :options="$units->pluck('name', 'id')->toArray()"
-                                        placeholder="Select Unit"
-                                        :required="true"
-                                    />
+                                    <div class="form-group">
+                                        <label for="category_id"><strong>Category <span class="text-danger">*</span></strong></label>
+                                        <select name="category_id" id="category_id" class="form-control select2" aria-label="Select category">
+                                            <option value="">Select Category</option>
+                                            @foreach($categories as $category)
+                                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted d-block mt-1">
+                                            Category not listed?
+                                            <a href="{{ route('categories.create') }}" class="text-muted text-decoration-underline">Create category</a>
+                                        </small>
+                                        <span class="text-danger error-text" data-field="category_id"></span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="row">
+                            <div class="row g-3 mt-1">
                                 <div class="col-md-6">
-                                    <x-form.input 
-                                        name="tags" 
-                                        label="Tags"
-                                        placeholder="Add tags separated by comma"
-                                        help="e.g., new, sale, popular, trending"
-                                    />
+                                    <div class="form-group">
+                                        <label for="unit_id"><strong>Unit <span class="text-danger">*</span></strong></label>
+                                        <select name="unit_id" id="unit_id" class="form-control select2" aria-label="Select unit">
+                                            <option value="">Select Unit</option>
+                                            @foreach($units as $unit)
+                                                <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted d-block mt-1">
+                                            Unit not listed?
+                                            <a href="{{ route('units.create') }}" class="text-muted text-decoration-underline">Create unit</a>
+                                        </small>
+                                        <span class="text-danger error-text" data-field="unit_id"></span>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <x-form.number 
-                                        name="stock_level" 
-                                        label="Low Stock Threshold"
-                                        :value="1"
-                                        :min="0"
-                                        help="Alert for restock when stock reaches this level. Default is 1"
-                                    />
+                                    <div class="form-group">
+                                        <label for="stock_level"><strong>Low Stock Threshold</strong></label>
+                                        <input type="number" id="stock_level" name="stock_level" class="form-control" value="{{ old('stock_level', 1) }}" min="0" placeholder="Enter low stock threshold">
+                                        <small class="text-muted">Alert for restock when stock reaches this level. Default is 1</small>
+                                        <span class="text-danger error-text" data-field="stock_level"></span>
+                                    </div>
                                 </div>
                             </div>
                             

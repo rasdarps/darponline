@@ -25,7 +25,7 @@
                                     </button>
                                     <ul id="errors"></ul>
                                 </div>
-                                <form method="post" action="{{ route('sales.store') }}" id="invoiceForm">
+                                <form method="post" action="{{ route('sales.store') }}" id="invoiceForm" novalidate>
                                     @csrf
                                         <div class="row mb-2">
                                             <div class="col-md-4 d-flex align-items-center">
@@ -35,7 +35,7 @@
                                                 <input class="form-control" name="current_stock_qty" type="text" id="current_stock_qty" readonly style="background-color:#ddd">
                                             </div>
                                             <div class="col-md-4 d-flex align-items-center justify-content-end">
-                                                <input class="form-control" value="{{ $date }}" name="date" type="date" id="date">
+                                                <input class="form-control" value="{{ $date }}" name="date" type="date" id="date" {{ !empty($preventBackdatedInvoices) ? 'min='.$date : '' }}>
                                             </div>
                                         </div>
 
@@ -57,14 +57,7 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            {{-- <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
-                                                <option disabled selected value="">Select Product</option>
-                                                @foreach($products as $product)
-                                                    <option value="{{ $product->id }}" data-price="{{ $product->selling_price }}">
-                                                        {{ $product->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select> --}}
+                                           
                                              <div class="col-md-4">
                                                 <div class="form-group mb-1 d-flex align-items-center">
                                                     <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
@@ -107,7 +100,10 @@
                                                     <tr>
                                                         <td colspan="6">Discount</td>
                                                         <td>
-                                                            <input type="text" name="discount_amount" id="discount_amount" class="form-control estimated_amount" placeholder="Discount Amount">
+                                                            <input type="text" name="discount_amount" id="discount_amount" class="form-control estimated_amount" placeholder="Discount Amount" value="0" {{ empty($allowManualDiscountEntryByStaff) ? 'readonly' : '' }}>
+                                                            @if (empty($allowManualDiscountEntryByStaff))
+                                                                <small class="text-muted">Manual discount entry is disabled by settings.</small>
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -290,16 +286,21 @@
 
 @section('scripts')
     <script type="text/javascript">
+        const ALLOW_NEGATIVE_STOCK = @json((bool) ($allowNegativeStock ?? false));
+        const PREVENT_BACKDATED_INVOICES = @json((bool) ($preventBackdatedInvoices ?? false));
+        const ALLOW_MANUAL_DISCOUNT_ENTRY_BY_STAFF = @json((bool) ($allowManualDiscountEntryByStaff ?? true));
+
         $(document).ready(function (){
             // Handle form submission
             $('#invoiceForm').on('submit', function(e) {
                 e.preventDefault();
                 // Client-side validation (Notiflix style)
                 function notify(msg) {
+                    console.log('Validation Error:', msg);
                     if (typeof Notiflix !== 'undefined') {
                         Notiflix.Notify.failure(msg, {
-                            timeout: 3000,
-                            showOnlyTheLastOne: true,
+                            timeout: 4000,
+                            showOnlyTheLastOne: false,
                             position: 'right-top',
                         });
                     } else {
@@ -310,6 +311,17 @@
                 if(!$('#date').val().trim()) {
                     notify('Please enter a date');
                     return;
+                }
+
+                if (PREVENT_BACKDATED_INVOICES) {
+                    var selectedDate = new Date($('#date').val());
+                    var today = new Date();
+                    selectedDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+                    if (selectedDate < today) {
+                        notify('Backdated invoices are disabled. Please use today\'s date.');
+                        return;
+                    }
                 }
                 if(!$('#category_id').val()) {
                     notify('Please select a category');
@@ -332,21 +344,57 @@
 
                 // Validate Sale item fields (selling_qty, unit_selling_price > 0)
                 var validItems = true;
-                $('#addRow tr').each(function() {
-                    var qty = $(this).find('input.selling_qty').val();
-                    var price = $(this).find('input.unit_selling_price').val();
+                var validationError = null;
+                var firstInvalidField = null;
+                
+                $('#addRow tr').each(function(index) {
+                    if (!validItems) return false;
+                    
+                    var $row = $(this);
+                    var $qtyField = $row.find('input.selling_qty');
+                    var qty = $qtyField.val();
+                    var price = $row.find('input.unit_selling_price').val();
+                    var availableQty = parseFloat($row.find('input.available_stock_qty').val()) || 0;
+                    
                     if (!qty || isNaN(qty) || parseFloat(qty) <= 0) {
-                        notify('Each item must have a valid quantity greater than 0.');
+                        validationError = 'Each item must have a valid quantity greater than 0.';
+                        firstInvalidField = $qtyField;
                         validItems = false;
                         return false;
                     }
+                    
+                    if (!ALLOW_NEGATIVE_STOCK && parseFloat(qty) > availableQty) {
+                        validationError = 'One of the selected items has negative stock so remove from invoice';
+                        firstInvalidField = $qtyField;
+                        validItems = false;
+                        return false;
+                    }
+                    
                     if (!price || isNaN(price) || parseFloat(price) <= 0) {
-                        notify('Each item must have a valid unit selling price greater than 0.');
+                        validationError = 'Each item must have a valid unit selling price greater than 0.';
+                        firstInvalidField = $row.find('input.unit_selling_price');
                         validItems = false;
                         return false;
                     }
                 });
-                if (!validItems) return;
+                
+                if (!validItems) {
+                    if (validationError) {
+                        console.error('Validation Error:', validationError);
+                        notify(validationError);
+                        // Scroll to the error field
+                        if (firstInvalidField && firstInvalidField.length) {
+                            $('html, body').animate({
+                                scrollTop: firstInvalidField.offset().top - 100
+                            }, 500);
+                            firstInvalidField.focus().css('border-color', '#dc3545');
+                            setTimeout(function() {
+                                firstInvalidField.css('border-color', '');
+                            }, 3000);
+                        }
+                    }
+                    return;
+                }
 
                 if(!$('#paid_status').val()) {
                     notify('Please select a paid status');
@@ -457,6 +505,52 @@
                             Notiflix.Loading.remove();
                         }
                         $('#errors').empty();
+
+                        if (xhr.status === 419 || xhr.status === 401) {
+                            const sessionMessage = 'Your login session has expired due to inactivity.';
+                            const sessionAction = 'Action: refresh the page and sign in again, then retry saving the Sale.';
+
+                            $('#errorAlert').show();
+                            $('#errors').append('<li>' + sessionMessage + '</li>');
+                            $('#errors').append('<li>' + sessionAction + '</li>');
+
+                            if (typeof Notiflix !== 'undefined') {
+                                Notiflix.Notify.failure(sessionMessage + ' ' + sessionAction);
+                            } else {
+                                alert(sessionMessage + ' ' + sessionAction);
+                            }
+
+                            $('html, body').animate({
+                                scrollTop: $('#errorAlert').offset().top - 100
+                            }, 500);
+                            return;
+                        }
+
+                        if (xhr.status === 409 && xhr.responseJSON && xhr.responseJSON.error_code === 'SALE_NO_CLASH') {
+                            $('#errorAlert').show();
+
+                            const clashMessage = xhr.responseJSON.message || 'Sale number clash detected.';
+                            const clashAction = xhr.responseJSON.action || 'Action: click Save Sale again.';
+
+                            $('#errors').append('<li>' + clashMessage + '</li>');
+                            $('#errors').append('<li>' + clashAction + '</li>');
+
+                            if (xhr.responseJSON.next_no) {
+                                $('#sale_no').val(xhr.responseJSON.next_no);
+                            }
+
+                            if (typeof Notiflix !== 'undefined') {
+                                Notiflix.Notify.failure(clashMessage + ' ' + clashAction);
+                            } else {
+                                alert(clashMessage + ' ' + clashAction);
+                            }
+
+                            $('html, body').animate({
+                                scrollTop: $('#errorAlert').offset().top - 100
+                            }, 500);
+                            return;
+                        }
+
                         if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                             $('#errorAlert').show();
                             $.each(xhr.responseJSON.errors, function(field, messages) {
@@ -521,11 +615,14 @@
             <td>
                 <input type="hidden" name="product_id[]" value="@{{product_id}}">
                 @{{ product_name }}
+                <br>
+                <small class="text-muted">Available Qty: @{{ available_qty }}</small>
+                <input type="hidden" name="available_stock_qty[]" class="available_stock_qty" value="@{{ available_qty }}">
             </td>
 
             
             <td>
-                <input type="number" min="1" class="form-control selling_qty text-right" id="selling_qty" name="selling_qty[]" value="{{ old('selling_qty') }}" onchange="checkQuantity()"> 
+                <input type="number" min="1" class="form-control selling_qty text-right" id="selling_qty" name="selling_qty[]" value="{{ old('selling_qty') }}" onchange="checkQuantity()" oninput="$(this).css('border-color', '')"> 
             </td>
 
             <td>
@@ -609,6 +706,7 @@
                                 category_name: product.category.name,
                                 product_id: product.id,
                                 product_name: product.name,
+                                available_qty: product.quantity,
                                 unit_id: product.unit_id,
                                 unit_name: product.unit.name,
                                 unit_selling_price: product.selling_price // ðŸ”¹ add this
@@ -642,6 +740,7 @@
                 var product_id = $('#product_id').val();
                 var product_name = $('#product_id').find('option:selected').text();
                 var selling_price = $('#product_id').find('option:selected').data('price'); // ðŸ”¹ new
+                var available_qty = $('#product_id').find('option:selected').data('qty');
                 var unit_id  = $('#unit_id').val();
                 var unit_name = $('#unit_id').find('option:selected').text();
 
@@ -679,6 +778,7 @@
                     category_name:category_name,
                     product_id:product_id,
                     product_name:product_name,
+                    available_qty: available_qty,
                     unit_id:unit_id,
                     unit_name:unit_name,
                     barcode: '', // ðŸ”¹ empty if added manually
@@ -721,6 +821,10 @@
                 });
 
                 var discountAmount = parseFloat($('#discount_amount').val()) || 0;
+                if (!ALLOW_MANUAL_DISCOUNT_ENTRY_BY_STAFF) {
+                    discountAmount = 0;
+                    $('#discount_amount').val('0');
+                }
                 if (discountAmount < 0) {
                     discountAmount = 0;
                 }
@@ -766,7 +870,7 @@
                     success:function(data){
                         var html = '<option value="">Select Product</option>';
                         $.each(data,function(key,v){
-                            html += '<option value=" '+v.id+' " data-price="'+v.selling_price+'"> '+v.name+'</option>';
+                            html += '<option value=" '+v.id+' " data-price="'+v.selling_price+'" data-qty="'+v.quantity+'"> '+v.name+'</option>';
                         });
                         $('#product_id').html(html);
                     }
@@ -818,25 +922,34 @@
     {{-- check quantity script --}}
     <script>
         function checkQuantity() {
-            var unit_selling_prices = document.getElementsByName('unit_selling_price[]');
-            var current_stock_qtys = document.getElementsByName('current_stock_qty');
-            var selling_qtys = document.getElementsByName('selling_qty[]');
-            for (var i = 0; i < unit_selling_prices.length; i++) {
-                var unit_selling_price = unit_selling_prices[i];
-                // var current_stock_qty = current_stock_qtys[i];
-                var selling_qty = selling_qtys[i];
-                var current_stock_qty = document.getElementById('current_stock_qty');
-                var current_stock = current_stock_qty ? parseInt(current_stock_qty.value) : 0;
-                var selling = selling_qty ? parseInt(selling_qty.value) : 0;
-                if (selling > current_stock) {
-                    if (typeof Notiflix !== 'undefined') {
-                        Notiflix.Notify.failure('Selling quantity cannot be more than current stock quantity!');
-                    } else {
-                        alert('Selling quantity cannot be more than current stock quantity!');
-                    }
-                    unit_selling_price.disabled = true;
+            if (ALLOW_NEGATIVE_STOCK) {
+                return;
+            }
+
+            var hasNegativeStock = false;
+
+            $('#addRow tr').each(function() {
+                var qtyField = $(this).find('input.selling_qty');
+                var qty = parseFloat(qtyField.val()) || 0;
+                var availableQty = parseFloat($(this).find('input.available_stock_qty').val()) || 0;
+
+                if (qty > availableQty && qty > 0) {
+                    hasNegativeStock = true;
+                    qtyField.css('border-color', '#dc3545');
                 } else {
-                    unit_selling_price.disabled = false;
+                    // Clear red border if quantity is now valid
+                    qtyField.css('border-color', '');
+                }
+            });
+
+            if (hasNegativeStock) {
+                if (typeof Notiflix !== 'undefined') {
+                    Notiflix.Notify.warning('Quantity exceeds available stock. Please adjust before submitting.', {
+                        timeout: 4000,
+                        position: 'right-top',
+                    });
+                } else {
+                    alert('Quantity exceeds available stock. Please adjust before submitting.');
                 }
             }
         }

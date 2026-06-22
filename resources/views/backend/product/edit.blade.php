@@ -8,24 +8,20 @@ use Illuminate\Support\Facades\Crypt;
 
 @section('content')
 
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
 <div class="page-content">
 <div class="container-fluid">
 
     <div class="row">
-        <div class="col-12">
+        <div class="col-12 col-xl-10 mx-auto">
             <div class="card">
-                <div class="card-header with-border">
+                <div class="card-header with-border d-flex align-items-center justify-content-between">
                     <span class="card-title" style="font-size:20px;">Edit | Product </span>
 
-                    <a href="{{route('products.index')}}" style="float:right">
+                    <a href="{{ route('products.index') }}">
                         <button type="button" class="btn btn-primary modal_btn">
                             View Products
                         </button>
                     </a>
-
-                    <hr>
 
                     <div class="card-body">
 
@@ -41,7 +37,7 @@ use Illuminate\Support\Facades\Crypt;
                                 <ul id="errors"></ul>
                             </div>
 
-                            <div class="row">
+                            <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="name"><strong>Product Name <span class="text-danger">*</span></strong></label>
@@ -54,8 +50,8 @@ use Illuminate\Support\Facades\Crypt;
                                         <label for="unit_id"><strong>Unit Name <span class="text-danger">*</span></strong></label>
                                         <select name="unit_id" id="unit_id" class="form-control select2" aria-label="Select unit">
                                             <option disabled value="">Select Unit</option>
-                                            @foreach($unit as $uni)
-                                            <option value="{{ $uni->id }}" {{ (old('unit_id', $product->unit_id) == $uni->id) ? 'selected' : '' }}>{{ $uni->name }}</option>
+                                            @foreach($units as $unit)
+                                            <option value="{{ $unit->id }}" {{ (old('unit_id', $product->unit_id) == $unit->id) ? 'selected' : '' }}>{{ $unit->name }}</option>
                                            @endforeach
                                         </select>
                                     </div>
@@ -63,14 +59,14 @@ use Illuminate\Support\Facades\Crypt;
                             </div>
                             {{-- row 1 ends --}}
 
-                            <div class="row">
+                            <div class="row g-3 mt-1">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="category_id"><strong>Category Name <span class="text-danger">*</span></strong></label>
                                         <select name="category_id" id="category_id" class="form-control select2" aria-label="Select category">
                                             <option disabled value="">Select Category</option>
-                                            @foreach($category as $cat)
-                                            <option value="{{ $cat->id }}" {{ (old('category_id', $product->category_id) == $cat->id) ? 'selected' : '' }}>{{ $cat->name }}</option>
+                                            @foreach($categories as $category)
+                                            <option value="{{ $category->id }}" {{ (old('category_id', $product->category_id) == $category->id) ? 'selected' : '' }}>{{ $category->name }}</option>
                                            @endforeach
                                         </select>
                                     </div>
@@ -85,7 +81,7 @@ use Illuminate\Support\Facades\Crypt;
                             </div>
                             {{-- row 2 ends --}}
 
-                            <div class="row">
+                            <div class="row mt-4">
                                 <div class="col-12 text-center">
                                     <button type="submit" class="btn btn-success mt-3">Update Product</button>
                                 </div>
@@ -163,9 +159,11 @@ use Illuminate\Support\Facades\Crypt;
         color: #dc3545;
     }
     
-    .form-control:focus {
-        border-color: #80bdff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    .form-control:focus,
+    .select2-container--default .select2-selection--single:focus,
+    .select2-container--default.select2-container--focus .select2-selection--single {
+        border-color: #0F766E;
+        box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.2);
     }
     
     .form-control.is-invalid:focus {

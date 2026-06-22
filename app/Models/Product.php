@@ -22,8 +22,6 @@ class Product extends Model
     'created_by',
     'updated_by',
     'deleted_by',
-    'price',
-    'unit_id',
     'cost_price',
     'selling_price',
    
