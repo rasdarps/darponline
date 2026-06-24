@@ -30,7 +30,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /home/ilmanrli/applications.ilma.edu.gh/public # Adjust the server directory accordingly
+          server-dir: /home/techpxsg/darppos.techforgeservices.com/ # Adjust the server directory accordingly
 
       - name: Run Migrations
         run: php artisan migrate --force
