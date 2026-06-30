@@ -22,9 +22,20 @@ elif [ -f "$APP_PATH/composer.phar" ]; then
   COMPOSER_BIN="php $APP_PATH/composer.phar"
 else
   echo "[deploy] Composer not found in standard paths; downloading composer.phar..."
-  php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
-  php /tmp/composer-setup.php --install-dir="$APP_PATH" --filename=composer.phar
+  php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" \
+    || { echo "[deploy] Failed to download Composer installer." >&2; exit 1; }
+  EXPECTED_SIG="$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")"
+  ACTUAL_SIG="$(curl -sSL https://composer.github.io/installer.sig)"
+  if [ "$EXPECTED_SIG" != "$ACTUAL_SIG" ]; then
+    echo "[deploy] Composer installer signature mismatch; aborting." >&2
+    rm -f /tmp/composer-setup.php
+    exit 1
+  fi
+  php /tmp/composer-setup.php --install-dir="$APP_PATH" --filename=composer.phar \
+    || { echo "[deploy] Composer installer failed." >&2; rm -f /tmp/composer-setup.php; exit 1; }
   rm -f /tmp/composer-setup.php
+  [ -f "$APP_PATH/composer.phar" ] \
+    || { echo "[deploy] composer.phar not found after install." >&2; exit 1; }
   COMPOSER_BIN="php $APP_PATH/composer.phar"
 fi
 
