@@ -1,6 +1,7 @@
 name: Deploy to cPanel
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Laravel CI"]
     types: [completed]
@@ -8,7 +9,7 @@ on:
 jobs:
   deploy:
     # Deploy only when CI succeeds for pushes to main.
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
 
     steps:

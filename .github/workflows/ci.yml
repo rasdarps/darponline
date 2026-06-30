@@ -6,6 +6,7 @@ name: Laravel CI
 # - Production on cPanel continues to use MySQL via .env.
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths-ignore:
