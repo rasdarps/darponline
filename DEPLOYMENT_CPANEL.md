@@ -70,7 +70,7 @@ Add in cPanel Cron Jobs:
 
 ## 6) First Deploy Checklist
 
-1. Confirm PHP version is 8.1 or newer.
+1. Confirm PHP version is 8.2 or newer for both the web app and CLI (`php -v`).
 2. Confirm required PHP extensions are enabled.
 3. Set production `.env` values.
 4. Run deployment from cPanel Git UI.
