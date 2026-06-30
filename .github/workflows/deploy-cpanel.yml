@@ -12,6 +12,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Validate deploy secrets
+        env:
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+          CPANEL_PORT: ${{ secrets.CPANEL_PORT }}
+          CPANEL_APP_PATH: ${{ secrets.CPANEL_APP_PATH }}
+        run: |
+          set -euo pipefail
+          [ -n "$CPANEL_HOST" ] || { echo "Missing secret: CPANEL_HOST"; exit 1; }
+          [ -n "$CPANEL_USER" ] || { echo "Missing secret: CPANEL_USER"; exit 1; }
+          [ -n "$CPANEL_SSH_KEY" ] || { echo "Missing secret: CPANEL_SSH_KEY"; exit 1; }
+          [ -n "$CPANEL_PORT" ] || { echo "Missing secret: CPANEL_PORT"; exit 1; }
+          [ -n "$CPANEL_APP_PATH" ] || { echo "Missing secret: CPANEL_APP_PATH"; exit 1; }
+          case "$CPANEL_PORT" in
+            ''|*[!0-9]*) echo "Invalid CPANEL_PORT: must be numeric"; exit 1 ;;
+          esac
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -21,9 +39,22 @@ jobs:
           port: ${{ secrets.CPANEL_PORT }}
           script: |
             set -euo pipefail
+
+            echo "[deploy] user=$(whoami) host=$(hostname)"
+            echo "[deploy] app_path=${{ secrets.CPANEL_APP_PATH }}"
+
+            [ -d "${{ secrets.CPANEL_APP_PATH }}" ] || { echo "[deploy] app path not found"; exit 1; }
             cd "${{ secrets.CPANEL_APP_PATH }}"
+
+            git rev-parse --is-inside-work-tree >/dev/null
+            git remote -v
+
             git fetch origin main
             git checkout main
             git pull --ff-only origin main
+
+            chmod +x "${{ secrets.CPANEL_APP_PATH }}/scripts/cpanel_deploy.sh"
+            chmod +x "${{ secrets.CPANEL_APP_PATH }}/scripts/post_deploy_health_check.sh"
+
             /bin/bash "${{ secrets.CPANEL_APP_PATH }}/scripts/cpanel_deploy.sh"
             /bin/bash "${{ secrets.CPANEL_APP_PATH }}/scripts/post_deploy_health_check.sh"
