@@ -1,0 +1,29 @@
+name: Deploy to cPanel
+
+on:
+  workflow_run:
+    workflows: ["Laravel CI"]
+    types: [completed]
+
+jobs:
+  deploy:
+    # Deploy only when CI succeeds for pushes to main.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          port: ${{ secrets.CPANEL_PORT }}
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.CPANEL_APP_PATH }}"
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+            /bin/bash "${{ secrets.CPANEL_APP_PATH }}/scripts/cpanel_deploy.sh"
+            /bin/bash "${{ secrets.CPANEL_APP_PATH }}/scripts/post_deploy_health_check.sh"
