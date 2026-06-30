@@ -39,6 +39,7 @@ jobs:
           port: ${{ secrets.CPANEL_PORT }}
           script: |
             set -euo pipefail
+            trap 'echo "[deploy] ERROR line=${LINENO} cmd=${BASH_COMMAND}"' ERR
 
             echo "[deploy] user=$(whoami) host=$(hostname)"
             echo "[deploy] app_path=${{ secrets.CPANEL_APP_PATH }}"
@@ -62,8 +63,12 @@ jobs:
             git checkout main
             git pull --ff-only origin main
 
+            echo "[deploy] Ensuring deploy scripts are executable"
             chmod +x "${{ secrets.CPANEL_APP_PATH }}/scripts/cpanel_deploy.sh"
             chmod +x "${{ secrets.CPANEL_APP_PATH }}/scripts/post_deploy_health_check.sh"
 
+            echo "[deploy] Running cpanel_deploy.sh"
             /bin/bash "${{ secrets.CPANEL_APP_PATH }}/scripts/cpanel_deploy.sh"
+            echo "[deploy] Running post_deploy_health_check.sh"
             /bin/bash "${{ secrets.CPANEL_APP_PATH }}/scripts/post_deploy_health_check.sh"
+            echo "[deploy] Completed successfully"
