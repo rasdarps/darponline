@@ -38,6 +38,7 @@ jobs:
           key: ${{ secrets.CPANEL_SSH_KEY }}
           port: ${{ secrets.CPANEL_PORT }}
           script: |
+            /bin/bash <<'BASH'
             set -euo pipefail
             trap 'echo "[deploy] ERROR line=${LINENO} cmd=${BASH_COMMAND}"' ERR
 
@@ -72,3 +73,4 @@ jobs:
             echo "[deploy] Running post_deploy_health_check.sh"
             /bin/bash "${{ secrets.CPANEL_APP_PATH }}/scripts/post_deploy_health_check.sh"
             echo "[deploy] Completed successfully"
+            BASH
