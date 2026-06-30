@@ -10,9 +10,22 @@ if [ -x /opt/cpanel/composer/bin/composer ]; then
   COMPOSER_BIN="/opt/cpanel/composer/bin/composer"
 elif command -v composer >/dev/null 2>&1; then
   COMPOSER_BIN="composer"
+elif [ -x "$HOME/bin/composer" ]; then
+  COMPOSER_BIN="$HOME/bin/composer"
+elif [ -x "$HOME/.local/bin/composer" ]; then
+  COMPOSER_BIN="$HOME/.local/bin/composer"
+elif [ -x /usr/local/bin/composer ]; then
+  COMPOSER_BIN="/usr/local/bin/composer"
+elif [ -x /usr/bin/composer ]; then
+  COMPOSER_BIN="/usr/bin/composer"
+elif [ -f "$APP_PATH/composer.phar" ]; then
+  COMPOSER_BIN="php $APP_PATH/composer.phar"
 else
-  echo "[deploy] Composer not found." >&2
-  exit 1
+  echo "[deploy] Composer not found in standard paths; downloading composer.phar..."
+  php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
+  php /tmp/composer-setup.php --install-dir="$APP_PATH" --filename=composer.phar
+  rm -f /tmp/composer-setup.php
+  COMPOSER_BIN="php $APP_PATH/composer.phar"
 fi
 
 $COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction
