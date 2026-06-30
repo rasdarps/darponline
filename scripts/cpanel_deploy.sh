@@ -41,6 +41,16 @@ fi
 
 $COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction
 
+if [ ! -f "$APP_PATH/.env" ]; then
+  echo "[deploy] Missing $APP_PATH/.env. Create production .env before running deploy." >&2
+  exit 1
+fi
+
+if grep -Eq '^DB_DATABASE=forge\s*$|^DB_USERNAME=forge\s*$' "$APP_PATH/.env"; then
+  echo "[deploy] .env still has default Forge DB values. Set DB_DATABASE/DB_USERNAME/DB_PASSWORD for production." >&2
+  exit 1
+fi
+
 php artisan optimize:clear
 php artisan migrate --force
 php artisan storage:link || true
