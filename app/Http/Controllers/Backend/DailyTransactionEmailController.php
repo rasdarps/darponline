@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Mail\DailyTransactionMail;
+use App\Models\AppSetting;
 use App\Models\Company;
 use App\Models\DailyTransactionEmail;
 use App\Models\ExpenseVoucherItem;
 use App\Models\Payment;
-use App\Models\AppSetting;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class DailyTransactionEmailController extends Controller
 {
@@ -73,7 +74,7 @@ class DailyTransactionEmailController extends Controller
             try {
                 Mail::to($company->email)->send(new DailyTransactionMail($emailRecord, $company->name));
             } catch (\Throwable $mailError) {
-                \Log::error('Email send failed: ' . $mailError->getMessage(), [
+                Log::error('Email send failed: ' . $mailError->getMessage(), [
                     'exception' => $mailError,
                     'company_email' => $company->email,
                     'line' => $mailError->getLine(),
@@ -93,7 +94,7 @@ class DailyTransactionEmailController extends Controller
                 ],
             ]);
         } catch (\Throwable $e) {
-            \Log::error('DailyTransactionEmail error: ' . $e->getMessage(), ['exception' => $e]);
+             Log::error('DailyTransactionEmail error: ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'status' => 500,
                 'message' => 'Error sending email: ' . $e->getMessage(),
@@ -109,20 +110,20 @@ class DailyTransactionEmailController extends Controller
     {
         // Check if feature is enabled
         if (!$this->isEmailFeatureEnabled()) {
-            \Log::info('Daily transaction email feature is disabled.');
+            Log::info('Daily transaction email feature is disabled.');
             return;
         }
 
         try {
             $company = Company::first();
             if (!$company) {
-                \Log::warning('No company found for auto-send.');
+                Log::warning('No company found for auto-send.');
                 return;
             }
 
             // Check if already sent today
             if (DailyTransactionEmail::alreadySentToday($company->id)) {
-                \Log::info('Email already sent today for company: ' . $company->id);
+                Log::info('Email already sent today for company: ' . $company->id);
                 return;
             }
 
@@ -146,9 +147,9 @@ class DailyTransactionEmailController extends Controller
             // Send email
             Mail::to($company->email)->send(new DailyTransactionMail($emailRecord, $company->name));
 
-            \Log::info('Auto-send daily transaction email sent successfully to ' . $company->email);
+            Log::info('Auto-send daily transaction email sent successfully to ' . $company->email);
         } catch (\Throwable $e) {
-            \Log::error('Error auto-sending daily transaction email: ' . $e->getMessage());
+            Log::error('Error auto-sending daily transaction email: ' . $e->getMessage());
         }
     }
 
