@@ -93,7 +93,6 @@ class UnitsDataTable extends DataTable
         return [
             Column::make('name'),
             Column::make('created_at'),
-            Column::make('updated_at'),
             Column::make('edit_button')->title('Actions')
             ->searchable(false)->printable(false)->exportable(false),
         ];
