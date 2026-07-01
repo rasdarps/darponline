@@ -16,6 +16,8 @@ class PermissionTableSeeder extends Seeder
     public function run()
     {
         //
+        $guardName = config('permission.defaults.guard_name', config('auth.defaults.guard', 'web'));
+
         $permissions = [
             'role-list','role-create','role-edit','role-delete',
             'unit-list','unit-create','unit-edit','unit-delete',
@@ -24,10 +26,7 @@ class PermissionTableSeeder extends Seeder
          ];
       
          foreach ($permissions as $permission) {
-               
-              //Permission::create(['name' => $permission]); 
-              //add to exixting seeder use firstOrCreate
-              Permission::firstOrCreate(['name' => $permission]); 
+                Permission::findOrCreate($permission, $guardName);
          }
 
 
@@ -39,7 +38,7 @@ class PermissionTableSeeder extends Seeder
 
          // Create products management permissions in the database if they don't already exist
         foreach ($products_management_permissions as $product_permission) {
-            Permission::firstOrCreate(['name' => $product_permission]);
+            Permission::findOrCreate($product_permission, $guardName);
         }
 
 
@@ -51,7 +50,7 @@ class PermissionTableSeeder extends Seeder
 
         // Create supplier management permissions in the database if they don't already exist
         foreach ($supplier_management_permissions as $supplier_permission) {
-            Permission::firstOrCreate(['name' => $supplier_permission]);
+            Permission::findOrCreate($supplier_permission, $guardName);
         }
 
         $customers_management_permissions = [ 
@@ -62,7 +61,7 @@ class PermissionTableSeeder extends Seeder
 
         // Create customer management permissions in the database if they don't already exist
         foreach ($customers_management_permissions as $customer_permission) {
-            Permission::firstOrCreate(['name' => $customer_permission]);
+            Permission::findOrCreate($customer_permission, $guardName);
         }
 
           $transactions_management_permissions = [ 
@@ -115,68 +114,68 @@ class PermissionTableSeeder extends Seeder
 
         // Create transactions management permissions in the database if they don't already exist
         foreach ($transactions_management_permissions as $transaction_permission) {
-            Permission::firstOrCreate(['name' => $transaction_permission]);
+            Permission::findOrCreate($transaction_permission, $guardName);
         }
 
         // Create expense management permissions in the database if they don't already exist
         foreach ($expense_management_permissions as $expense_permission) {
-            Permission::firstOrCreate(['name' => $expense_permission]);
+            Permission::findOrCreate($expense_permission, $guardName);
         }
 
         // Create expense category permissions in the database if they don't already exist
         foreach ($expense_category_permissions as $expense_category_permission) {
-            Permission::firstOrCreate(['name' => $expense_category_permission]);
+            Permission::findOrCreate($expense_category_permission, $guardName);
         }
 
         // Create stock adjustment permissions in the database if they don't already exist
         foreach ($stock_adjustment_permissions as $stock_adjustment_permission) {
-            Permission::firstOrCreate(['name' => $stock_adjustment_permission]);
+            Permission::findOrCreate($stock_adjustment_permission, $guardName);
         }
 
         // Create company management permissions
         foreach ($company_management_permissions as $company_permission) {
-            Permission::firstOrCreate(['name' => $company_permission]);
+            Permission::findOrCreate($company_permission, $guardName);
         }
 
         // Create product price permissions
         foreach ($product_price_permissions as $product_price_permission) {
-            Permission::firstOrCreate(['name' => $product_price_permission]);
+            Permission::findOrCreate($product_price_permission, $guardName);
         }
 
         // Create cash reconciliation permissions
         foreach ($cash_reconciliation_permissions as $cash_reconciliation_permission) {
-            Permission::firstOrCreate(['name' => $cash_reconciliation_permission]);
+            Permission::findOrCreate($cash_reconciliation_permission, $guardName);
         }
 
         // Create report permissions
         foreach ($report_permissions as $report_permission) {
-            Permission::firstOrCreate(['name' => $report_permission]);
+            Permission::findOrCreate($report_permission, $guardName);
         }
 
         // Create stock report permissions
         foreach ($stock_report_permissions as $stock_report_permission) {
-            Permission::firstOrCreate(['name' => $stock_report_permission]);
+            Permission::findOrCreate($stock_report_permission, $guardName);
         }
 
         // Create dashboard permissions
         foreach ($dashboard_permissions as $dashboard_permission) {
-            Permission::firstOrCreate(['name' => $dashboard_permission]);
+            Permission::findOrCreate($dashboard_permission, $guardName);
         }
 
         // Create settings permissions
         foreach ($settings_permissions as $settings_permission) {
-            Permission::firstOrCreate(['name' => $settings_permission]);
+            Permission::findOrCreate($settings_permission, $guardName);
         }
 
         // Find or retrieve the Super Admin role (must exist)
-        $role = Role::findByName('Super Admin');
+        $role = Role::findOrCreate('Super Admin', $guardName);
         
         // Create Manager role if it doesn't exist, or retrieve it if it does
-        $manager_role = Role::firstOrCreate(['name' => 'Manager']);
+        $manager_role = Role::findOrCreate('Manager', $guardName);
 
         // Create Cashier and Supervisor roles if they don't exist
-        $cashier_role = Role::firstOrCreate(['name' => 'Cashier']);
-        $supervisor_role = Role::firstOrCreate(['name' => 'Supervisor']);
+        $cashier_role = Role::findOrCreate('Cashier', $guardName);
+        $supervisor_role = Role::findOrCreate('Supervisor', $guardName);
 
 
          // Assign products permissions to Super Admin and Manager roles

@@ -17,21 +17,47 @@ class CreateAdminUserSeeder extends Seeder
     public function run()
     {
         //
-        // Find or create the Super Admin role
-        $role = Role::firstOrCreate(['name' => 'Super Admin']);
+        $guardName = config('permission.defaults.guard_name', config('auth.defaults.guard', 'web'));
+        $adminEmail = 'admin@gmail.com';
+        $adminUsername = 'rasdarps';
 
-        // Find or create the admin user
-        $user = User::firstOrCreate(
-            ['email' => 'admin@gmail.com'],
-            [
+        // Find or create the Super Admin role using the active guard.
+        $role = Role::findOrCreate('Super Admin', $guardName);
+
+        // Reuse an existing admin account when either the email or username already exists.
+        $user = User::query()
+            ->where('email', $adminEmail)
+            ->orWhere('username', $adminUsername)
+            ->first();
+
+        if (! $user) {
+            $user = User::create([
                 'name' => 'Kwaku Darpah',
-                'username' => 'rasdarps',
+                'email' => $adminEmail,
+                'username' => $adminUsername,
                 'phone' => '0242222874',
                 'password' => bcrypt('juliana@1985'),
                 'user_type' => 'Super Admin',
-                'created_by' => 1
-            ]
-        );
+                'created_by' => 1,
+            ]);
+        } else {
+            $updates = [
+                'name' => 'Kwaku Darpah',
+                'phone' => '0242222874',
+                'user_type' => 'Super Admin',
+                'created_by' => 1,
+            ];
+
+            if ($user->email !== $adminEmail && ! User::where('email', $adminEmail)->whereKeyNot($user->getKey())->exists()) {
+                $updates['email'] = $adminEmail;
+            }
+
+            if ($user->username !== $adminUsername && ! User::where('username', $adminUsername)->whereKeyNot($user->getKey())->exists()) {
+                $updates['username'] = $adminUsername;
+            }
+
+            $user->fill($updates)->save();
+        }
 
         // Assign all permissions to the Super Admin role
         $permissions = Permission::pluck('id','id')->all();
