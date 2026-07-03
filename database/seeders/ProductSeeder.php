@@ -4,9 +4,12 @@ namespace Database\Seeders;
 
 use App\Models\Product;
 use Illuminate\Database\Seeder;
+use Database\Seeders\Concerns\SkipsUnchangedUpserts;
 
 class ProductSeeder extends Seeder
 {
+    use SkipsUnchangedUpserts;
+
     /**
      * Run the database seeds.
      */
@@ -24,7 +27,6 @@ class ProductSeeder extends Seeder
                 'stock_level' => 0,
                 'cost_price' => 0,
                 'selling_price' => 0,
-                'created_at' => now(),
                 'created_by' => 1,
             ],
             [
@@ -37,7 +39,6 @@ class ProductSeeder extends Seeder
                 'stock_level' => 5,
                 'cost_price' => 0,
                 'selling_price' => 0,
-                'created_at' => now(),
                 'created_by' => 1,
             ],
             [
@@ -50,27 +51,22 @@ class ProductSeeder extends Seeder
                 'stock_level' => 10,
                 'cost_price' => 0,
                 'selling_price' => 0,
-                'created_at' => now(),
                 'created_by' => 1,
             ],
          ];
 
         foreach ($products as $product) {
-            Product::updateOrCreate(
-                ['id' => $product['id']],
-                [
-                    'name' => $product['name'],
-                    'barcode' => $product['barcode'],
-                    'quantity' => $product['quantity'],
-                    'unit_id' => $product['unit_id'],
-                    'category_id' => $product['category_id'],
-                    'stock_level' => $product['stock_level'],
-                    'cost_price' => $product['cost_price'],
-                    'selling_price' => $product['selling_price'],
-                    'created_by' => $product['created_by'],
-                    'created_at' => now(),
-                ]
-            );
+            $this->upsertOnlyWhenChanged(Product::class, ['id' => $product['id']], [
+                'name' => $product['name'],
+                'barcode' => $product['barcode'],
+                'quantity' => $product['quantity'],
+                'unit_id' => $product['unit_id'],
+                'category_id' => $product['category_id'],
+                'stock_level' => $product['stock_level'],
+                'cost_price' => $product['cost_price'],
+                'selling_price' => $product['selling_price'],
+                'created_by' => $product['created_by'],
+            ]);
         }
     }
 }

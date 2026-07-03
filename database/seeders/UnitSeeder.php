@@ -4,35 +4,34 @@ namespace Database\Seeders;
 
 use App\Models\Unit;
 use Illuminate\Database\Seeder;
+use Database\Seeders\Concerns\SkipsUnchangedUpserts;
 
 class UnitSeeder extends Seeder
 {
+    use SkipsUnchangedUpserts;
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
         //
-         $units = array(
-            array('id' => 1, 'name' => 'pieces', 'created_at' => now()),
-            array('id' => 2, 'name' => 'boxes', 'created_at' => now()),
-            array('id' => 3, 'name' => 'bundles', 'created_at' => now()),
-            array('id' => 4, 'name' => 'liters', 'created_at' => now()),
-            array('id' => 5, 'name' => 'kilograms', 'created_at' => now()),
-            array('id' => 6, 'name' => 'meters', 'created_at' => now()),
+            $units = array(
+                array('id' => 1, 'name' => 'pieces'),
+                array('id' => 2, 'name' => 'boxes'),
+                array('id' => 3, 'name' => 'bundles'),
+                array('id' => 4, 'name' => 'liters'),
+                array('id' => 5, 'name' => 'kilograms'),
+                array('id' => 6, 'name' => 'meters'),
            
 
         );
 
         foreach ($units as $unit) {
-            Unit::updateOrCreate(
-                ['id' => $unit['id']],
-                [
-                    'name' => $unit['name'],
-                    'created_at' => now(),
-                    'created_by' => 1,
-                ]
-            );
+            $this->upsertOnlyWhenChanged(Unit::class, ['id' => $unit['id']], [
+                'name' => $unit['name'],
+                'created_by' => 1,
+            ]);
         }
     }
 }

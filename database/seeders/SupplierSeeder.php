@@ -4,9 +4,12 @@ namespace Database\Seeders;
 
 use App\Models\Supplier;
 use Illuminate\Database\Seeder;
+use Database\Seeders\Concerns\SkipsUnchangedUpserts;
 
 class SupplierSeeder extends Seeder
 {
+    use SkipsUnchangedUpserts;
+
     /**
      * Run the database seeds.
      */
@@ -22,26 +25,21 @@ class SupplierSeeder extends Seeder
                 'address' => 'PMB Accra Ghana',
                 'city' => 'Accra',
                 'type' => 'Manufacturer',
-                'created_at' => now(),
                 'created_by' => 1,
             ],
             
         ];
 
         foreach ($suppliers as $supplier) {
-            Supplier::updateOrCreate(
-                ['id' => $supplier['id']],
-                [
-                    'name' => $supplier['name'],
-                    'mobile_no' => $supplier['mobile_no'],
-                    'email' => $supplier['email'],
-                    'address' => $supplier['address'],
-                    'city' => $supplier['city'],
-                    'type' => $supplier['type'],
-                    'created_by' => $supplier['created_by'],
-                    'created_at' => now(),
-                ]
-            );
+            $this->upsertOnlyWhenChanged(Supplier::class, ['id' => $supplier['id']], [
+                'name' => $supplier['name'],
+                'mobile_no' => $supplier['mobile_no'],
+                'email' => $supplier['email'],
+                'address' => $supplier['address'],
+                'city' => $supplier['city'],
+                'type' => $supplier['type'],
+                'created_by' => $supplier['created_by'],
+            ]);
         }
     }
 }
