@@ -69,16 +69,16 @@
                         <div class="navbar-brand-box">
                             {{-- <a href="{{ route('dashboard') }}" class="logo logo-dark">
                                 <span class="logo_cart.png">
-                                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo_cart.png" height="22">
+                                    <img src="{{ asset('images/logo_cart.png') }}" alt="logo_cart.png" height="22">
                                 </span>
                                 <span class="logo-lg">
-                                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo-dark" height="20">
+                                    <img src="{{ asset('images/logo_cart.png') }}" alt="logo-dark" height="20">
                                 </span>
                             </a> --}}
 
                             <a href="{{ route('dashboard') }}" class="logo logo-light">
                                 {{-- <span class="logo_cart.png">
-                                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo_cart.png-light" height="22">
+                                    <img src="{{ asset('images/logo_cart.png') }}" alt="logo_cart.png-light" height="22">
                                 </span> --}}
                                 <span class="logo-lg">
                                     <img src="{{ asset('images/rict_logo.png') }}" alt="logo-light" height="60" style="margin-top: 5px;">
@@ -233,11 +233,12 @@
     @php
     $id = Auth::user()->id;
     $adminData = App\Models\User::find($id);
-    $headerProfileImage = url('upload/rict_logo.png');
+    $headerProfileImage = asset('storage/profile_images/rict_logo.png');
     if (!empty($adminData->profile_image)) {
-        $headerProfileImage = str_starts_with($adminData->profile_image, 'profile_images/')
-            ? asset('storage/' . $adminData->profile_image)
-            : url('upload/admin_images/' . $adminData->profile_image);
+        $storagePath = str_starts_with($adminData->profile_image, 'profile_images/')
+            ? $adminData->profile_image
+            : 'profile_images/' . ltrim($adminData->profile_image, '/');
+        $headerProfileImage = asset('storage/' . $storagePath);
     }
     @endphp
 

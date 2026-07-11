@@ -1,4 +1,4 @@
-/*
+﻿/*
 Template Name: Upcube -  Admin & Dashboard Template
 Author: Themesdesign
 Version: 2.0.0
@@ -3904,7 +3904,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before {
 }
 
 .auth-body-bg {
-  background-image: url(../images/auth-bg.jpg);
+  background-image: url(/images/auth-bg.jpg);
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;

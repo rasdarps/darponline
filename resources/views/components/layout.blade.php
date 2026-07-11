@@ -23,8 +23,8 @@
     <!-- Custom fonts for this template -->
     <link href="{{asset('fontawesome-free/css/all.min.css')}}" rel="stylesheet" type="text/css">
      <!-- Custom datatable styles for this page -->
-    <link rel="stylesheet" type="text/css" href="{{asset('datatables/Buttons-2.2.3/css/buttons.dataTables.min.css')}}"/>
-    <link href="{{asset('datatables/dataTables.bootstrap4.min.css')}}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{asset('backend/datatables/Buttons-2.2.3/css/buttons.dataTables.min.css')}}"/>
+    <link href="{{asset('backend/datatables/dataTables.bootstrap4.min.css')}}" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="{{asset('css/sb-admin-2.min.css')}}" rel="stylesheet">
 
@@ -470,16 +470,16 @@ aria-hidden="true">
 <script src="{{asset('js/sb-admin-2.min.js')}}"></script>
 
 <!-- Page level plugins -->
-<script src="{{asset('datatables/jquery.dataTables.min.js')}}"></script>
-<script src="{{asset('datatables/dataTables.bootstrap4.min.js')}}"></script>
+<script src="{{asset('backend/datatables/jquery.dataTables.min.js')}}"></script>
+<script src="{{asset('backend/datatables/dataTables.bootstrap4.min.js')}}"></script>
 
  <!--Offline links-->
-<script type="text/javascript" src="{{asset('datatables/JSZip-2.5.0/jszip.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('datatables/pdfmake-0.1.36/pdfmake.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('datatables/pdfmake-0.1.36/vfs_fonts.js')}}"></script>
-<script type="text/javascript" src="{{asset('datatables/Buttons-2.2.3/js/dataTables.buttons.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('datatables/Buttons-2.2.3/js/buttons.html5.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('datatables/Buttons-2.2.3/js/buttons.print.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('backend/datatables/JSZip-2.5.0/jszip.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('backend/datatables/pdfmake-0.1.36/pdfmake.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('backend/datatables/pdfmake-0.1.36/vfs_fonts.js')}}"></script>
+<script type="text/javascript" src="{{asset('backend/datatables/Buttons-2.2.3/js/dataTables.buttons.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('backend/datatables/Buttons-2.2.3/js/buttons.html5.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('backend/datatables/Buttons-2.2.3/js/buttons.print.min.js')}}"></script>
 
 <!-- Page level custom scripts -->
 <script src="{{asset('js/demo/datatables-demo.js')}}"></script>

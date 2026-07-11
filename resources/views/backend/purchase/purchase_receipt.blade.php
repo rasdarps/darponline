@@ -39,7 +39,7 @@
                                 $purchase_payment = App\Models\PurchasePayment::where('purchase_id',$purchase->id)->first();
                                 @endphp  
                                 <h3>
-                                    <img src="{{ asset('backend/assets/images/logo_cart.png') }}" alt="logo" height="24"/> {{ ucfirst($purchase_payment['supplier']['name']) }} - Purchase Sale
+                                    <img src="{{ asset('images/logo_cart.png') }}" alt="logo" height="24"/> {{ ucfirst($purchase_payment['supplier']['name']) }} - Purchase Sale
                                 </h3>
                             </div>
                             <hr> 
