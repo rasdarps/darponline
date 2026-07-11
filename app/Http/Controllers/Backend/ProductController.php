@@ -205,9 +205,11 @@ class ProductController extends Controller
 
             try {
                 DB::transaction(function () use ($validatedData, $product) {
+                    $barcodeInput = isset($validatedData['barcode']) ? trim((string) $validatedData['barcode']) : '';
+
                     $updateData = [
                         'name' => $validatedData['name'],
-                        'barcode'     => $validatedData['barcode'] ?? $product->barcode,
+                        'barcode' => $barcodeInput !== '' ? $barcodeInput : $product->barcode,
                         'unit_id' => $validatedData['unit_id'],
                         'category_id' => $validatedData['category_id'],
                         'stock_level' => $validatedData['stock_level'],

@@ -76,19 +76,30 @@ use Illuminate\Support\Facades\Crypt;
 
                                 <div class="col-md-6">
                                     <div class="form-group">
+                                        <label for="barcode"><strong>Barcode</strong></label>
+                                        <input type="text" id="barcode" name="barcode" class="form-control" value="{{ old('barcode', $product->barcode) }}" placeholder="enter barcode (EAN-13 preferred)">
+                                        <small class="text-muted">Temporary manual edit field for fixing older products without generated EAN-13.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- row 2 ends --}}
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <div class="form-group">
                                         <label for="stock_level"><strong>Stock Level <span class="text-danger">*</span></strong></label>
                                         <input type="number" id="stock_level" name="stock_level" class="form-control" value="{{ old('stock_level', $product->stock_level) }}" placeholder="enter stock level" min="0">
                                     </div>
                                 </div>
                             </div>
-                            {{-- row 2 ends --}}
+                            {{-- row 3 ends --}}
 
                             <div class="row mt-4">
                                 <div class="col-12 text-center">
                                     <button type="submit" class="btn btn-success mt-3">Update Product</button>
                                 </div>
                             </div>
-                            {{-- row 3 ends --}}
+                            {{-- row 4 ends --}}
 
                         </form>
 
