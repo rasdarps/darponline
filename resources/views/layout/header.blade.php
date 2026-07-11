@@ -233,12 +233,18 @@
     @php
     $id = Auth::user()->id;
     $adminData = App\Models\User::find($id);
-    $headerProfileImage = asset('storage/profile_images/rict_logo.png');
+    $storageDefault = public_path('storage/profile_images/rict_logo.png');
+    $headerProfileImage = file_exists($storageDefault)
+        ? asset('storage/profile_images/rict_logo.png')
+        : asset('images/rict_logo.png');
     if (!empty($adminData->profile_image)) {
         $storagePath = str_starts_with($adminData->profile_image, 'profile_images/')
             ? $adminData->profile_image
             : 'profile_images/' . ltrim($adminData->profile_image, '/');
-        $headerProfileImage = asset('storage/' . $storagePath);
+        $storageFile = public_path('storage/' . $storagePath);
+        if (file_exists($storageFile)) {
+            $headerProfileImage = asset('storage/' . $storagePath);
+        }
     }
     @endphp
 

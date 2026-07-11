@@ -3,13 +3,19 @@
 
 @php
     $profileImagePath = $adminData->profile_image ?? null;
-    $profileImageUrl = asset('storage/profile_images/rict_logo.png');
+    $storageDefault = public_path('storage/profile_images/rict_logo.png');
+    $profileImageUrl = file_exists($storageDefault)
+        ? asset('storage/profile_images/rict_logo.png')
+        : asset('images/rict_logo.png');
 
     if (!empty($profileImagePath)) {
         $storagePath = str_starts_with($profileImagePath, 'profile_images/')
             ? $profileImagePath
             : 'profile_images/' . ltrim($profileImagePath, '/');
-        $profileImageUrl = asset('storage/' . $storagePath);
+        $storageFile = public_path('storage/' . $storagePath);
+        if (file_exists($storageFile)) {
+            $profileImageUrl = asset('storage/' . $storagePath);
+        }
     }
 @endphp
 
