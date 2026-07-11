@@ -12,10 +12,7 @@
         $storagePath = str_starts_with($profileImagePath, 'profile_images/')
             ? $profileImagePath
             : 'profile_images/' . ltrim($profileImagePath, '/');
-        $storageFile = public_path('storage/' . $storagePath);
-        if (file_exists($storageFile)) {
-            $profileImageUrl = asset('storage/' . $storagePath);
-        }
+        $profileImageUrl = asset('storage/' . $storagePath);
     }
 @endphp
 

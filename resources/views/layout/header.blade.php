@@ -241,10 +241,7 @@
         $storagePath = str_starts_with($adminData->profile_image, 'profile_images/')
             ? $adminData->profile_image
             : 'profile_images/' . ltrim($adminData->profile_image, '/');
-        $storageFile = public_path('storage/' . $storagePath);
-        if (file_exists($storageFile)) {
-            $headerProfileImage = asset('storage/' . $storagePath);
-        }
+        $headerProfileImage = asset('storage/' . $storagePath);
     }
     @endphp
 
