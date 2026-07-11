@@ -13,7 +13,6 @@
                         <div class="card-header">
                             <span class="card-title" style="font-size:20px;">Create | Category </span>
 
-                            {{-- @can('create asset category') --}}
                             <a href="{{route('categories.index')}}" style="float:right">
                                 <button type="button" class="btn btn-primary modal_btn">
                                     View Categories

@@ -15,7 +15,6 @@
                         <div class="card-header with-border">
                             <span class="card-title" style="font-size:20px;">Create | User </span>
 
-                            {{-- @can('create asset category') --}}
                             <a href="{{route('users.index')}}" style="float:right">
                                 <button type="button" class="btn btn-primary modal_btn">
                                     View Users
