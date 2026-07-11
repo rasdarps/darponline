@@ -1,6 +1,17 @@
 @extends('layout.main')
 @section('title') {{'View Profile'}} @endsection
 
+@php
+    $profileImagePath = $adminData->profile_image ?? null;
+    $profileImageUrl = url('upload/rict_logo.png');
+
+    if (!empty($profileImagePath)) {
+        $profileImageUrl = str_starts_with($profileImagePath, 'profile_images/')
+            ? asset('storage/' . $profileImagePath)
+            : url('upload/admin_images/' . $profileImagePath);
+    }
+@endphp
+
 @section('content')
 
 <div class="page-content">
@@ -20,7 +31,7 @@
             <div class="col-xl-4 col-lg-5">
                 <div class="card">
                     <div class="card-body text-center py-4">
-                        <img class="rounded-circle shadow-sm mb-3" width="120" height="120" src="{{ (!empty($adminData->profile_image)) ? url('upload/admin_images/'.$adminData->profile_image) : url('upload/fpm_logo_2.png') }}" alt="Profile Image">
+                        <img class="rounded-circle shadow-sm mb-3" width="120" height="120" src="{{ $profileImageUrl }}" alt="Profile Image">
                         <h5 class="mb-1">{{ $adminData->name }}</h5>
                         <p class="text-muted mb-0">{{ $adminData->username }}</p>
                     </div>

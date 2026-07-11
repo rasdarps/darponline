@@ -1,6 +1,17 @@
 @extends('layout.main')
 @section('title') {{'Edit Profile'}} @endsection
 
+@php
+    $profileImagePath = $editData->profile_image ?? null;
+    $profileImageUrl = url('upload/fpm_logo_2.png');
+
+    if (!empty($profileImagePath)) {
+        $profileImageUrl = str_starts_with($profileImagePath, 'profile_images/')
+            ? asset('storage/' . $profileImagePath)
+            : url('upload/admin_images/' . $profileImagePath);
+    }
+@endphp
+
 @section('content')
 <div class="page-content">
     <div class="container-fluid">
@@ -58,7 +69,7 @@
 
                                 <div class="col-md-4 text-center">
                                     <label class="d-block"><strong>Preview</strong></label>
-                                    <img id="showImage" class="rounded-circle shadow-sm" width="140" height="140" src="{{ (!empty($editData->profile_image)) ? url('upload/admin_images/'.$editData->profile_image) : url('upload/fpm_logo_2.png') }}" alt="Profile Preview">
+                                    <img id="showImage" class="rounded-circle shadow-sm" width="140" height="140" src="{{ $profileImageUrl }}" alt="Profile Preview">
                                 </div>
                             </div>
 

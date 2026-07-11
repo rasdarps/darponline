@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -43,19 +44,26 @@ class AdminController extends Controller
     }// End Method 
 
     public function StoreProfile(Request $request){
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
         $id = Auth::user()->id;
         $data = User::find($id);
         $data->name = $request->name;
-        $data->name = $request->username;
         $data->email = $request->email;
         $data->username = $request->username;
 
-        if ($request->file('profile_image')) {
-           $file = $request->file('profile_image');
+        if ($request->hasFile('profile_image')) {
+           if (!empty($data->profile_image) && str_starts_with($data->profile_image, 'profile_images/')) {
+               Storage::disk('public')->delete($data->profile_image);
+           }
 
-           $filename = date('YmdHi').$file->getClientOriginalName();
-           $file->move(public_path('upload/admin_images'),$filename);
-           $data['profile_image'] = $filename;
+           $path = $request->file('profile_image')->store('profile_images', 'public');
+           $data->profile_image = $path;
         }
         $data->save();
 
