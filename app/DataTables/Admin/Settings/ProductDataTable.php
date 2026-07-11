@@ -21,6 +21,13 @@ class ProductDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
+         ->addColumn('checkbox', function($row) {
+            $hasBarcode = !empty(trim((string) $row->barcode));
+            $disabledAttr = $hasBarcode ? '' : ' disabled';
+            $titleAttr = $hasBarcode ? '' : ' title="Barcode not available for this product"';
+
+            return '<input type="checkbox" class="product-checkbox" value="' . $row->id . '" data-printable="' . ($hasBarcode ? '1' : '0') . '"' . $disabledAttr . $titleAttr . '>';
+        })
         ->addColumn('product_info', function($row) {
             return '
                 <div class="d-flex align-items-center">
@@ -33,7 +40,19 @@ class ProductDataTable extends DataTable
         ->addColumn('category', function($row) {
             return $row->category ? e($row->category->name) : '<span class="text-muted">Uncategorized</span>';
         })
-        ->addColumn('price', function($row) {
+        ->editColumn('barcode', function($row) {
+            $barcode = trim((string) ($row->barcode ?? ''));
+
+            if ($barcode === '') {
+                return '<span class="text-muted">N/A</span>';
+            }
+
+            return '<span class="font-weight-bold">' . e($barcode) . '</span>';
+        })
+        ->editColumn('cost_price', function($row) {
+            return '<span class="font-weight-bold">₵' . number_format((float) ($row->cost_price ?? 0), 2) . '</span>';
+        })
+        ->editColumn('selling_price', function($row) {
             return '<span class="font-weight-bold">₵' . number_format((float) ($row->selling_price ?? 0), 2) . '</span>';
         })
         ->addColumn('stock', function($row) {
@@ -83,7 +102,7 @@ class ProductDataTable extends DataTable
         ->filterColumn('product_info', function($query, $keyword) {
             $query->where('name', 'like', "%{$keyword}%");
         })
-        ->rawColumns(['product_info', 'category', 'price', 'stock', 'actions'])
+        ->rawColumns(['checkbox','product_info', 'category', 'barcode', 'cost_price', 'selling_price', 'stock', 'actions'])
         ->setRowId('id');
     }
 
@@ -114,7 +133,7 @@ class ProductDataTable extends DataTable
             $query->where('quantity', '>', 0)
                   ->whereColumn('quantity', '<=', 'stock_level');
         } elseif ($stock_filter == 'out_of_stock') {
-            $query->where('quantity', 0);
+            $query->where('quantity', '<=', 0);
         }
 
     }
@@ -132,7 +151,7 @@ class ProductDataTable extends DataTable
                     ->columns($this->getColumns())
                     ->minifiedAjax()
                     //->dom('Bfrtip')
-                    ->orderBy(0)
+                    ->orderBy(7, 'desc')
                     ->selectStyleSingle()
                     ->parameters([
                         'dom'          => "<'row'l>Bfrtip",  //row counter button
@@ -149,6 +168,13 @@ class ProductDataTable extends DataTable
                         'drawCallback' => "function() {
                             initializeToggles();
                             initializeDeleteButtons();
+                            if (typeof initializeFeaturedToggles === 'function') {
+                                initializeFeaturedToggles();
+                            }
+                            if (typeof initializeBulkActions === 'function') {
+                                initializeBulkActions();
+                                updateBulkActionButtons();
+                            }
                             updateFilterSummary();
                         }",
                         'initComplete' => "function() {
@@ -163,10 +189,13 @@ class ProductDataTable extends DataTable
     public function getColumns(): array
     {
         return [
+            Column::make('checkbox')->title('<input type="checkbox" id="select-all">')->width(30)
+                ->searchable(false)->orderable(false)->exportable(false)->printable(false),
             Column::make('product_info')->title('Product')->width(250),
             Column::make('category')->title('Category')->width(120),
+            Column::make('barcode')->title('Barcode')->width(150),
             Column::make('cost_price')->title('Cost_Price')->width(120),
-            Column::make('selling_price')->title('Celling_Price')->width(120),
+            Column::make('selling_price')->title('Selling_Price')->width(120),
             Column::make('stock')->title('Stock')->width(100),
             Column::make('created_at')->title('Added')->width(100),
             Column::make('actions')->title('Actions')->width(120)

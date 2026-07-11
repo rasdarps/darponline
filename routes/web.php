@@ -140,8 +140,9 @@ Route::prefix('admin')->group(function () {
                 Route::patch('/update/{encryptedId}', [ProductController::class, 'update'])->name('update');
                 Route::delete('/destroy/{encryptedId}', [ProductController::class, 'destroy'])->name('destroy');
                 
-                // âœ… New route for barcode lookup
-                Route::post('/find-by-barcode', [ProductController::class, 'findByBarcode'])->name('findByBarcode');
+                // Barcode lookup supports both scanner-driven GET and form POST callers
+                Route::match(['get', 'post'], '/find-by-barcode', [ProductController::class, 'findByBarcode'])->name('findByBarcode');
+                Route::get('/print-barcodes', [ProductController::class, 'printBarcodes'])->name('print-barcodes');
                 Route::post('/update-stock', [ProductController::class, 'updateStock'])->name('update-stock');
                 Route::get('/export', [ProductController::class, 'export'])->name('export');
 

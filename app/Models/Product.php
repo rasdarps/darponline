@@ -96,26 +96,29 @@ protected $casts = [
         return $this->hasMany(ProductPrice::class, 'product_id', 'id');
     }
 
-    //for generating barcode automatically for products
+    // Generate deterministic numeric EAN-13 barcode: 200 + 9-digit product id + check digit
     public static function generateBarcode(string $name, int $id, $createdAt = null): string
     {
-        $createdAt = $createdAt ?: now();
-        $yearSuffix = $createdAt->format('y');
+        $base12 = '200' . str_pad((string) $id, 9, '0', STR_PAD_LEFT);
+        $checkDigit = static::calculateEan13CheckDigit($base12);
 
-        $cleanName = trim(preg_replace('/[^A-Za-z0-9\s]/u', '', $name));
-        $parts = preg_split('/\s+/', $cleanName, -1, PREG_SPLIT_NO_EMPTY);
+        return $base12 . $checkDigit;
+    }
 
-        if (count($parts) >= 2) {
-            $prefix = mb_substr($parts[0], 0, 1) . mb_substr($parts[1], 0, 1);
-        } elseif (count($parts) === 1) {
-            $prefix = mb_substr($parts[0], 0, 2);
-        } else {
-            $prefix = 'PR';
+    private static function calculateEan13CheckDigit(string $base12): int
+    {
+        if (!preg_match('/^\d{12}$/', $base12)) {
+            throw new \InvalidArgumentException('EAN-13 base must be exactly 12 numeric digits.');
         }
 
-        $prefix = strtoupper($prefix);
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) {
+            $digit = (int) $base12[$i];
+            // EAN-13 applies weight 1,3 alternating from the left for the first 12 digits.
+            $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+        }
 
-        return $prefix . $id . $yearSuffix;
+        return (10 - ($sum % 10)) % 10;
     }
 
     /**

@@ -19,8 +19,11 @@ class ProductController extends Controller
     {
             $this->middleware('permission:product-list', ['only' => ['index','show', 'export']]);
          $this->middleware('permission:product-create', ['only' => ['create','store']]);
-            $this->middleware('permission:product-edit', ['only' => ['edit','update', 'findByBarcode', 'updateStock']]);
+            $this->middleware('permission:product-edit', ['only' => ['edit','update', 'updateStock']]);
+            $this->middleware('permission:product-edit|purchase-create|sale-create', ['only' => ['findByBarcode']]);
             $this->middleware('permission:product-delete', ['only' => ['destroy']]);
+            $this->middleware('permission:product-list', ['only' => ['printBarcodes']]);
+
     }
 
     public function index(ProductDataTable $dataTable){
@@ -32,8 +35,8 @@ class ProductController extends Controller
     //barcode lookup method for POS scanning
     public function findByBarcode(Request $request)
     {
-        $barcode = $request->input('barcode');
-        $product = Product::where('barcode', $barcode)->first();
+        $barcode = trim((string) $request->input('barcode', ''));
+        $product = Product::with(['category', 'unit'])->where('barcode', $barcode)->first();
 
         if (!$product) {
             return response()->json([
@@ -42,10 +45,7 @@ class ProductController extends Controller
             ]);
         }
 
-        return response()->json([
-            'status' => 200,
-            'product' => $product,
-        ]);
+        return response()->json($product);
     }
 
     public function create(){
@@ -241,6 +241,46 @@ class ProductController extends Controller
             ]);
         }
     }// End Method 
+
+
+    /**
+     * Print barcode labels for selected products.
+     */
+    public function printBarcodes(Request $request)
+    {
+        $idsInput = $request->query('ids', []);
+
+        if (is_string($idsInput)) {
+            $ids = array_filter(array_map('intval', explode(',', $idsInput)));
+        } elseif (is_array($idsInput)) {
+            $ids = array_filter(array_map('intval', $idsInput));
+        } else {
+            $ids = [];
+        }
+
+        if (empty($ids)) {
+            return redirect()->route('products.index')->with([
+                'message' => 'Please select at least one product to print barcodes.',
+                'alert-type' => 'warning'
+            ]);
+        }
+
+        $products = Product::whereIn('id', $ids)
+            ->whereNotNull('barcode')
+            ->where('barcode', '!=', '')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'barcode']);
+
+        if ($products->isEmpty()) {
+            return redirect()->route('products.index')->with([
+                'message' => 'No printable barcodes found for the selected products.',
+                'alert-type' => 'warning'
+            ]);
+        }
+
+        return view('backend.product.print_barcodes', compact('products'));
+    }
+
 
     public function destroy(string $encryptedId){
         try {

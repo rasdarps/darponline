@@ -46,7 +46,13 @@
                                         <div class="col-md-4">
                                             <div class="form-group mb-1 d-flex align-items-center">
                                                 <input type="text" id="barcode" class="form-control" placeholder="Scan Barcode" autofocus>
+                                                <button type="button" id="startCameraScan" class="btn btn-outline-primary ml-2">Scan With Camera</button>
+                                                <button type="button" id="stopCameraScan" class="btn btn-outline-secondary ml-2" style="display:none;">Stop Camera</button>
                                                 {{-- <small class="form-text text-muted">Scan product barcode here</small> --}}
+                                            </div>
+                                            <div id="cameraScanWrap" class="mt-2" style="display:none;">
+                                                <video id="barcodeCameraPreview" autoplay playsinline muted style="width:100%;max-height:220px;border:1px solid #ddd;border-radius:4px;background:#111;"></video>
+                                                <small class="text-muted">Point camera at barcode. Works best over HTTPS on phone and desktop browsers.</small>
                                             </div>
                                         </div>
 
@@ -248,6 +254,7 @@
 @endsection
 
 @section('scripts')
+    <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
     <script type="text/javascript">
     $(document).ready(function (){
         // Handle form submission
@@ -268,10 +275,14 @@
 
             // --- client-side validation (unchanged) ---
             if(!$('#date').val().trim()) { notify('Please enter a date'); return; }
-            if(!$('#category_id').val()) { notify('Please select a category'); return; }
-            if(!$('#product_id').val()) { notify('Please select a product'); return; }
-            if(!$('#unit_id').val()) { notify('Please select a unit'); return; }
-            if($('#addRow').children('tr').length === 0) { notify('Please add at least one purchase item.'); return; }
+            var addedItemsCount = $('#addRow').children('tr').length;
+            if (addedItemsCount === 0) {
+                if(!$('#category_id').val()) { notify('Please select a category'); return; }
+                if(!$('#product_id').val()) { notify('Please select a product'); return; }
+                if(!$('#unit_id').val()) { notify('Please select a unit'); return; }
+                notify('Please add at least one purchase item.');
+                return;
+            }
             var validItems = true;
             $('#addRow tr').each(function() {
                 var qty = $(this).find('input.buying_qty').val();
@@ -448,10 +459,187 @@
      {{-- handles add more item in purchase --}}
     <script type="text/javascript">
         $(document).ready(function(){
+            var cameraStream = null;
+            var detector = null;
+            var scanRafId = null;
+            var zxingReader = null;
+            var zxingControls = null;
+            var scanLocked = false;
+
+            function notifyScan(message, type) {
+                if (typeof Notiflix !== 'undefined') {
+                    if (type === 'success') {
+                        Notiflix.Notify.success(message);
+                    } else if (type === 'warning') {
+                        Notiflix.Notify.warning(message);
+                    } else {
+                        Notiflix.Notify.failure(message);
+                    }
+                } else {
+                    alert(message);
+                }
+            }
+
+            function triggerBarcodeLookup(scannedBarcode) {
+                if (!scannedBarcode) return;
+                $('#barcode').val(scannedBarcode).trigger('change');
+            }
+
+            function stopCameraScan() {
+                if (scanRafId) {
+                    cancelAnimationFrame(scanRafId);
+                    scanRafId = null;
+                }
+
+                if (zxingControls && typeof zxingControls.stop === 'function') {
+                    zxingControls.stop();
+                }
+                zxingControls = null;
+
+                if (zxingReader && typeof zxingReader.reset === 'function') {
+                    zxingReader.reset();
+                }
+                zxingReader = null;
+
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(function(track){ track.stop(); });
+                    cameraStream = null;
+                }
+
+                var video = document.getElementById('barcodeCameraPreview');
+                if (video) {
+                    video.pause();
+                    video.srcObject = null;
+                }
+
+                $('#cameraScanWrap').hide();
+                $('#startCameraScan').show();
+                $('#stopCameraScan').hide();
+                scanLocked = false;
+            }
+
+            function onBarcodeScanned(codeText) {
+                var cleanCode = $.trim(codeText || '');
+                if (!cleanCode || scanLocked) return;
+
+                scanLocked = true;
+                triggerBarcodeLookup(cleanCode);
+                notifyScan('Barcode scanned from camera', 'success');
+                stopCameraScan();
+            }
+
+            function startNativeDetector(videoEl) {
+                if (!detector) {
+                    detector = new BarcodeDetector({
+                        formats: ['code_128', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_39', 'qr_code']
+                    });
+                }
+
+                var detectFrame = function() {
+                    if (!cameraStream) return;
+
+                    detector.detect(videoEl)
+                        .then(function(codes) {
+                            if (codes && codes.length > 0) {
+                                onBarcodeScanned(codes[0].rawValue);
+                                return;
+                            }
+                            scanRafId = requestAnimationFrame(detectFrame);
+                        })
+                        .catch(function() {
+                            scanRafId = requestAnimationFrame(detectFrame);
+                        });
+                };
+
+                detectFrame();
+            }
+
+            function startZxingFallback(videoEl) {
+                if (!window.ZXing || !window.ZXing.BrowserMultiFormatReader) {
+                    notifyScan('Camera scanner fallback is not available in this browser.', 'error');
+                    stopCameraScan();
+                    return;
+                }
+
+                zxingReader = new window.ZXing.BrowserMultiFormatReader();
+                zxingReader.decodeFromVideoDevice(null, videoEl, function(result, err, controls) {
+                    if (controls) {
+                        zxingControls = controls;
+                    }
+
+                    if (result) {
+                        onBarcodeScanned(result.getText());
+                    }
+                });
+            }
+
+            async function startCameraScan() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    notifyScan('Camera is not supported on this device/browser.', 'error');
+                    return;
+                }
+
+                if (!(window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+                    notifyScan('Camera scanning requires HTTPS in production.', 'warning');
+                    return;
+                }
+
+                stopCameraScan();
+
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: 'environment' } },
+                        audio: false
+                    });
+
+                    var video = document.getElementById('barcodeCameraPreview');
+                    video.srcObject = cameraStream;
+                    await video.play();
+
+                    $('#cameraScanWrap').show();
+                    $('#startCameraScan').hide();
+                    $('#stopCameraScan').show();
+
+                    if ('BarcodeDetector' in window) {
+                        startNativeDetector(video);
+                    } else {
+                        startZxingFallback(video);
+                    }
+                } catch (error) {
+                    notifyScan('Unable to start camera. Please allow camera permission and retry.', 'error');
+                    stopCameraScan();
+                }
+            }
+
+            $(document).on('click', '#startCameraScan', function() {
+                startCameraScan();
+            });
+
+            $(document).on('click', '#stopCameraScan', function() {
+                stopCameraScan();
+            });
+
+            $(window).on('beforeunload', function() {
+                stopCameraScan();
+            });
+
+            $(document).on('keydown', '#barcode', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $(this).trigger('change');
+                }
+            });
+
+            function resetProductSelectionFields() {
+                $('#category_id').val(null).trigger('change');
+                $('#product_id').html('<option value="">Select Product</option>').val(null).trigger('change');
+                $('#unit_id').html('<option value="">Select Unit</option>').val(null).trigger('change');
+                $('#current_stock_qty').val('');
+            }
 
             // ðŸ”¹ Handle barcode scan/entry
             $(document).on("change", "#barcode", function(){
-                var barcode = $(this).val();
+                var barcode = $.trim($(this).val());
                 if(!barcode) return;
 
                 $.ajax({
@@ -488,17 +676,25 @@
 
                             // Clear barcode field after scan
                             $('#barcode').val('');
+                            resetProductSelectionFields();
 
                             // ðŸ”¹ Optional: show stock quantity
                             // $('#current_stock_qty').val(product.quantity);
 
                             Notiflix.Notify.success('Product added via barcode');
+                            $('#barcode').focus();
                         } else {
-                            Notiflix.Notify.failure('Product not found for this barcode. Please select manually.');
+                            var backendMessage = product && product.message ? product.message : 'Product not found for this barcode.';
+                            Notiflix.Notify.failure(backendMessage);
+                            $('#barcode').val('');
+                            $('#barcode').focus();
                         }
                     },
-                    error: function(){
-                        Notiflix.Notify.failure('Error looking up barcode. Try again.');
+                    error: function(xhr){
+                        var backendMessage = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error looking up barcode. Try again.';
+                        Notiflix.Notify.failure(backendMessage);
+                        $('#barcode').val('');
+                        $('#barcode').focus();
                     }
                 });
             });
@@ -556,6 +752,8 @@
                 };
                 var html = template(data);
                 $("#addRow").append(html);
+                resetProductSelectionFields();
+                $('#barcode').val('').focus();
             });
 
             // Remove row

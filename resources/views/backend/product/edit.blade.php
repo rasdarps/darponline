@@ -1,7 +1,7 @@
 {{-- filepath: c:\xampp\htdocs\rictPOS\resources\views\backend\product\edit.blade.php --}}
-{{-- @php
+@php
 use Illuminate\Support\Facades\Crypt;
-@endphp --}}
+@endphp
 
 @extends('layout.main')
 @section('title') {{'Edit Product'}} @endsection
@@ -12,16 +12,18 @@ use Illuminate\Support\Facades\Crypt;
 <div class="container-fluid">
 
     <div class="row">
-        <div class="col-12 col-xl-10 mx-auto">
+        <div class="col-12">
             <div class="card">
-                <div class="card-header with-border d-flex align-items-center justify-content-between">
+                <div class="card-header with-border">
                     <span class="card-title" style="font-size:20px;">Edit | Product </span>
 
-                    <a href="{{ route('products.index') }}">
+                    <a href="{{ route('products.index') }}" style="float:right">
                         <button type="button" class="btn btn-primary modal_btn">
                             View Products
                         </button>
                     </a>
+
+                    <hr>
 
                     <div class="card-body">
 

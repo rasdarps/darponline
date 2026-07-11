@@ -1,3 +1,67 @@
+<style>
+    @media (max-width: 991.98px) {
+        #page-topbar .navbar-header {
+            height: auto;
+            min-height: 70px;
+            align-items: flex-start;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        #page-topbar .navbar-header > .d-flex:first-child {
+            flex: 1 1 auto;
+            min-width: 0;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            row-gap: 6px;
+        }
+
+        #page-topbar #vertical-menu-btn {
+            margin-left: 0 !important;
+            margin-right: 8px !important;
+        }
+
+        #page-topbar .header-quick-actions {
+            flex: 1 1 100%;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center !important;
+            gap: 6px;
+            margin-top: 4px;
+            padding-right: 8px;
+        }
+
+        #page-topbar .header-quick-actions .quick-action-btn {
+            height: 38px;
+            min-width: 38px;
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #page-topbar .navbar-header {
+            min-height: 150px;
+            padding-top: 12px;
+            padding-bottom: 14px;
+        }
+
+        #page-topbar .header-quick-actions {
+            row-gap: 8px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        #page-topbar .header-quick-actions .quick-action-btn {
+            height: 34px;
+            min-width: 34px;
+            padding: 0 8px;
+        }
+    }
+</style>  
   <header id="page-topbar">
                 <div class="navbar-header" style="background-color:#0f766e; position: relative;">
                     <div class="d-flex">

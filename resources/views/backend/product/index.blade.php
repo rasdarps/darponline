@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\Crypt;
                             <a href="{{route('products.create')}}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Create New Product
                             </a>
+                            <button type="button" class="btn btn-dark" id="print-barcodes-btn" style="display: none;">
+                                <i class="fas fa-barcode"></i> Print Labels
+                            </button>
+                            <small id="selected-products-hint" class="text-muted ml-2" style="display:none;"></small>
                         </div>
                     </div>
                     
@@ -50,10 +54,13 @@ use Illuminate\Support\Facades\Crypt;
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-1">
-                                    <button class="btn btn-filter btn-block" id="apply-filters">
-                                        <i class="fas fa-filter"></i> Filter
-                                    </button>
+                                <div class="col-md-2">
+                                    
+                                        <label>Filter Records</label>
+                                        <button type="button" class="btn btn-dark btn-filter btn-block" id="apply-filters">
+                                            <i class="fas fa-filter"></i> Filter
+                                        </button>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -117,10 +124,21 @@ use Illuminate\Support\Facades\Crypt;
             initializeToggles();
             initializeDeleteButtons();
         }
+        if (typeof initializeFeaturedToggles === 'function') {
+            initializeFeaturedToggles();
+        }
+        if (typeof initializeBulkActions === 'function') {
+            initializeBulkActions();
+        }
+        if (typeof updateBulkActionButtons === 'function') {
+            updateBulkActionButtons();
+        }
         updateFilterSummary();
     };
     
     $(document).ready(function() {
+        var selectedProductIds = new Set();
+
         // Initialize Select2
        
         
@@ -208,9 +226,10 @@ use Illuminate\Support\Facades\Crypt;
                     'Cancel',
                     function() {
                         Notiflix.Loading.pulse('Deleting product...');
+                        var deleteUrl = '{{ route("products.destroy", "__ID__") }}'.replace('__ID__', encodeURIComponent(id));
                         
                         $.ajax({
-                            url: '{{ route("products.destroy", "") }}/' + id,
+                            url: deleteUrl,
                             type: 'DELETE',
                             data: { _token: '{{ csrf_token() }}' },
                             success: function(response) {
@@ -230,6 +249,83 @@ use Illuminate\Support\Facades\Crypt;
                     }
                 );
             });
+        };
+
+         // Initialize bulk actions
+        window.initializeBulkActions = function() {
+            // Select all checkbox
+            $('#select-all').off('change').on('change', function() {
+                var shouldCheck = $(this).is(':checked');
+                $('.product-checkbox:not(:disabled)').each(function() {
+                    var id = String($(this).val());
+                    $(this).prop('checked', shouldCheck);
+                    if (shouldCheck) {
+                        selectedProductIds.add(id);
+                    } else {
+                        selectedProductIds.delete(id);
+                    }
+                });
+                updateBulkActionButtons();
+            });
+            
+            // Individual checkbox change
+            $(document).off('change', '.product-checkbox').on('change', '.product-checkbox', function() {
+                var id = String($(this).val());
+                if ($(this).is(':checked')) {
+                    selectedProductIds.add(id);
+                } else {
+                    selectedProductIds.delete(id);
+                }
+                updateBulkActionButtons();
+            });
+
+            // Print barcode labels button
+            $('#print-barcodes-btn').off('click').on('click', function() {
+                var selectedIds = Array.from(selectedProductIds);
+
+                if (selectedIds.length === 0) {
+                    Notiflix.Notify.warning('Please select products to print labels');
+                    return;
+                }
+
+                var printUrl = '{{ route("products.print-barcodes") }}?ids=' + encodeURIComponent(selectedIds.join(','));
+                window.open(printUrl, '_blank');
+            });
+
+            syncBulkSelections();
+        };
+
+        window.syncBulkSelections = function() {
+            $('.product-checkbox').each(function() {
+                var id = String($(this).val());
+                var isDisabled = $(this).is(':disabled');
+
+                if (isDisabled) {
+                    selectedProductIds.delete(id);
+                    $(this).prop('checked', false);
+                    return;
+                }
+
+                $(this).prop('checked', selectedProductIds.has(id));
+            });
+        };
+        
+        // Update bulk action button visibility
+        window.updateBulkActionButtons = function() {
+            syncBulkSelections();
+
+            var selectedCount = selectedProductIds.size;
+            var enabledOnPage = $('.product-checkbox:not(:disabled)').length;
+            var checkedOnPage = $('.product-checkbox:not(:disabled):checked').length;
+            $('#select-all').prop('checked', enabledOnPage > 0 && checkedOnPage === enabledOnPage);
+
+            if (selectedCount > 0) {
+                $('#print-barcodes-btn').show().html(`<i class="fas fa-barcode"></i> Print Labels (${selectedCount})`);
+                $('#selected-products-hint').show().text(`${selectedCount} product(s) selected`);
+            } else {
+                $('#print-barcodes-btn').hide();
+                $('#selected-products-hint').hide().text('');
+            }
         };
         
         // Add CSS for filter badges
@@ -341,7 +437,7 @@ use Illuminate\Support\Facades\Crypt;
                 return;
             }
             
-            var productId = $(this).find('.delete-product').data('id');
+            var productId = $(this).find('.view-product').data('id');
             
             if (!productId) {
                 productId = $(this).find('[data-id]').first().data('id');
@@ -373,8 +469,12 @@ use Illuminate\Support\Facades\Crypt;
         if (window.LaravelDataTables && window.LaravelDataTables['products-table']) {
             window.LaravelDataTables['products-table'].on('draw.dt', function() {
                 initializeToggles();
-                initializeFeaturedToggles();
+                if (typeof initializeFeaturedToggles === 'function') {
+                    initializeFeaturedToggles();
+                }
                 initializeDeleteButtons();
+                initializeBulkActions();
+                updateBulkActionButtons();
                 updateFilterSummary();
             });
         }
@@ -382,8 +482,12 @@ use Illuminate\Support\Facades\Crypt;
         // Initial setup
         setTimeout(function() {
             initializeToggles();
-            initializeFeaturedToggles();
+            if (typeof initializeFeaturedToggles === 'function') {
+                initializeFeaturedToggles();
+            }
             initializeDeleteButtons();
+            initializeBulkActions();
+            updateBulkActionButtons();
             updateFilterSummary();
         }, 500);
     });
