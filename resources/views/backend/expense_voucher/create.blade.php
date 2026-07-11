@@ -119,6 +119,8 @@
 @section('scripts')
 <script type="text/javascript">
     $(document).ready(function () {
+        const categoryOptionsHtml = $('#expense-lines-table tbody tr:first .expense-category').html();
+
         function updateTotal() {
             let total = 0;
             $('.amount-input').each(function () {
@@ -135,12 +137,42 @@
             $('.remove-line').prop('disabled', rowCount <= 1);
         }
 
+        function buildExpenseLineRow() {
+            return $(
+                '<tr class="expense-line-row">' +
+                    '<td>' +
+                        '<input type="hidden" name="item_id[]" value="">' +
+                        '<select name="expense_category_id[]" class="form-control expense-category select2" required>' +
+                            categoryOptionsHtml +
+                        '</select>' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="number" step="0.01" min="0.01" name="amount[]" class="form-control amount-input" placeholder="0.00" required>' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="text" name="description[]" class="form-control" placeholder="line description">' +
+                    '</td>' +
+                    '<td class="text-center">' +
+                        '<button type="button" class="btn btn-danger btn-sm remove-line" disabled>' +
+                            '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                    '</td>' +
+                '</tr>'
+            );
+        }
+
         $('#add-line').on('click', function () {
-            const $lastRow = $('#expense-lines-table tbody tr:last');
-            const $newRow = $lastRow.clone();
-            $newRow.find('select').val('');
-            $newRow.find('input').val('');
+            const $newRow = buildExpenseLineRow();
             $('#expense-lines-table tbody').append($newRow);
+
+            if ($.fn.select2) {
+                $newRow.find('.expense-category').val('').select2({
+                    width: '100%'
+                });
+            } else {
+                $newRow.find('.expense-category').val('');
+            }
+
             bindRemoveButtons();
         });
 
