@@ -205,7 +205,7 @@ class ReportController extends Controller
 
         $overallTotal = ExpenseVoucherItem::query()->sum('amount');
 
-        return $dataTable->render('backend.Report.expense', compact('users', 'categories', 'monthTotal', 'overallTotal'));
+        return $dataTable->render('backend.report.expense', compact('users', 'categories', 'monthTotal', 'overallTotal'));
     }
 
     public function stockAdjustmentReport(StockAdjustmentReportDataTable $dataTable)
@@ -222,7 +222,7 @@ class ReportController extends Controller
 
         $overallTotal = StockAdjustmentItem::query()->sum('amount');
 
-        return $dataTable->render('backend.Report.stock_adjustment', compact('users', 'products', 'monthTotal', 'overallTotal'));
+        return $dataTable->render('backend.report.stock_adjustment', compact('users', 'products', 'monthTotal', 'overallTotal'));
     }
 
     public function summaryLedger()
@@ -269,7 +269,7 @@ class ReportController extends Controller
         $stockNetAdjustment = $stockOverageGain - $stockShortageLoss;
         $netProfit = $grossProfit - $totalExpenses - $cashShortageLoss + $cashOverageGain - $stockShortageLoss + $stockOverageGain;
 
-        return view('backend.Report.summary_ledger', compact(
+        return view('backend.report.summary_ledger', compact(
             'totalPurchases',
             'currentStockValue',
             'totalExpenses',
