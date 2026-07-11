@@ -269,6 +269,26 @@
                     flex: 0 0 auto;
                 }
             }
+
+            @media (max-width: 991.98px) {
+                .main-content {
+                    margin-top: 96px !important;
+                }
+
+                .page-content {
+                    padding-top: 16px;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .main-content {
+                    margin-top: 160px !important;
+                }
+
+                .page-content {
+                    padding-top: 18px;
+                }
+            }
         </style>
         
     </head>
