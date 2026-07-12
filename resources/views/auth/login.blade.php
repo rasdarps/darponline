@@ -4,8 +4,11 @@
 
 @section('content')
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
+
     body {
         position: relative;
+        font-family: 'Manrope', 'Segoe UI', sans-serif;
         background-color: #0b1f2a !important;
         background-image:
             radial-gradient(circle at 12% 18%, rgba(255, 193, 7, 0.24) 0%, rgba(255, 193, 7, 0) 38%),
@@ -36,38 +39,112 @@
     }
 
     .auth-shell {
-        min-height: calc(100vh - 120px);
+        min-height: calc(100vh - 90px);
         display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: center;
-        gap: 16px;
-        padding: 18px 0;
+        padding: 28px 0;
+    }
+
+    .auth-stage {
+        width: min(1140px, 95vw);
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        align-items: center;
+        gap: 28px;
+    }
+
+    .auth-hero {
+        color: #f8fafc;
+        padding: 14px 6px;
+        animation: enterFade 0.6s ease-out;
+    }
+
+    .auth-kicker {
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(15, 23, 42, 0.46);
+        border: 1px solid rgba(226, 232, 240, 0.28);
+        border-radius: 999px;
+        font-size: 0.77rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 7px 12px;
+    }
+
+    .auth-kicker::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #38bdf8;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.85);
     }
 
     .auth-welcome {
-        margin: 0;
-        text-align: center;
+        margin: 14px 0 0;
         color: #f8fafc;
-        font-size: clamp(1.5rem, 2.2vw, 2rem);
+        font-family: 'Sora', 'Segoe UI', sans-serif;
+        font-size: clamp(2rem, 3.3vw, 3.2rem);
+        line-height: 1.12;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-shadow: 0 10px 34px rgba(2, 6, 23, 0.5);
+    }
+
+    .auth-subtext {
+        margin: 14px 0 0;
+        max-width: 580px;
+        color: rgba(241, 245, 249, 0.88);
+        font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+        line-height: 1.65;
+    }
+
+    .auth-points {
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .auth-points li {
+        background: rgba(15, 23, 42, 0.48);
+        border: 1px solid rgba(226, 232, 240, 0.3);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.83rem;
         font-weight: 700;
-        letter-spacing: 0.3px;
-        text-shadow: 0 4px 20px rgba(2, 6, 23, 0.55);
+        color: #f8fafc;
     }
 
     .auth-card {
         width: 100%;
-        max-width: 480px;
+        max-width: 520px;
+        justify-self: end;
         border: 1px solid rgba(255, 255, 255, 0.35);
         border-radius: 14px;
         box-shadow: 0 20px 45px rgba(2, 12, 27, 0.45);
         overflow: hidden;
         background: rgba(255, 255, 255, 0.94);
         backdrop-filter: blur(2px);
+        position: relative;
+        animation: enterUp 0.52s ease-out;
+    }
+
+    .auth-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 4px;
+        background: linear-gradient(90deg, #f59e0b 0%, #38bdf8 50%, #0f172a 100%);
     }
 
     .auth-header {
-        padding: 22px 24px;
+        padding: 24px 24px 20px;
         background: #0f172a;
         color: #ffffff;
     }
@@ -109,7 +186,7 @@
     .auth-actions {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 10px;
         margin-top: 18px;
     }
@@ -121,6 +198,7 @@
         color: #fff;
         font-weight: 600;
         padding: 10px 18px;
+        min-width: 126px;
     }
 
     .btn-auth:hover {
@@ -128,14 +206,26 @@
         color: #fff;
     }
 
-    .auth-link {
-        color: #0f172a;
-        font-weight: 600;
-        text-decoration: none;
+    @keyframes enterUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .auth-link:hover {
-        text-decoration: underline;
+    @keyframes enterFade {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     @media (max-width: 991.98px) {
@@ -146,24 +236,64 @@
 
         .auth-shell {
             min-height: auto;
-            padding: 14px 0 10px;
-            gap: 12px;
+            padding: 16px 0 10px;
+        }
+
+        .auth-stage {
+            width: min(560px, 95vw);
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .auth-hero {
+            text-align: center;
+            padding: 4px 0;
+        }
+
+        .auth-kicker {
+            margin: 0 auto;
         }
 
         .auth-welcome {
-            font-size: clamp(1.25rem, 4.8vw, 1.55rem);
-            padding: 0 10px;
+            margin-top: 10px;
+            font-size: clamp(1.42rem, 5.2vw, 1.9rem);
+            line-height: 1.2;
+        }
+
+        .auth-subtext {
+            margin: 10px auto 0;
+            font-size: 0.92rem;
+            max-width: 500px;
+        }
+
+        .auth-points {
+            justify-content: center;
+            margin-top: 12px;
         }
 
         .auth-card {
-            max-width: 520px;
+            max-width: 560px;
+            justify-self: stretch;
         }
     }
 
     @media (max-width: 575.98px) {
         .auth-shell {
             padding: 8px 0 6px;
-            gap: 10px;
+        }
+
+        .auth-stage {
+            gap: 12px;
+        }
+
+        .auth-kicker {
+            font-size: 0.68rem;
+            padding: 6px 10px;
+        }
+
+        .auth-subtext,
+        .auth-points {
+            display: none;
         }
 
         .auth-card {
@@ -190,20 +320,12 @@
             min-height: 44px;
             font-size: 0.95rem;
         }
-
-        .btn-auth {
-            width: 100%;
-            padding: 11px 18px;
-        }
-
-        .auth-actions {
-            margin-top: 14px;
-        }
     }
 
     @media (min-width: 1400px) {
-        .auth-shell {
-            gap: 20px;
+        .auth-stage {
+            width: min(1260px, 94vw);
+            gap: 36px;
         }
 
         .auth-card {
@@ -211,72 +333,91 @@
         }
 
         .auth-welcome {
-            font-size: clamp(1.7rem, 1.8vw, 2.15rem);
+            font-size: clamp(2.3rem, 3vw, 3.5rem);
+        }
+    }
+
+    @media (min-width: 1800px) {
+        .auth-stage {
+            width: min(1360px, 90vw);
+            grid-template-columns: 1.15fr 0.85fr;
         }
     }
 </style>
 
 <div class="auth-shell">
-    <p class="auth-welcome">Welcome to Rasdarps Enterprise POS System</p>
-    <div class="auth-card">
-        <div class="auth-header">
-            <h5>{{ __('Admin Login') }}</h5>
-            <p style="margin-top:4px; opacity:0.75;">Sign in to access your dashboard.</p>
+    <div class="auth-stage">
+        <div class="auth-hero">
+            <p class="auth-kicker">Rasdarps POS</p>
+            <p class="auth-welcome">Welcome to Rasdarps Enterprise POS System</p>
+            <p class="auth-subtext">Manage inventory, monitor sales, and keep operations in sync from one dashboard built for busy retail teams.</p>
+            <ul class="auth-points">
+                <li>Fast Stock Tracking</li>
+                <li>Daily Sales Insight</li>
+                <li>Secure Access</li>
+            </ul>
         </div>
 
-        <div class="auth-body">
-            <form method="POST" action="{{ route('login') }}" id="loginForm" novalidate>
-                @csrf
+        <div class="auth-card">
+            <div class="auth-header">
+                <h5>{{ __('Admin Login') }}</h5>
+                <p>Sign in to access your dashboard.</p>
+            </div>
 
-                <div class="mb-3">
-                    <label for="login">{{ __('Email or Username') }}</label>
-                    <input id="login" type="text" class="form-control @error('login') @error('email') @error('username') is-invalid @enderror @enderror @enderror" name="login" value="{{ old('login') }}" required autocomplete="login" autofocus placeholder="Enter email or username">
+            <div class="auth-body">
+                <form method="POST" action="{{ route('login') }}" id="loginForm" novalidate>
+                    @csrf
 
-                    @error('login')
-                        <span class="invalid-feedback d-block" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror
-                    @error('email')
-                        <span class="invalid-feedback d-block" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror
-                    @error('username')
-                        <span class="invalid-feedback d-block" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror
-                </div>
+                    <div class="mb-3">
+                        <label for="login">{{ __('Email or Username') }}</label>
+                        <input id="login" type="text" class="form-control @error('login') @error('email') @error('username') is-invalid @enderror @enderror @enderror" name="login" value="{{ old('login') }}" required autocomplete="login" autofocus placeholder="Enter email or username">
 
-                <div class="mb-3">
-                    <label for="password">{{ __('Password') }}</label>
-                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Enter password">
+                        @error('login')
+                            <span class="invalid-feedback d-block" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
+                        @error('email')
+                            <span class="invalid-feedback d-block" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
+                        @error('username')
+                            <span class="invalid-feedback d-block" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
+                    </div>
 
-                    @error('password')
-                        <span class="invalid-feedback d-block" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror
-                </div>
+                    <div class="mb-3">
+                        <label for="password">{{ __('Password') }}</label>
+                        <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Enter password">
 
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                    <label class="form-check-label" for="remember">
-                        {{ __('Remember Me') }}
-                    </label>
-                </div>
+                        @error('password')
+                            <span class="invalid-feedback d-block" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
+                    </div>
 
-                <div class="auth-actions">
-                    <button id="loginSubmitBtn" type="submit" class="btn btn-auth">
-                        {{ __('Login') }}
-                    </button>
-                </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="remember">
+                            {{ __('Remember Me') }}
+                        </label>
+                    </div>
 
-                <div class="text-center mt-3" style="font-size:12px; color:#64748b; font-weight:600;">
-                    DarPOS V 1.0
-                </div>
-            </form>
+                    <div class="auth-actions">
+                        <button id="loginSubmitBtn" type="submit" class="btn btn-auth">
+                            {{ __('Login') }}
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-3" style="font-size:12px; color:#64748b; font-weight:600;">
+                        DarPOS V 1.0
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

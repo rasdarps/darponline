@@ -10,9 +10,9 @@
                 <div class="col-12">
                     <div class="card" style="margin-top: 5px;">
                         <div class="card-header with-border">
-                            <span class="card-title" style="font-size:20px;">Create | Purchase Sale</span>
-                            <a href="{{route('purchases.index')}}" style="float:right">
-                                <button type="button" class="btn btn-dark modal_btn">
+                            <span class="card-title mobile-page-title" style="font-size:20px;">Create | Purchase Sale</span>
+                            <a href="{{route('purchases.index')}}" class="mobile-header-action" style="float:right">
+                                <button type="button" class="btn btn-dark modal_btn mobile-header-btn">
                                     View Purchases Sale
                                 </button>
                             </a>
@@ -44,10 +44,14 @@
                                     <div class="row align-items-end mb-2">
                                         {{-- //barcode field for product lookup --}}
                                         <div class="col-md-4">
-                                            <div class="form-group mb-1 d-flex align-items-center">
+                                            <div class="form-group mb-1">
                                                 <input type="text" id="barcode" class="form-control" placeholder="Scan Barcode" autofocus>
-                                                <button type="button" id="startCameraScan" class="btn btn-outline-primary ml-2">Scan With Camera</button>
-                                                <button type="button" id="stopCameraScan" class="btn btn-outline-secondary ml-2" style="display:none;">Stop Camera</button>
+                                                <div class="mt-2 d-flex align-items-center">
+                                                    <button type="button" id="startCameraScan" class="btn btn-outline-primary camera-scan-btn">
+                                                        <i class="fas fa-camera mr-1"></i> Scan With Camera
+                                                    </button>
+                                                    <button type="button" id="stopCameraScan" class="btn btn-outline-secondary ml-2 camera-scan-btn" style="display:none;">Stop Camera</button>
+                                                </div>
                                                 {{-- <small class="form-text text-muted">Scan product barcode here</small> --}}
                                             </div>
                                             <div id="cameraScanWrap" class="mt-2" style="display:none;">
@@ -86,23 +90,24 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-12 text-center">
-                                            <button type="button" class="btn btn-dark waves-effect waves-light fas fa-plus-circle addeventmore"> Add</button>
+                                            <button type="button" class="btn btn-dark waves-effect waves-light fas fa-plus-circle addeventmore mobile-action-btn"> Add</button>
                                         </div>
                                     </div>
                                     {{-- <hr> --}}
                                     <div class="row">
                                         <div class="col-12">
-                                            <table class="table-sm table-bordered" width="100%" style="border-color: #ddd;">
+                                            <div class="table-responsive mobile-item-table-wrap">
+                                            <table class="table-sm table-bordered mobile-item-table" width="100%" style="border-color: #ddd;">
                                                 <thead>
                                                     <tr style="background-color:#111827; text-align:center;" class="text-white">
                                                         <th width="10%">Category</th>
                                                         <th width="12%">Barcode</th>
-                                                        <th width="15%">Product Name</th>
+                                                        <th width="15%">Name</th>
                                                         <th width="10%">Qty</th>
                                                         <th width="15%">Cost Price</th>
                                                         <th width="10%">Sell Price</th>
                                                         <th width="10%">Per</th>
-                                                        <th width="15%">Total Price(Ghc)</th>
+                                                        <th width="15%">Total (Ghc)</th>
                                                         <th width="5%">Action</th>
                                                     </tr>
                                                 </thead>
@@ -123,6 +128,7 @@
                                                     </tr>
                                                 </tbody>
                                             </table>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="form-row mt-3">
@@ -170,7 +176,7 @@
                                     </div>
                                     <div class="form-group mt-4">
                                         <center>
-                                            <button type="submit" class="btn btn-success storeButton" id="storeButton">Submit Purchase</button>
+                                            <button type="submit" class="btn btn-success storeButton mobile-submit-btn" id="storeButton">Submit Purchase</button>
                                         </center>
                                     </div>
                                 </form>
@@ -249,6 +255,86 @@
         }
         .select2 {
             width: 100% !important;
+        }
+
+        .camera-scan-btn {
+            border-color: #0f766e;
+            color: #0f766e;
+        }
+
+        .camera-scan-btn:hover,
+        .camera-scan-btn:focus,
+        .camera-scan-btn:active {
+            background-color: #0f766e !important;
+            border-color: #0f766e !important;
+            color: #ffffff !important;
+        }
+
+        @media (max-width: 767.98px) {
+            .mobile-page-title {
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            .mobile-header-action {
+                float: none !important;
+                display: block;
+                width: 100%;
+            }
+
+            .mobile-header-btn,
+            .mobile-action-btn,
+            .mobile-submit-btn {
+                width: 100%;
+            }
+
+            .mobile-item-table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .mobile-item-table {
+                min-width: 920px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .page-content .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .card-header.with-border {
+                padding: 12px 12px 10px;
+            }
+
+            .card-body {
+                padding: 10px;
+            }
+
+            .card-body .row.mb-2,
+            .card-body .row.mt-3,
+            .card-body .form-row.mt-3,
+            .card-body .form-group.mt-4 {
+                margin-top: 8px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .card-body .form-control,
+            .card-body .btn,
+            .card-body .select2-selection--single {
+                min-height: 40px;
+            }
+
+            .mobile-item-table th,
+            .mobile-item-table td {
+                font-size: 12px;
+                padding: 0.3rem 0.4rem;
+            }
+
+            #description {
+                min-height: 88px;
+            }
         }
     </style>
 @endsection

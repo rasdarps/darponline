@@ -85,4 +85,9 @@ class DailyTransactionEmail extends Model
             ->latest('sent_at')
             ->first();
     }
+
+      public function sender()
+    {
+        return $this->belongsTo(User::class, 'sent_by');
+    }
 }

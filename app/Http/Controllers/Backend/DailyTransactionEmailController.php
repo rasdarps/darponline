@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\DataTables\Admin\Settings\DailyTransactionEmailDataTable;
 use App\Http\Controllers\Controller;
 use App\Mail\DailyTransactionMail;
 use App\Models\AppSetting;
@@ -11,6 +12,7 @@ use App\Models\ExpenseVoucherItem;
 use App\Models\Payment;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -18,8 +20,19 @@ class DailyTransactionEmailController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth')->only(['index', 'logs', 'sendManual', 'getStatus']);
+        $this->middleware('permission:settings-list|settings-edit|daily-transaction-email-send')->only(['index', 'logs', 'getStatus']);
         $this->middleware('permission:daily-transaction-email-send', ['only' => ['sendManual']]);
+    }
+
+     public function index()
+    {
+        return view('backend.settings.daily_transaction_report');
+    }
+
+    public function logs(DailyTransactionEmailDataTable $dataTable)
+    {
+        return $dataTable->render('backend.settings.daily_transaction_email_logs');
     }
 
     /**
@@ -159,37 +172,74 @@ class DailyTransactionEmailController extends Controller
     public function getStatus()
     {
         $enabled = $this->isEmailFeatureEnabled();
+        $configuredHour = (int) config('pos.daily_email_report_time', 18);
+        $configuredTimeLabel = str_pad((string) $configuredHour, 2, '0', STR_PAD_LEFT) . ':00';
+        $businessDate = now()->toDateString();
 
         try {
             $company = Company::first();
             if (!$company) {
                 return response()->json([
+                    'success' => true,
                     'status' => 200,
+                    'feature_enabled' => $enabled,
                     'enabled' => $enabled,
                     'already_sent_today' => false,
+                    'last_sent_at' => null,
                     'last_sent' => null,
+                    'last_send_type' => null,
                     'send_type' => null,
+                    'recipient_email' => null,
+                    'auto_send_enabled' => $enabled,
+                    'configured_auto_send_time_label' => $configuredTimeLabel,
+                    'business_date' => $businessDate,
+                    'can_send' => false,
                     'message' => 'No company found.',
                 ]);
             }
 
             $lastSent = DailyTransactionEmail::lastSent($company->id);
             $alreadySentToday = DailyTransactionEmail::alreadySentToday($company->id);
+            $canSend = $enabled
+                && !$alreadySentToday
+                && auth()->check()
+                && Gate::allows('daily-transaction-email-send');
+
+            $lastSentAt = $lastSent ? $lastSent->sent_at->format('Y-m-d H:i:s') : null;
+            $lastSendType = $lastSent?->type;
 
             return response()->json([
+                'success' => true,
                 'status' => 200,
+                'feature_enabled' => $enabled,
                 'enabled' => $enabled,
                 'already_sent_today' => $alreadySentToday,
-                'last_sent' => $lastSent ? $lastSent->sent_at->format('Y-m-d H:i:s') : null,
-                'send_type' => $lastSent?->type,
+                'last_sent_at' => $lastSentAt,
+                'last_sent' => $lastSentAt,
+                'last_send_type' => $lastSendType,
+                'send_type' => $lastSendType,
+                'recipient_email' => $company->email,
+                'auto_send_enabled' => $enabled,
+                'configured_auto_send_time_label' => $configuredTimeLabel,
+                'business_date' => $businessDate,
+                'can_send' => $canSend,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
+                'success' => false,
                 'status' => 500,
+                'feature_enabled' => $enabled,
                 'enabled' => $enabled,
                 'already_sent_today' => false,
+                'last_sent_at' => null,
                 'last_sent' => null,
+                'last_send_type' => null,
                 'send_type' => null,
+                'recipient_email' => null,
+                'auto_send_enabled' => $enabled,
+                'configured_auto_send_time_label' => $configuredTimeLabel,
+                'business_date' => $businessDate,
+                'can_send' => false,
                 'message' => 'Error: ' . $e->getMessage(),
             ]);
         }

@@ -238,6 +238,8 @@ Route::prefix('admin')->group(function () {
         });
 
         Route::prefix('daily-transaction-email')->name('daily-transaction-email.')->group(function () {
+            Route::get('/', [DailyTransactionEmailController::class, 'index'])->name('index');
+            Route::get('/logs', [DailyTransactionEmailController::class, 'logs'])->name('logs');
             Route::post('/send', [DailyTransactionEmailController::class, 'sendManual'])->name('send');
             Route::get('/status', [DailyTransactionEmailController::class, 'getStatus'])->name('status');
         });

@@ -18,15 +18,13 @@ class CompanySeeder extends Seeder
         //
         //
          $company = array(
-            array('id' => 1, 'name' => 'Rasdarps Enterprise', 'address' => 'Kotobabi Down, Accra, Ghana', 
-            'phone' =>'0242222874', 'tin_number' => 'GHA-000000000-0', 'email'=>'rasdarps@email.com',
+            array('name' => 'Rasdarps Enterprise', 'address' => 'Kotobabi Down, Accra, Ghana',
+            'phone' =>'0242222874', 'tin_number' => 'GHA-000000000-0', 'email'=>'rasdarps@gmail.com',
             ),
-           
-
         );
 
         foreach ($company as $comp) {
-            $this->upsertOnlyWhenChanged(Company::class, ['id' => $comp['id']], [
+            $this->upsertOnlyWhenChanged(Company::class, ['email' => $comp['email']], [
                 'name' => $comp['name'],
                 'address' => $comp['address'],
                 'phone' => $comp['phone'],

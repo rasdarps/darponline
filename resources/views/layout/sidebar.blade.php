@@ -319,6 +319,20 @@
                         @endcanany
                         {{-- setup menu ends --}}
 
+                         @canany(['settings-list', 'settings-edit', 'daily-transaction-email-send'])
+                        <li class="menu-title">Emails and Notifications</li>
+                        <li>
+                            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                <i class="fa fa-envelope"></i>
+                                <span>Email Automation</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="{{ route('daily-transaction-email.index') }}">Send Daily Email</a></li>
+                                <li><a href="{{ route('daily-transaction-email.logs') }}">Daily Email Report</a></li>
+                            </ul>
+                        </li>
+                        @endcanany
+
 
                         {{-- setup user starts --}}
                         @canany(['user-list', 'user-create', 'role-list', 'role-create'])
