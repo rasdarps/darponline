@@ -136,6 +136,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/show/{id}', [ProductController::class, 'show'])->name('show');
                 Route::get('/create', [ProductController::class, 'create'])->name('create');
                 Route::post('/store', [ProductController::class, 'store'])->name('store');
+                Route::post('/import', [ProductController::class, 'import'])->name('import');
                 Route::get('/edit/{encryptedId}', [ProductController::class, 'edit'])->name('edit');
                 Route::patch('/update/{encryptedId}', [ProductController::class, 'update'])->name('update');
                 Route::delete('/destroy/{encryptedId}', [ProductController::class, 'destroy'])->name('destroy');

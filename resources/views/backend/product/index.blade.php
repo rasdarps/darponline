@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Crypt;
                             <a href="{{route('products.create')}}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Create New Product
                             </a>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productImportModal">
+                                <i class="fas fa-file-excel"></i> Import Excel
+                            </button>
                             <button type="button" class="btn btn-dark" id="print-barcodes-btn" style="display: none;">
                                 <i class="fas fa-barcode"></i> Print Labels
                             </button>
@@ -111,6 +114,42 @@ use Illuminate\Support\Facades\Crypt;
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="productImportModal" tabindex="-1" aria-labelledby="productImportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="productImportModalLabel">
+                    <i class="fas fa-file-excel"></i> Import Products from Excel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="productImportForm" enctype="multipart/form-data" novalidate>
+                @csrf
+                <div class="modal-body">
+                    <p class="mb-2">Upload an Excel or CSV file with these columns:</p>
+                    <div class="mb-3">
+                        <code>name</code>, <code>category_name</code>, <code>unit_name</code>, <code>stock_level</code>
+                    </div>
+                    <div class="alert alert-info mb-3">
+                        Category and unit names must already exist in the system. Barcode is generated automatically.
+                    </div>
+                    <div class="form-group">
+                        <label for="product_import_file"><strong>Select file</strong></label>
+                        <input type="file" name="file" id="product_import_file" class="form-control" accept=".xls,.xlsx,.csv">
+                        <small class="text-muted">Maximum file size: 5MB</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Import Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -147,6 +186,100 @@ use Illuminate\Support\Facades\Crypt;
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
+        });
+
+        $('#productImportForm').on('submit', function(e) {
+            e.preventDefault();
+
+            $('#productImportResult').remove();
+
+            const fileInput = $('#product_import_file')[0];
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                Notiflix.Notify.failure('Please select a file before importing.');
+                return;
+            }
+
+            var formData = new FormData(this);
+
+            Notiflix.Loading.standard('Importing products, please wait...');
+
+            $.ajax({
+                url: '{{ route('products.import') }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    Notiflix.Loading.remove();
+
+                    const summary = response.summary || {};
+                    const failedRows = Array.isArray(summary.errors) ? summary.errors : [];
+                    const hasSkippedRows = (summary.failed || 0) > 0;
+
+                    if (response.status === 'success') {
+                        let html = `<strong>${response.message || 'Products imported successfully'}</strong>`;
+                        html += `<div class="mt-2">Imported: ${summary.imported || 0} | Skipped: ${summary.failed || 0}</div>`;
+
+                        if (hasSkippedRows) {
+                            html += '<div class="mt-3"><strong>Skipped rows:</strong><ul class="mb-0">';
+                            failedRows.forEach(function(item) {
+                                const rowMessages = Array.isArray(item.messages) ? item.messages.join(' ') : '';
+                                html += `<li>Row ${item.row}: ${rowMessages}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+
+                        if (!hasSkippedRows) {
+                            $('#productImportForm')[0].reset();
+                            $('#productImportModal').modal('hide');
+                            Notiflix.Notify.success(response.message || 'Products imported successfully');
+                            if (window.LaravelDataTables && window.LaravelDataTables['products-table']) {
+                                window.LaravelDataTables['products-table'].ajax.reload();
+                            }
+                        } else {
+                            $('#productImportModal').find('.modal-body').prepend(
+                                `<div class="alert alert-warning mt-0" id="productImportResult">${html}</div>`
+                            );
+                            Notiflix.Notify.warning('Import completed with some skipped rows. Review the details in the modal.');
+                            if (window.LaravelDataTables && window.LaravelDataTables['products-table']) {
+                                window.LaravelDataTables['products-table'].ajax.reload();
+                            }
+                        }
+                    } else {
+                        Notiflix.Notify.warning(response.message || 'Import completed with warnings');
+                        $('#productImportModal').find('.modal-body').prepend(
+                            `<div class="alert alert-warning mt-0" id="productImportResult">${response.message || 'Import completed with warnings'}</div>`
+                        );
+                    }
+                },
+                error: function(xhr) {
+                    Notiflix.Loading.remove();
+
+                    let message = 'Failed to import products';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                        if (xhr.responseJSON.errors) {
+                            const firstError = Object.values(xhr.responseJSON.errors).flat()[0];
+                            if (firstError) {
+                                message = firstError;
+                            }
+                        }
+                    }
+
+                    Notiflix.Notify.failure(message);
+                    $('#productImportModal').find('.modal-body').prepend(
+                        `<div class="alert alert-danger mt-0" id="productImportResult">${message}</div>`
+                    );
+                }
+            });
+        });
+
+        $('#productImportModal').on('hidden.bs.modal', function() {
+            $('#productImportResult').remove();
+            $('#productImportForm')[0].reset();
         });
         
         // ============ DEFINE ALL FUNCTIONS GLOBALLY ============

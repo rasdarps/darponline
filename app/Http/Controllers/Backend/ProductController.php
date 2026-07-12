@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Imports\ProductImport;
 use App\DataTables\Admin\Settings\ProductDataTable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductCreationRequest;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -54,6 +56,44 @@ class ProductController extends Controller
 
         return view('backend.product.create', compact('units', 'categories'));
     } // End Method 
+
+    public function import(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'file' => ['required', 'file', 'mimes:xls,xlsx,csv', 'max:5120'],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        try {
+            $import = new ProductImport(Auth::id());
+            Excel::import($import, $validated['file']);
+
+            $summary = $import->summary();
+            $message = "Imported {$summary['imported']} product(s).";
+
+            if ($summary['failed'] > 0) {
+                $message .= " {$summary['failed']} row(s) were skipped.";
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => $message,
+                'summary' => $summary,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     public function store(ProductCreationRequest $request){
             $productData = $request->getProductData();
