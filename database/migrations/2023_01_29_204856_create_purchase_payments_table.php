@@ -29,9 +29,7 @@ return new class extends Migration
             ->onUpdate('cascade')
             ->onDelete('cascade');
 
-            $table->string('paid_status',51)->nullable();
             $table->double('paid_amount')->nullable();
-            $table->double('due_amount')->nullable();
             $table->double('total_amount')->nullable();
             $table->double('discount_amount')->nullable();
 

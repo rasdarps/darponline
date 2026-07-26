@@ -34,12 +34,20 @@
 
         {{-- Yajra Data Table Scripts end--}}
 
+        @if(request()->routeIs('dashboard'))
         <script src="{{ asset('backend/assets/js/pages/dashboard.init.js') }}"></script>
+        @endif
 
         <!-- App js -->
         <script src="{{ asset('backend/assets/js/app.js') }}"></script>
 
         <script src="{{ asset('backend/assets/libs/select2/js/select2.min.js') }}"></script>
+        <script src="{{ asset('backend/assets/libs/spectrum-colorpicker2/spectrum.min.js') }}"></script>
+        <script src="{{ asset('backend/assets/libs/bootstrap-touchspin/jquery.bootstrap-touchspin.min.js') }}"></script>
+        <script src="{{ asset('backend/assets/libs/bootstrap-maxlength/bootstrap-maxlength.min.js') }}"></script>
+        <script src="{{ asset('backend/assets/libs/inputmask/jquery.inputmask.min.js') }}"></script>
+        <script src="{{ asset('backend/assets/libs/bootstrap-datepicker/js/bootstrap-datepicker.min.js') }}"></script>
+        <script src="{{ asset('backend/assets/libs/bootstrap-timepicker/js/bootstrap-timepicker.min.js') }}"></script>
         <script src="{{ asset('backend/assets/js/pages/form-advanced.init.js') }}"></script>
 
         <script src="{{ asset('notiflix/notiflix-3.2.8.min.js') }}"></script>

@@ -185,7 +185,7 @@ Access application at: `http://127.0.0.1:8000`
 
 - Click **"View Purchases"** to see all records
 - Approve pending purchases
-- Track supplier credits
+- Track supplier balances
 - Print purchase orders
 
 ---

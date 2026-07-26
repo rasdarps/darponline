@@ -13,19 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('purchase_payment_details', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('purchase_id')
-            ->constrained('purchases')
-            ->unsigned()
-            ->onUpdate('cascade')
-            ->onDelete('cascade');
-            
-            $table->double('current_paid_amount')->nullable();
-            $table->date('date');
-            $table->integer('updated_by')->nullable(); 
-            $table->timestamps();
-        });
+        // POS-only edition: purchase_payment_details removed (single-step payment flow).
     }
 
     /**

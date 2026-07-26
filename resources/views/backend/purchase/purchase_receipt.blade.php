@@ -164,16 +164,6 @@
                                                 <td class="no-line"></td>
                                                 <td class="no-line"></td>
                                                 <td class="no-line text-center">
-                                                    <strong>Due Amount</strong></td>
-                                                <td class="no-line text-end">{{ number_format($purchase_payment->due_amount, 2) }}</td>
-                                            </tr>
-                                            <tr>
-                                                
-                                                <td class="no-line"></td>
-                                                <td class="no-line"></td>
-                                                <td class="no-line"></td>
-                                                <td class="no-line"></td>
-                                                <td class="no-line text-center">
                                                     <strong>Grand Amount</strong></td>
                                                 <td class="no-line text-end"><h4 class="m-0">Gh¢{{ number_format($purchase_payment->total_amount, 2) }}</h4></td>
                                             </tr>

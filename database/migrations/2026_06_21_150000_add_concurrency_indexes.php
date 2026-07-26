@@ -20,12 +20,6 @@ return new class extends Migration
             $table->index('created_by');
         });
 
-        // Payments: index for status lookups
-        Schema::table('payments', function (Blueprint $table) {
-            $table->index('paid_status');
-            $table->index(['sale_id', 'paid_status']);
-        });
-
         // Sale Details: composite index for line-item lookups
         Schema::table('sale_details', function (Blueprint $table) {
             $table->index(['sale_id', 'product_id']);
@@ -54,13 +48,6 @@ return new class extends Migration
             });
         }
 
-        // Purchase Payments: status indexing for consistency
-        if (Schema::hasTable('purchase_payments')) {
-            Schema::table('purchase_payments', function (Blueprint $table) {
-                $table->index('paid_status');
-                $table->index(['purchase_id', 'paid_status']);
-            });
-        }
     }
 
     /**
@@ -74,11 +61,6 @@ return new class extends Migration
             $table->dropIndex(['quantity']);
             $table->dropIndex(['category_id', 'quantity']);
             $table->dropIndex(['created_by']);
-        });
-
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropIndex(['paid_status']);
-            $table->dropIndex(['sale_id', 'paid_status']);
         });
 
         Schema::table('sale_details', function (Blueprint $table) {
@@ -105,12 +87,6 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('purchase_payments')) {
-            Schema::table('purchase_payments', function (Blueprint $table) {
-                $table->dropIndex(['paid_status']);
-                $table->dropIndex(['purchase_id', 'paid_status']);
-            });
-        }
     }
 };
 

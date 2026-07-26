@@ -29,8 +29,8 @@
  
     <div class="row">
         <div class="col-md-12 text-center">
-            <strong> Customer Wise Credit Report </strong>
-            <input type="radio" name="customer_wise_report" value="customer_wise_credit" class="search_value"> &nbsp;&nbsp;
+            <strong> Customer Wise Account Report </strong>
+            <input type="radio" name="customer_wise_report" value="customer_wise_account" class="search_value"> &nbsp;&nbsp;
 
 
             <strong> Customer Wise Paid Report </strong>
@@ -40,8 +40,8 @@
         </div>        
     </div> <!-- // end row  -->
 
-<!--  /// Customer Credit Wise  -->
-    <div class="show_credit" style="display:none">
+<!--  /// Customer Account Wise  -->
+    <div class="show_account" style="display:none">
         <form method="GET" action="#" id="myForm">
 
             <div class="row">
@@ -64,7 +64,7 @@
         </form>
         
     </div>
-<!--  /// End Customer Credit Wise  -->
+<!--  /// End Customer Account Wise  -->
 
 <!--  /// show_paid  -->
 <div class="show_paid" style="display:none">
@@ -113,10 +113,10 @@
 <script type="text/javascript">
     $(document).on('change','.search_value', function(){
         var search_value = $(this).val();
-        if (search_value == 'customer_wise_credit') {
-            $('.show_credit').show();
+        if (search_value == 'customer_wise_account') {
+            $('.show_account').show();
         }else{
-            $('.show_credit').hide();
+            $('.show_account').hide();
         }
     }); 
 

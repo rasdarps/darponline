@@ -13,25 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('payment_details', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('sale_id')
-            ->constrained('sales')
-            ->unsigned()
-            ->onUpdate('cascade')
-            ->onDelete('cascade');
-            
-            $table->double('current_paid_amount')->nullable();
-            $table->date('date');
-            
-            // Fixed: Proper foreign key relationship to users table
-            $table->unsignedBigInteger('updated_by')->nullable();
-            
-            $table->timestamps();
-
-            // Add foreign key constraint for updated_by
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
-        });
+        // POS-only edition: payment_details removed (single-step payment flow).
     }
 
     /**

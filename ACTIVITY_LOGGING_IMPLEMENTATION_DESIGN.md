@@ -159,7 +159,7 @@ Mask in logs:
 
 ## 8. Minimum Before and After Field Sets
 
-1. Invoice create: invoice_no, customer_id, total_amount, paid_amount, due_amount, created_by.
+1. Invoice create: invoice_no, customer_id, total_amount, paid_amount, created_by.
 2. Invoice cancel: status, total_amount, cancelled_by.
 3. Product quantity change: quantity and stock_level.
 4. Reconciliation approve: status, approved_by, approved_at, variance.

@@ -196,20 +196,22 @@
                                             <textarea name="description" class="form-control" id="description" placeholder="Write Description Here"></textarea>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="form-group col-md-3 block_div">
-                                            <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
-                                            <select name="paid_status" id="paid_status" class="form-control" readonly>
-                                                {{-- <option value="">Select Payment Status</option> --}}
-                                                <option value="full_paid">Full Paid</option>
-                                                <option value="full_due" disabled>Credit</option>
-                                                <option value="partial_paid" disabled>Partial Paid</option>
-                                            </select>
-                                            <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">
+                                    <div class="row mt-3 mb-2">
+                                        <div class="col-12 text-left">
+                                            <div class="form-check d-inline-flex align-items-center justify-content-start">
+                                                <input class="form-check-input mr-2" type="checkbox" id="enable_customer_tag">
+                                                <label class="form-check-label mb-0" for="enable_customer_tag">Show customer tag options</label>
+                                            </div>
                                         </div>
-                                        <div class="form-group col-md-9 block_div">
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="form-group col-md-3 block_div customer-block">
+                                            <label><strong>Payment Mode</strong></label>
+                                            <input type="text" class="form-control" value="Cash (Full Paid)" readonly>
+                                        </div>
+                                        <div class="form-group col-md-9 block_div customer-block entity-select-wrap">
                                             <label><strong>Account Name <span class="text-danger">*</span></strong></label>
-                                            <select name="customer_id" id="customer_id" class="form-control" readonly>
+                                            <select name="customer_id" id="customer_id" class="form-control select2" readonly>
                                                 <option value="" disabled>Select Customer</option>
                                                 @foreach($costomer as $cust)
                                                     <option value="{{ $cust->id }}" 
@@ -217,21 +219,27 @@
                                                         {{ $cust->name }}
                                                     </option>
                                                 @endforeach
-                                                <option value="0" disabled>New Customer</option>
+                                                <option value="new_customer">New Customer</option>
                                             </select>
                                         </div>
                                     </div>
 
-                                    <!-- Hidden Add Customer Form -->
-                                    <div class="row new_customer mt-3 block_div">
-                                        <div class="form-group col-md-4">
-                                            <input type="text" name="name" id="name" class="form-control" placeholder="Customer Name">
+                                    <div class="row new_customer mt-3">
+                                        <div class="form-group col-md-6 customer-create-field">
+                                            <label for="customer_name"><strong>Customer Name <span class="text-danger">*</span></strong></label>
+                                            <input type="text" name="name" id="customer_name" class="form-control" placeholder="Enter customer name" onkeypress="return isCharKey(event)">
                                         </div>
-                                        <div class="form-group col-md-4">
-                                            <input type="text" name="mobile_no" id="mobile_no" class="form-control" placeholder="Customer Mobile No" minlength="10" maxlength="10" onkeypress="return isNumberKey(event)">
+                                        <div class="form-group col-md-6 customer-create-field">
+                                            <label for="customer_mobile_no"><strong>Mobile Number <span class="text-danger">*</span></strong></label>
+                                            <input type="text" name="mobile_no" id="customer_mobile_no" class="form-control" placeholder="Enter mobile number" minlength="10" maxlength="10" onkeypress="return isNumberKey(event)">
                                         </div>
-                                        <div class="form-group col-md-4">
-                                            <input type="text" name="email" id="email" class="form-control" placeholder="Customer Email">
+                                        <div class="form-group col-md-6 customer-create-field">
+                                            <label for="customer_email"><strong>Email Address</strong></label>
+                                            <input type="email" name="email" id="customer_email" class="form-control" placeholder="Enter email address">
+                                        </div>
+                                        <div class="form-group col-md-6 customer-create-field">
+                                            <label for="customer_address"><strong>Address</strong></label>
+                                            <input type="text" name="address" id="customer_address" class="form-control" placeholder="Enter address">
                                         </div>
                                     </div>
                                     <div class="form-group mt-4">
@@ -256,8 +264,21 @@
     <style>
         .block_div {
             display: none;
-           
         }
+
+        .new_customer {
+            display: none;
+        }
+
+        .new_customer.is-visible {
+            display: flex;
+        }
+
+        .entity-select-wrap .select2-container {
+            width: 100% !important;
+            max-width: 360px;
+        }
+
         .card {
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease-in-out;
@@ -332,6 +353,10 @@
         }
 
         @media (max-width: 767.98px) {
+            .entity-select-wrap .select2-container {
+                max-width: 100%;
+            }
+
             .mobile-page-title {
                 display: block;
                 margin-bottom: 10px;
@@ -519,11 +544,6 @@
                     return;
                 }
 
-                if(!$('#paid_status').val()) {
-                    notify('Please select a paid status');
-                    return;
-                }
-
                 var totalAmount = parseFloat($('#estimated_amount').val()) || 0;
                 var cashTendered = parseFloat($('#cash_tendered').val());
                 if(isNaN(cashTendered) || cashTendered < 0) {
@@ -531,7 +551,7 @@
                     return;
                 }
 
-                if($('#paid_status').val() === 'full_paid' && cashTendered < totalAmount) {
+                if(cashTendered < totalAmount) {
                     notify('Cash tendered cannot be less than the grand total for full payment.');
                     return;
                 }
@@ -541,20 +561,11 @@
                     return;
                 }
 
-                // Validate paid amount if partial paid
-                if($('#paid_status').val() === 'partial_paid') {
-                    var paidAmount = $('input.paid_amount').val();
-                    if(!paidAmount || isNaN(paidAmount) || parseFloat(paidAmount) <= 0) {
-                        notify('Please enter a valid paid amount greater than 0 for partial payment.');
-                        return;
-                    }
-                }
-
-                // Validate new customer fields if "New Customer" is selected
-                if($('#customer_id').val() === '0') {
-                    var name = $('#name').val();
-                    var mobile = $('#mobile_no').val();
-                    var email = $('#email').val();
+                // Validate inline customer fields only when creating a new customer
+                if(isCreatingNewCustomer()) {
+                    var name = $('#customer_name').val();
+                    var mobile = $('#customer_mobile_no').val();
+                    var email = $('#customer_email').val();
                     if(!name || !name.trim()) {
                         notify('Customer name is required.');
                         return;
@@ -563,7 +574,7 @@
                         notify('Customer mobile number must be 10 digits.');
                         return;
                     }
-                    if(!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                    if(email && !/^\S+@\S+\.\S+$/.test(email)) {
                         notify('Please enter a valid customer email.');
                         return;
                     }
@@ -610,6 +621,7 @@
                             if ($('.select2').length) {
                                 $('.select2').val('').trigger('change');
                             }
+                            syncCustomerTagging();
                             
                             // Directly set next purchase number from backend response
                         if (data.next_no) {
@@ -1238,24 +1250,65 @@
 
 
     <script type="text/javascript">
-    //payment status and customer show or hide
-        $(document).on('change','#paid_status', function(){
-            var paid_status = $(this).val();
-            if (paid_status == 'partial_paid') {
-                $('.paid_amount').show();
-            }else{
-                $('.paid_amount').hide();
+        function applyCustomerSelectWidth() {
+            var $select2 = $('#customer_id').next('.select2-container');
+            var availableWidth = $('.entity-select-wrap').first().width() || 0;
+
+            if (!$select2.length) {
+                return;
             }
-        });
+
+            $select2.css({
+                width: availableWidth && availableWidth < 420 ? '100%' : '360px',
+                maxWidth: '100%'
+            });
+        }
+
+        function isCreatingNewCustomer() {
+            return $('#enable_customer_tag').is(':checked') && $('#customer_id').val() === 'new_customer';
+        }
+
+        function syncCustomerCreateFields() {
+            $('.new_customer').toggleClass('is-visible', isCreatingNewCustomer());
+        }
 
         $(document).on('change','#customer_id', function(){
-            var customer_id = $(this).val();
-            if (customer_id == '0') {
-                $('.new_customer').show();
-            }else{
-                $('.new_customer').hide();
-            }
+            syncCustomerCreateFields();
         });
+
+        function getDefaultCustomerId() {
+            var defaultOption = $('#customer_id option').filter(function () {
+                return $.trim($(this).text()) === 'cash_sales';
+            }).first();
+
+            return defaultOption.val() || '';
+        }
+
+        function syncCustomerTagging() {
+            var enabled = $('#enable_customer_tag').is(':checked');
+            $('.customer-block').toggle(enabled);
+
+            if (!enabled) {
+                var defaultCustomerId = getDefaultCustomerId();
+                if (defaultCustomerId) {
+                    $('#customer_id').val(defaultCustomerId).trigger('change');
+                }
+                $('#customer_id').val(getDefaultCustomerId());
+            }
+
+            syncCustomerCreateFields();
+            applyCustomerSelectWidth();
+        }
+
+        $(document).on('change', '#enable_customer_tag', function () {
+            syncCustomerTagging();
+        });
+
+        $(window).on('resize', function () {
+            applyCustomerSelectWidth();
+        });
+
+        syncCustomerTagging();
 
 
     </script>

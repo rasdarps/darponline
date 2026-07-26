@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Backend;
 use App\DataTables\Admin\Settings\CustomerDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use App\Models\Payment;
-use App\Models\PaymentDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -17,9 +15,9 @@ class CustomerController extends Controller
 {
     function __construct()
     {
-            $this->middleware('permission:customer-list', ['only' => ['index','show', 'CreditCustomer', 'PaidCustomer']]);
+                $this->middleware('permission:customer-list', ['only' => ['index','show']]);
          $this->middleware('permission:customer-create', ['only' => ['create','store']]);
-            $this->middleware('permission:customer-edit', ['only' => ['edit','update', 'CustomerEditInvoice', 'CustomerUpdateInvoice']]);
+                $this->middleware('permission:customer-edit', ['only' => ['edit','update']]);
          $this->middleware('permission:customer-delete', ['only' => ['destroy']]);
     }
 
@@ -229,57 +227,6 @@ class CustomerController extends Controller
         }
     } // End Method
 
-
-    public function CreditCustomer(){
-        $allData = Payment::whereIn('paid_status',['full_due','partial_paid'])->get();
-        return view('backend.customer.customer_credit',compact('allData'));
-    } // End Method
-
-    public function CustomerEditSale($sale_id){
-        $payment = Payment::where('sale_id',$sale_id)->first();
-        return view('backend.customer.edit_customer_sale',compact('payment'));
-    }// End Method
-
-    public function CustomerUpdateSale(Request $request,$sale_id){
-        if ($request->new_paid_amount < $request->paid_amount) {
-            $notification = array(
-                'message' => 'Sorry You Paid Maximum Value', 
-                'alert-type' => 'error'
-            );
-            return redirect()->back()->with($notification); 
-        } else{
-            $payment = Payment::where('sale_id',$sale_id)->first();
-            $payment_details = new PaymentDetail();
-            $payment->paid_status = $request->paid_status;
-
-            if ($request->paid_status == 'full_paid') {
-                 $payment->paid_amount = Payment::where('sale_id',$sale_id)->first()['paid_amount']+$request->new_paid_amount;
-                 $payment->due_amount = '0';
-                 $payment_details->current_paid_amount = $request->new_paid_amount;
-            } elseif ($request->paid_status == 'partial_paid') {
-                $payment->paid_amount = Payment::where('sale_id',$sale_id)->first()['paid_amount']+$request->paid_amount;
-                $payment->due_amount = Payment::where('sale_id',$sale_id)->first()['due_amount']-$request->paid_amount;
-                $payment_details->current_paid_amount = $request->paid_amount;
-            }
-
-            $payment->save();
-            $payment_details->sale_id = $sale_id;
-            $payment_details->date = date('Y-m-d',strtotime($request->date));
-            $payment_details->updated_by = Auth::user()->id;
-            $payment_details->save();
-
-            $notification = array(
-                'message' => 'Sale Update Successfully', 
-                'alert-type' => 'success'
-            );
-            return redirect()->route('credit.customer')->with($notification); 
-        }
-    }// End Method
-
-    public function PaidCustomer(){
-        $allData = Payment::where('paid_status','!=','full_due')->get();
-        return view('backend.customer.customer_paid',compact('allData'));
-    }// End Method
 
 }
 

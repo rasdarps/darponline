@@ -95,14 +95,6 @@ Route::prefix('admin')->group(function () {
 
             });
             Route::controller(CustomerController::class)->group(function () {
-                Route::get('/credit/customer', 'CreditCustomer')->name('credit.customer');
-
-                Route::get('/customer/edit/sale/{sale_id}', 'CustomerEditSale')->name('customer.edit.sale');
-                Route::post('/customer/update/sale/{sale_id}', 'CustomerUpdateSale')->name('customer.update.sale');
-
-
-                Route::get('/paid/customer', 'PaidCustomer')->name('paid.customer');
-
                 
             });
 

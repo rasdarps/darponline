@@ -26,7 +26,7 @@
                                     </tr>
                                     <tr>
                                         <th class="text-center text-danger">Debit (Left Side)</th>
-                                        <th class="text-center text-success">Credit (Right Side)</th>
+                                        <th class="text-center text-success">Income (Right Side)</th>
                                     </tr>
                                 </thead>
                                 <tbody>

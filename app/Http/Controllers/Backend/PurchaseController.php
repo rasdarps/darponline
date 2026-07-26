@@ -11,7 +11,6 @@ use App\Models\ProductPrice;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
 use App\Models\PurchasePayment;
-use App\Models\PurchasePaymentDetail;
 use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\User;
@@ -22,7 +21,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
   
 class PurchaseController extends Controller
@@ -77,19 +75,17 @@ class PurchaseController extends Controller
             'unit_cost_price.*' => ['required', 'numeric', 'min:0.01'],
             'unit_selling_price' => ['required', 'array', 'min:1'],
             'unit_selling_price.*' => ['required', 'numeric', 'min:0.01'],
-            'paid_status' => ['required', Rule::in(['full_paid', 'full_due', 'partial_paid'])],
+            'paid_amount' => ['nullable', 'numeric', 'min:0'],
         ];
 
-        // paid_amount required if partial_paid
-        if ($request->paid_status === 'partial_paid') {
-            $rules['paid_amount'] = ['required', 'numeric', 'min:1', 'max:' . $request->estimated_amount];
-        }
-
-        // New supplier fields required if supplier_id == 0
-        if ($request->supplier_id == '0') {
+        // New supplier fields required if supplier_id requests inline creation
+        if ($request->supplier_id === 'new_supplier') {
             $rules['name'] = ['required', 'string', 'max:255'];
             $rules['mobile_no'] = ['required', 'digits:10'];
-            $rules['email'] = ['required', 'email', 'max:255'];
+            $rules['email'] = ['nullable', 'email', 'max:255'];
+            $rules['address'] = ['nullable', 'string', 'max:500'];
+            $rules['city'] = ['nullable', 'string', 'max:255'];
+            $rules['type'] = ['nullable', 'string', 'max:255'];
         }
 
         $request->validate($rules);
@@ -197,11 +193,14 @@ class PurchaseController extends Controller
                         ]);
                     }
 
-                    if ($request->supplier_id == '0') {
+                    if ($request->supplier_id === 'new_supplier') {
                         $supplier = Supplier::create([
                             'name' => $request->name,
                             'mobile_no' => $request->mobile_no,
                             'email' => $request->email,
+                            'address' => $request->address,
+                            'city' => $request->city,
+                            'type' => $request->type,
                             'created_by' => Auth::id(),
                         ]);
                         $supplier_id = $supplier->id;
@@ -210,32 +209,13 @@ class PurchaseController extends Controller
                     }
 
                     $purchase_payment = new PurchasePayment();
-                    $purchase_payment_details = new PurchasePaymentDetail();
 
                     $purchase_payment->purchase_id = $purchase->id;
                     $purchase_payment->supplier_id = $supplier_id;
-                    $purchase_payment->paid_status = $request->paid_status;
                     $purchase_payment->discount_amount = $request->discount_amount;
                     $purchase_payment->total_amount = $request->estimated_amount;
-
-                    if ($request->paid_status == 'full_paid') {
-                        $purchase_payment->paid_amount = $request->estimated_amount;
-                        $purchase_payment->due_amount = 0;
-                        $purchase_payment_details->current_paid_amount = $request->estimated_amount;
-                    } elseif ($request->paid_status == 'full_due') {
-                        $purchase_payment->paid_amount = 0;
-                        $purchase_payment->due_amount = $request->estimated_amount;
-                        $purchase_payment_details->current_paid_amount = 0;
-                    } elseif ($request->paid_status == 'partial_paid') {
-                        $purchase_payment->paid_amount = $request->paid_amount;
-                        $purchase_payment->due_amount = $request->estimated_amount - $request->paid_amount;
-                        $purchase_payment_details->current_paid_amount = $request->paid_amount;
-                    }
+                    $purchase_payment->paid_amount = $request->estimated_amount;
                     $purchase_payment->save();
-
-                    $purchase_payment_details->purchase_id = $purchase->id;
-                    $purchase_payment_details->date = date('Y-m-d', strtotime($request->date));
-                    $purchase_payment_details->save();
                 });
 
                 break;
@@ -337,16 +317,9 @@ class PurchaseController extends Controller
 
                 // Zero-out payment values so cancelled purchase does not affect financial totals
                 PurchasePayment::where('purchase_id', $purchase->id)->update([
-                    'paid_status' => 'full_paid',
                     'paid_amount' => 0,
-                    'due_amount' => 0,
                     'total_amount' => 0,
                     'discount_amount' => 0,
-                ]);
-
-                // Zero-out payment detail entries tied to this purchase
-                PurchasePaymentDetail::where('purchase_id', $purchase->id)->update([
-                    'current_paid_amount' => 0,
                 ]);
 
                 // Stamp cancellation on the purchase

@@ -55,6 +55,7 @@
                                     <div class="row">
                                         <div class="col-12">
                                                <p>
+                                                Customer: {{ optional(optional($Sale->payment)->customer)->name ?? 'Walk-in Customer' }}<br>
                                                 {{ $cashierDisplay }} | {{ optional($Sale->created_at)->format('d-m-Y h:i A') }}
                                                </p>
                                         </div>
@@ -63,7 +64,7 @@
                             </div>
 
                         @php
-                        $payment = App\Models\Payment::where('sale_id',$Sale->id)->first();
+                        $payment = $Sale->payment;
                         $discountAmount = $payment->discount_amount ?? 0;
                         $taxableAmount = $payment->taxable_amount ?? 0;
                         $nhilAmount = $payment->nhil_amount ?? 0;

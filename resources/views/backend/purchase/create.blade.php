@@ -158,20 +158,22 @@
                                             <textarea name="description" class="form-control" id="description" placeholder="Write Description Here"></textarea>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="form-group col-md-3 block_div">
-                                            <label><strong>Paid Status <span class="text-danger">*</span></strong></label>
-                                            <select name="paid_status" id="paid_status" class="form-control" readonly>
-                                                {{-- <option value="">Select Payment Status</option> --}}
-                                                <option value="full_paid">Full Paid</option>
-                                                <option value="full_due" disabled>Credit</option>
-                                                <option value="partial_paid" disabled>Partial Paid</option>
-                                            </select>
-                                            <input type="text" name="paid_amount" class="form-control paid_amount mt-2" placeholder="Enter Paid Amount" style="display:none;">
+                                    <div class="row mt-3 mb-2">
+                                        <div class="col-12 text-left">
+                                            <div class="form-check d-inline-flex align-items-center justify-content-start">
+                                                <input class="form-check-input mr-2" type="checkbox" id="enable_supplier_tag">
+                                                <label class="form-check-label mb-0" for="enable_supplier_tag">Show supplier tag options</label>
+                                            </div>
                                         </div>
-                                        <div class="form-group col-md-9 block_div">
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="form-group col-md-3 block_div supplier-block">
+                                            <label><strong>Payment Mode</strong></label>
+                                            <input type="text" class="form-control" value="Cash (Full Paid)" readonly>
+                                        </div>
+                                        <div class="form-group col-md-9 block_div supplier-block entity-select-wrap">
                                             <label><strong>Supplier Name <span class="text-danger">*</span></strong></label>
-                                            <select name="supplier_id" id="supplier_id" class="form-control" readonly>
+                                            <select name="supplier_id" id="supplier_id" class="form-control select2" readonly>
                                                 <option value="" disabled>Select Supplier</option>
                                                 @foreach($suppliers as $supplier)
                                                     <option value="{{ $supplier->id }}" 
@@ -179,21 +181,58 @@
                                                         {{ $supplier->name }}
                                                     </option>
                                                 @endforeach
-                                                <option value="0" disabled>New Supplier</option>
+                                                <option value="new_supplier">New Supplier</option>
                                             </select>
                                         </div>
                                     </div>
 
-                                    <!-- Hidden Add Supplier Form -->
-                                    <div class="row new_supplier mt-3 block_div">
-                                        <div class="form-group col-md-4">
-                                            <input type="text" name="name" id="name" class="form-control" placeholder="Supplier Name">
+                                    <div class="new_supplier mt-3">
+                                        <div class="supplier-create-row">
+                                            <div class="supplier-create-cell supplier-create-field">
+                                                <div class="form-group mb-0">
+                                                    <label for="supplier_name"><strong>Supplier Name <span class="text-danger">*</span></strong></label>
+                                                    <input type="text" name="name" id="supplier_name" class="form-control" placeholder="Enter supplier name" onkeypress="return isCharKey(event)">
+                                                </div>
+                                            </div>
+                                            <div class="supplier-create-cell supplier-create-field">
+                                                <div class="form-group mb-0">
+                                                    <label for="supplier_mobile_no"><strong>Mobile Number <span class="text-danger">*</span></strong></label>
+                                                    <input type="text" name="mobile_no" id="supplier_mobile_no" class="form-control" placeholder="Enter mobile number" minlength="10" maxlength="10" onkeypress="return isNumberKey(event)">
+                                                </div>
+                                            </div>
+                                            <div class="supplier-create-cell supplier-create-field">
+                                                <div class="form-group mb-0">
+                                                    <label for="supplier_email"><strong>Email Address</strong></label>
+                                                    <input type="email" name="email" id="supplier_email" class="form-control" placeholder="Enter email address">
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="form-group col-md-4">
-                                            <input type="text" name="mobile_no" id="mobile_no" class="form-control" placeholder="Supplier Mobile No" minlength="10" maxlength="10" onkeypress="return isNumberKey(event)">
-                                        </div>
-                                        <div class="form-group col-md-4">
-                                            <input type="text" name="email" id="email" class="form-control" placeholder="Supplier Email">
+                                        <div class="supplier-create-row">
+                                            <div class="supplier-create-cell supplier-create-field">
+                                                <div class="form-group mb-0">
+                                                    <label for="supplier_address"><strong>Address</strong></label>
+                                                    <input type="text" name="address" id="supplier_address" class="form-control" placeholder="Enter address">
+                                                </div>
+                                            </div>
+                                            <div class="supplier-create-cell supplier-create-field">
+                                                <div class="form-group mb-0">
+                                                    <label for="supplier_city"><strong>City</strong></label>
+                                                    <input type="text" name="city" id="supplier_city" class="form-control" placeholder="Enter city" onkeypress="return isCharKey(event)">
+                                                </div>
+                                            </div>
+                                            <div class="supplier-create-cell supplier-create-field">
+                                                <div class="form-group mb-0">
+                                                    <label for="supplier_type"><strong>Supplier Type</strong></label>
+                                                    <select name="type" id="supplier_type" class="form-control">
+                                                        <option value="">Select Supplier Type</option>
+                                                        <option value="Distributor">Distributor</option>
+                                                        <option value="Wholesaler">Wholesaler</option>
+                                                        <option value="Retailer">Retailer</option>
+                                                        <option value="Manufacturer">Manufacturer</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="form-group mt-4">
@@ -216,6 +255,34 @@
     <style>
         .block_div {
             display: none;
+        }
+
+        .new_supplier {
+            display: none;
+        }
+
+        .new_supplier.is-visible {
+            display: block;
+        }
+
+        .supplier-create-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .supplier-create-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .supplier-create-cell {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .entity-select-wrap .select2-container {
+            width: 100% !important;
+            max-width: 360px;
         }
         /* Ensure main content is not hidden under sidebar */
         /* Remove custom margin, let theme handle sidebar spacing */
@@ -293,6 +360,19 @@
         }
 
         @media (max-width: 767.98px) {
+            .entity-select-wrap .select2-container {
+                max-width: 100%;
+            }
+
+            .supplier-create-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .supplier-create-cell {
+                width: 100% !important;
+            }
+
             .mobile-page-title {
                 display: block;
                 margin-bottom: 10px;
@@ -414,22 +494,14 @@
                 if (parseFloat(sellingPrice) <= parseFloat(price)) { notify('Each item selling price must be greater than its cost price.'); validItems = false; return false; }
             });
             if (!validItems) return;
-            if(!$('#paid_status').val()) { notify('Please select a paid status'); return; }
             if(!$('#supplier_id').val()) { notify('Please select a supplier'); return; }
-            if($('#paid_status').val() === 'partial_paid') {
-                var paidAmount = $('input.paid_amount').val();
-                if(!paidAmount || isNaN(paidAmount) || parseFloat(paidAmount) <= 0) {
-                    notify('Please enter a valid paid amount greater than 0 for partial payment.');
-                    return;
-                }
-            }
-            if($('#supplier_id').val() === '0') {
-                var name = $('#name').val();
-                var mobile = $('#mobile_no').val();
-                var email = $('#email').val();
+            if(isCreatingNewSupplier()) {
+                var name = $('#supplier_name').val();
+                var mobile = $('#supplier_mobile_no').val();
+                var email = $('#supplier_email').val();
                 if(!name || !name.trim()) { notify('Supplier name is required.'); return; }
                 if(!mobile || !/^\d{10}$/.test(mobile)) { notify('Supplier mobile number must be 10 digits.'); return; }
-                if(!email || !/^\S+@\S+\.\S+$/.test(email)) { notify('Please enter a valid supplier email.'); return; }
+                if(email && !/^\S+@\S+\.\S+$/.test(email)) { notify('Please enter a valid supplier email.'); return; }
             }
 
             // Show loading
@@ -464,6 +536,7 @@
                         if ($('.select2').length) {
                             $('.select2').val('').trigger('change');
                         }
+                        syncSupplierTagging();
                         // Directly set next purchase number from backend response
                         if (data.next_no) {
                             $('#purchase_no').val(data.next_no);
@@ -934,25 +1007,96 @@
         });
     </script>
 
-    {{-- //payment status and customer show or hide --}}
+    {{-- supplier create toggle --}}
     <script type="text/javascript">
-        $(document).on('change','#paid_status', function(){
-            var paid_status = $(this).val();
-            if (paid_status == 'partial_paid') {
-                $('.paid_amount').show();
-            }else{
-                $('.paid_amount').hide();
+        function applySupplierSelectWidth() {
+            var $select2 = $('#supplier_id').next('.select2-container');
+            var availableWidth = $('.entity-select-wrap').first().width() || 0;
+
+            if (!$select2.length) {
+                return;
             }
-        });
+
+            $select2.css({
+                width: availableWidth && availableWidth < 420 ? '100%' : '360px',
+                maxWidth: '100%'
+            });
+        }
+
+        function isCreatingNewSupplier() {
+            return $('#enable_supplier_tag').is(':checked') && $('#supplier_id').val() === 'new_supplier';
+        }
+
+        function applySupplierCreateLayout() {
+            var $createSection = $('.new_supplier');
+            var $rows = $createSection.find('.supplier-create-row');
+            var $cells = $createSection.find('.supplier-create-cell');
+            var availableWidth = $createSection.parent().width() || $createSection.width() || 0;
+            var singleColumn = availableWidth < 420;
+
+            if ($createSection.hasClass('is-visible')) {
+                $rows.css({
+                    display: 'flex',
+                    flexDirection: singleColumn ? 'column' : 'row',
+                    gap: singleColumn ? '12px' : '15px'
+                });
+
+                $cells.css({
+                    flex: singleColumn ? '1 1 100%' : '1 1 0',
+                    width: singleColumn ? '100%' : 'auto',
+                    minWidth: '0'
+                });
+
+                return;
+            }
+
+            $rows.removeAttr('style');
+            $cells.removeAttr('style');
+        }
+
+        function syncSupplierCreateFields() {
+            $('.new_supplier').toggleClass('is-visible', isCreatingNewSupplier());
+            applySupplierCreateLayout();
+        }
 
         $(document).on('change','#supplier_id', function(){
-            var supplier_id = $(this).val();
-            if (supplier_id == '0') {
-                $('.new_supplier').show();
-            }else{
-                $('.new_supplier').hide();
-            }
+            syncSupplierCreateFields();
         });
+
+        function getDefaultSupplierId() {
+            var defaultOption = $('#supplier_id option').filter(function () {
+                return $.trim($(this).text()) === 'cash_purchase';
+            }).first();
+
+            return defaultOption.val() || '';
+        }
+
+        function syncSupplierTagging() {
+            var enabled = $('#enable_supplier_tag').is(':checked');
+            $('.supplier-block').toggle(enabled);
+
+            if (!enabled) {
+                var defaultSupplierId = getDefaultSupplierId();
+                if (defaultSupplierId) {
+                    $('#supplier_id').val(defaultSupplierId).trigger('change');
+                }
+                $('#supplier_id').val(getDefaultSupplierId());
+            }
+
+            syncSupplierCreateFields();
+            applySupplierSelectWidth();
+        }
+
+        $(document).on('change', '#enable_supplier_tag', function () {
+            syncSupplierTagging();
+        });
+
+        $(window).on('resize', function () {
+            applySupplierCreateLayout();
+            applySupplierSelectWidth();
+        });
+
+        syncSupplierTagging();
 
 
     </script>  

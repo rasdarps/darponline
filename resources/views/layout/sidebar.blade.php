@@ -221,8 +221,6 @@
                                         @endcan
                                         @can('customer-list')
                                             <li><a href="{{ route('customers.index') }}">All Customers</a></li>
-                                            <li><a href="{{ route('credit.customer') }}">Credit Customers</a></li>
-                                            <li><a href="{{ route('paid.customer') }}">Paid Customers</a></li>
                                         @endcan
                                     
                                     </ul>

@@ -10,7 +10,6 @@ use App\Models\Customer;
 use App\Models\Sale;
 use App\Models\SaleDetail;
 use App\Models\Payment;
-use App\Models\PaymentDetail;
 use App\Models\Product;
 use App\Models\Unit;
 use App\Models\User;
@@ -148,23 +147,14 @@ class SaleController extends Controller
             'unit_selling_price.*' => ['required', 'numeric', 'min:0.01'],
             'selling_price' => ['required', 'array', 'min:1'],
             'selling_price.*' => ['required', 'numeric', 'min:0.01'],
-            'paid_status' => ['required', 'in:full_paid,full_due,partial_paid'],
+            'cash_tendered' => ['required', 'numeric', 'min:' . $calculated['total_amount']],
         ];
 
-        if ($request->paid_status === 'partial_paid') {
-            $rules['paid_amount'] = ['required', 'numeric', 'min:1', 'max:' . $calculated['total_amount']];
-        }
-
-        if ($request->paid_status === 'full_paid') {
-            $rules['cash_tendered'] = ['required', 'numeric', 'min:' . $calculated['total_amount']];
-        } else {
-            $rules['cash_tendered'] = ['nullable', 'numeric', 'min:0'];
-        }
-
-        if ($request->customer_id == '0') {
+        if ($request->customer_id === 'new_customer') {
             $rules['name'] = ['required', 'string', 'max:255'];
             $rules['mobile_no'] = ['required', 'string', 'max:20'];
-            $rules['email'] = ['required', 'email', 'max:255'];
+            $rules['email'] = ['nullable', 'email', 'max:255'];
+            $rules['address'] = ['nullable', 'string', 'max:500'];
         }
 
         $request->validate($rules);
@@ -260,11 +250,13 @@ class SaleController extends Controller
                         ]);
                     }
 
-                    if ($request->customer_id == '0') {
+                    if ($request->customer_id === 'new_customer') {
                         $customer = Customer::create([
                             'name' => $request->name,
                             'mobile_no' => $request->mobile_no,
                             'email' => $request->email,
+                            'address' => $request->address,
+                            'created_by' => Auth::id(),
                         ]);
                         $customer_id = $customer->id;
                     } else {
@@ -272,11 +264,9 @@ class SaleController extends Controller
                     }
 
                     $payment = new Payment();
-                    $payment_details = new PaymentDetail();
 
                     $payment->sale_id = $Sale->id;
                     $payment->customer_id = $customer_id;
-                    $payment->paid_status = $request->paid_status;
                     $payment->discount_amount = $calculated['discount_amount'];
                     $payment->total_amount = $calculated['total_amount'];
                     $payment->taxable_amount = $calculated['taxable_amount'];
@@ -285,25 +275,8 @@ class SaleController extends Controller
                     $payment->vat_amount = $calculated['vat_amount'];
                     $payment->cash_tendered = $calculated['cash_tendered'];
                     $payment->change_due = $calculated['change_due'];
-
-                    if ($request->paid_status == 'full_paid') {
-                        $payment->paid_amount = $calculated['total_amount'];
-                        $payment->due_amount = 0;
-                        $payment_details->current_paid_amount = $calculated['total_amount'];
-                    } elseif ($request->paid_status == 'full_due') {
-                        $payment->paid_amount = 0;
-                        $payment->due_amount = $calculated['total_amount'];
-                        $payment_details->current_paid_amount = 0;
-                    } elseif ($request->paid_status == 'partial_paid') {
-                        $payment->paid_amount = $request->paid_amount;
-                        $payment->due_amount = $calculated['total_amount'] - $request->paid_amount;
-                        $payment_details->current_paid_amount = $request->paid_amount;
-                    }
+                    $payment->paid_amount = $calculated['total_amount'];
                     $payment->save();
-
-                    $payment_details->sale_id = $Sale->id;
-                    $payment_details->date = date('Y-m-d', strtotime($request->date));
-                    $payment_details->save();
 
                     return $Sale;
                 });
@@ -429,7 +402,6 @@ class SaleController extends Controller
 
                 // Zero-out payment values so cancelled Sale does not affect financial totals
                 Payment::where('sale_id', $Sale->id)->update([
-                    'paid_status' => 'full_due',
                     'discount_amount' => 0,
                     'total_amount' => 0,
                     'taxable_amount' => 0,
@@ -439,12 +411,6 @@ class SaleController extends Controller
                     'cash_tendered' => 0,
                     'change_due' => 0,
                     'paid_amount' => 0,
-                    'due_amount' => 0,
-                ]);
-
-                // Zero-out payment detail entries tied to this Sale
-                PaymentDetail::where('sale_id', $Sale->id)->update([
-                    'current_paid_amount' => 0,
                 ]);
 
                 // Stamp cancellation on the Sale
@@ -522,7 +488,7 @@ class SaleController extends Controller
     public function printSale($encryptedId){
 
         $id = Crypt::decrypt($encryptedId);
-        $Sale = Sale::with(['sale_details.category', 'sale_details.product', 'createdBy'])->findOrFail($id);
+        $Sale = Sale::with(['sale_details.category', 'sale_details.product', 'createdBy', 'payment.customer'])->findOrFail($id);
         $companyInfo = Company::first();
         return view('backend.sale.sale_receipt',compact('Sale','companyInfo'));
 
