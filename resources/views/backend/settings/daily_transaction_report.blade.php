@@ -136,6 +136,11 @@
                             <span id="daily-email-status-badge" class="badge status-label">Checking...</span>
                         </div>
 
+                        <p class="mb-2"><small><strong>Scheduler Health:</strong></small></p>
+                        <div id="schedulerHealthStatus" class="mb-3">
+                            <span id="scheduler-health-badge" class="badge status-label">Checking...</span>
+                        </div>
+
                         <p class="mb-2"><small><strong>Quick Actions:</strong></small></p>
                         @can('daily-transaction-email-send')
                             <button
@@ -166,6 +171,7 @@
 
     function updateDailyEmailStatusUi(payload) {
         const badge = document.getElementById('daily-email-status-badge');
+        const schedulerBadge = document.getElementById('scheduler-health-badge');
         const meta = document.getElementById('daily-email-meta');
         const button = document.getElementById('send-daily-email-btn');
 
@@ -176,6 +182,10 @@
         if (!payload.success) {
             badge.className = 'badge badge-danger';
             badge.textContent = 'Unavailable';
+            if (schedulerBadge) {
+                schedulerBadge.className = 'badge badge-danger';
+                schedulerBadge.textContent = 'Unavailable';
+            }
             meta.textContent = payload.message || 'Status endpoint failed.';
             if (button) {
                 button.disabled = true;
@@ -190,23 +200,45 @@
             if (button) {
                 button.disabled = true;
             }
-            return;
         }
 
-        if (payload.already_sent_today) {
-            const sentTime = payload.last_sent_at ? payload.last_sent_at : 'N/A';
-            badge.className = 'badge bg-success text-white';
-            badge.textContent = 'Sent Today - ' + sentTime;
-        } else {
-            badge.className = 'badge badge-info';
-            badge.textContent = 'Pending';
+        if (payload.feature_enabled) {
+            if (payload.already_sent_today) {
+                const sentTime = payload.last_sent_at ? payload.last_sent_at : 'N/A';
+                badge.className = 'badge bg-success text-white';
+                badge.textContent = 'Sent Today - ' + sentTime;
+            } else {
+                badge.className = 'badge badge-info';
+                badge.textContent = 'Pending';
+            }
+        }
+
+        const schedulerHealth = payload.scheduler_health || {};
+        if (schedulerBadge) {
+            if (schedulerHealth.status === 'ok') {
+                schedulerBadge.className = 'badge bg-success text-white';
+                schedulerBadge.textContent = 'Healthy';
+            } else if (schedulerHealth.status === 'stale') {
+                schedulerBadge.className = 'badge badge-warning';
+                schedulerBadge.textContent = 'Stale';
+            } else if (schedulerHealth.status === 'missing') {
+                schedulerBadge.className = 'badge badge-warning';
+                schedulerBadge.textContent = 'No Heartbeat Yet';
+            } else {
+                schedulerBadge.className = 'badge badge-danger';
+                schedulerBadge.textContent = 'Invalid';
+            }
         }
 
         const lastSentAt = payload.last_sent_at ? payload.last_sent_at : 'Not sent yet';
         const autoState = payload.auto_send_enabled ? 'ON' : 'OFF';
         const sendType = payload.last_send_type ? String(payload.last_send_type).toUpperCase() : 'N/A';
         const recipientEmail = payload.recipient_email ? payload.recipient_email : 'N/A';
-        meta.textContent = 'Business Date: ' + payload.business_date + ' | Last Sent: ' + lastSentAt + ' | Type: ' + sendType + ' | Recipient: ' + recipientEmail + ' | Auto Send: ' + autoState + ' | Auto Time: ' + payload.configured_auto_send_time_label;
+        const schedulerLastRun = schedulerHealth.last_run_at ? schedulerHealth.last_run_at : 'Never';
+        const schedulerAge = schedulerHealth.age_minutes !== null && schedulerHealth.age_minutes !== undefined
+            ? schedulerHealth.age_minutes + 'm'
+            : 'N/A';
+        meta.textContent = 'Business Date: ' + payload.business_date + ' | Last Sent: ' + lastSentAt + ' | Type: ' + sendType + ' | Recipient: ' + recipientEmail + ' | Auto Send: ' + autoState + ' | Auto Time: ' + payload.configured_auto_send_time_label + ' | Scheduler Last Run: ' + schedulerLastRun + ' | Scheduler Age: ' + schedulerAge;
 
         if (button) {
             button.disabled = !payload.can_send;

@@ -3,7 +3,7 @@
 
 
 @section('content')
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ <script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 
  <div class="page-content">
                     <div class="container-fluid">
@@ -100,9 +100,9 @@
             </td>
             <td class="text-center"><strong>Quantity</strong>
             </td>
-            <td class="text-center"><strong>Unit Price (GhÂ¢)</strong>
+            <td class="text-center"><strong>Unit Price (Gh¢)</strong>
             </td>
-            <td class="text-end"><strong>Total Price (GhÂ¢)</strong>
+            <td class="text-end"><strong>Total Price (Gh¢)</strong>
             </td>
             
         </tr>
@@ -179,7 +179,7 @@ $sale_details = App\Models\SaleDetail::where('sale_id',$payment->sale_id)->get()
                 <td class="no-line"></td>
                 <td class="no-line text-center">
                     <strong>Grand Amount</strong></td>
-                <td class="no-line text-end"><h4 class="m-0">GhÂ¢{{ $payment->total_amount }}</h4></td>
+                <td class="no-line text-end"><h4 class="m-0">Gh¢{{ $payment->total_amount }}</h4></td>
             </tr>
                             </tbody>
                         </table>

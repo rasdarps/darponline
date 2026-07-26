@@ -37,7 +37,7 @@
                             <th>Sale No </th>
                             <th>Date </th>
                             <th>Description</th>  
-                            <th>Amount (GhÂ¢)</th>
+                            <th>Amount (Gh¢)</th>
                             <th>Action</th>
                             
                         </thead>
@@ -58,7 +58,9 @@
                 <td>  {{ $item['payment']['total_amount'] }} </td>
 
                 <td>
-    <a href="{{ route('print.sale',$item->id) }}" class="btn btn-danger sm" title="Print Sale" >  <i class="fa fa-print"></i> </a>
+                    @can('sale-print')
+                        <a href="{{ route('print.sale',$item->id) }}" class="btn btn-danger sm" title="Print Sale" >  <i class="fa fa-print"></i> </a>
+                    @endcan
                 </td>
                
             </tr>

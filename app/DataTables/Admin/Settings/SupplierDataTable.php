@@ -6,6 +6,7 @@ use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -28,21 +29,34 @@ class SupplierDataTable extends DataTable
                     $csrf = csrf_field();
                     $method = method_field('DELETE');
 
-                    return '
+                    $buttons = [];
+
+                    if (Gate::allows('supplier-edit')) {
+                        $buttons[] = '
                         <form style="display:inline-block" action="'.$editUrl.'" method="GET">
                             '.$csrf.'
                             <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
                                 <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
                             </button>
-                        </form>
+                        </form>';
+                    }
+
+                    if (Gate::allows('supplier-delete')) {
+                        $buttons[] = '
                         <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
                             '.$csrf.'
                             '.$method.'
                             <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete delete-confirm-btn btn btn-sm btn-danger">
                                 <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                             </button>
-                        </form>
-                    ';
+                        </form>';
+                    }
+
+                    if (empty($buttons)) {
+                        return '<span class="text-muted">No actions</span>';
+                    }
+
+                    return implode(' ', $buttons);
                 })
             
             ->editColumn('created_at', function($row)
@@ -91,7 +105,7 @@ class SupplierDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
              Column::make('name'),
              Column::make('mobile_no'),
              Column::make('email'),
@@ -100,9 +114,14 @@ class SupplierDataTable extends DataTable
              Column::make('type'),
             //  Column::make('created_at'),
             //  Column::make('updated_at'),
-             Column::make('edit_button')->title('Actions')
-            ->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('supplier-edit') || Gate::allows('supplier-delete')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

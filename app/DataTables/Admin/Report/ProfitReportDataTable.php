@@ -6,6 +6,7 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -30,11 +31,33 @@ class ProfitReportDataTable extends DataTable
             })
 
             ->addColumn('created_by_name', function($row) {
-                return $row->createdBy ? $row->createdBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->createdBy;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $createdByUser ? $createdByUser->name : '';
             })
 
             ->addColumn('cancelled_by_name', function($row) {
-                return $row->cancelledBy ? $row->cancelledBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $cancelledByUser = $row->cancelledBy;
+
+                if (!$viewerIsSuperAdmin && $cancelledByUser && strtolower((string) ($cancelledByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $cancelledByUser ? $cancelledByUser->name : '';
             })
 
             ->addColumn('sales_total', function($row) {
@@ -221,20 +244,24 @@ class ProfitReportDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('date'),
             Column::make('sale_no'),
             Column::make('customer_name')->title('Customer Name'),
             Column::make('sales_total')->title('Net Sales (Gh¢)'),
-            Column::make('cost_total')->title('Cost (GhÂ¢)'),
+            Column::make('cost_total')->title('Cost (Gh¢)'),
             Column::make('profit_total')->title('Profit (Gh¢)'),
             Column::make('cancelled_status')->title('Status')
-            ->searchable(true)->printable(true)->exportable(true),
-            Column::make('created_by_name')->title('Created By'),
-            Column::make('cancelled_by_name')->title('Cancelled By')
-            ->searchable(true)->printable(true)->exportable(true),
-         
+                ->searchable(true)->printable(true)->exportable(true),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            $columns[] = Column::make('created_by_name')->title('Created By');
+            $columns[] = Column::make('cancelled_by_name')->title('Cancelled By')
+                ->searchable(true)->printable(true)->exportable(true);
+        }
+
+        return $columns;
     }
 
     /**

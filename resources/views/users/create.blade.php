@@ -4,7 +4,7 @@
 @section('content')
 
     <!--Validator link-->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
  
     <div class="page-content">
         <div class="container-fluid">
@@ -100,7 +100,7 @@
                                                 <select id="user_type" name="user_type" class="form-control">
                                                     <option value="" disabled selected>Select User Type</option>
                                                     <option value="Admin" {{ old('user_type') == 'Admin' ? 'selected' : '' }}>Admin</option>
-                                                    <option value="User" {{ old('user_type') == 'User' ? 'selected' : '' }}>User</option>
+                                                    {{-- <option value="User" {{ old('user_type') == 'User' ? 'selected' : '' }}>User</option> --}}
                                                 </select>
                                             </div>
                                         </div>

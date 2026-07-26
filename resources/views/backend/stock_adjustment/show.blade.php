@@ -10,9 +10,11 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">Stock Adjustment Details</h4>
                     <div>
-                        <a href="{{ route('stock-adjustments.print', Crypt::encrypt($adjustment->id)) }}" target="_blank" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-print"></i> Print
-                        </a>
+                        @can('stock_adjustment-print')
+                            <a href="{{ route('stock-adjustments.print', Crypt::encrypt($adjustment->id)) }}" target="_blank" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-print"></i> Print
+                            </a>
+                        @endcan
                         <a href="{{ route('stock-adjustments.edit', Crypt::encrypt($adjustment->id)) }}" class="btn btn-success btn-sm">
                             <i class="fas fa-edit"></i> Edit
                         </a>
@@ -34,7 +36,14 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6"><strong>Created By:</strong> {{ optional($adjustment->createdBy)->name ?: '-' }}</div>
+                            @can('user-audit-view')
+                                @php
+                                    $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                                    $createdBy = $adjustment->createdBy;
+                                    $maskCreatedBy = !$viewerIsSuperAdmin && $createdBy && strtolower((string) ($createdBy->user_type ?? '')) === 'super admin';
+                                @endphp
+                                <div class="col-md-6"><strong>Created By:</strong> {{ $maskCreatedBy ? '-' : (optional($createdBy)->name ?: '-') }}</div>
+                            @endcan
                             <div class="col-md-6"><strong>Notes:</strong> {{ $adjustment->notes ?: '-' }}</div>
                         </div>
 

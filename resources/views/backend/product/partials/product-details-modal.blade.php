@@ -1,4 +1,11 @@
 <div class="product-details">
+    @php
+        $quantity = (float) ($product->quantity ?? 0);
+        $stockLevel = (float) ($product->stock_level ?? 0);
+        $costPrice = (float) ($product->cost_price ?? 0);
+        $sellingPrice = (float) ($product->selling_price ?? 0);
+    @endphp
+
     <div class="row">
         <div class="col-md-12">
             <h4>{{ $product->name }}</h4>
@@ -21,25 +28,22 @@
                     </tr>
                     @endif
                     <tr>
-                        <td><strong>Price:</strong></td>
-                        <td>
-                            @if($product->is_on_sale && $product->sale_price)
-                                <span class="text-muted"><del>₵{{ number_format($product->price, 2) }}</del></span>
-                                <span class="text-danger font-weight-bold ml-2">₵{{ number_format($product->sale_price, 2) }}</span>
-                            @else
-                                <span class="font-weight-bold">₵{{ number_format($product->price, 2) }}</span>
-                            @endif
-                        </td>
+                        <td><strong>Cost Price:</strong></td>
+                        <td><span class="font-weight-bold">₵{{ number_format($costPrice, 2) }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Selling Price:</strong></td>
+                        <td><span class="font-weight-bold">₵{{ number_format($sellingPrice, 2) }}</span></td>
                     </tr>
                     <tr>
                         <td><strong>Stock Quantity:</strong></td>
                         <td>
-                            @if($product->stock_quantity <= 0)
+                            @if($quantity <= 0)
                                 <span class="badge badge-danger">Out of Stock</span>
-                            @elseif($product->stock_quantity <= ($product->low_stock_threshold ?? 5))
-                                <span class="badge badge-warning">Low Stock ({{ $product->stock_quantity }})</span>
+                            @elseif($quantity <= $stockLevel)
+                                <span class="badge badge-warning">Low Stock ({{ number_format($quantity, 0) }})</span>
                             @else
-                                <span class="badge badge-success">{{ $product->stock_quantity }} units</span>
+                                <span class="badge badge-success">{{ number_format($quantity, 0) }} units</span>
                             @endif
                         </td>
                     </tr>

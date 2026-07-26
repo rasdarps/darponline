@@ -22,7 +22,7 @@
 </style>
 
 @section('content')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 
 <div class="page-content">
     <div class="container-fluid">
@@ -127,15 +127,22 @@
                                 <label>To Date</label>
                                 <input type="date" id="filter_to_date" class="form-control">
                             </div>
-                            <div class="col-md-3 mt-2">
-                                <label>Created By</label>
-                                <select id="filter_created_by" class="form-control">
-                                    <option value="">All Users</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @can('user-filter-view')
+                                <div class="col-md-3 mt-2">
+                                    <label>Created By</label>
+                                    <select id="filter_created_by" class="form-control">
+                                        <option value="">All Users</option>
+                                        @php
+                                            $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                                        @endphp
+                                        @foreach($users as $user)
+                                            @if($viewerIsSuperAdmin || strtolower((string) ($user->user_type ?? '')) !== 'super admin')
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
                             <div class="col-md-3 mt-2 d-flex align-items-end">
                                 <button id="reset_filters" class="btn btn-dark w-100">Reset Filters</button>
                             </div>
@@ -154,7 +161,7 @@
 
 @section('scripts')
     {{ $dataTable->scripts() }}
-    <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.6/dist/notiflix-aio-3.2.6.min.js"></script>
+    <script src="{{ asset('notiflix/notiflix-aio-3.2.8.min.js') }}"></script>
     <script>
         $(function() {
             let table = $('#profitreport-table').DataTable();

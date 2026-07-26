@@ -5,6 +5,7 @@ namespace App\DataTables\Admin\Report;
 use App\Models\StockAdjustmentItem;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -43,8 +44,19 @@ class StockAdjustmentReportDataTable extends DataTable
                 return $row->product->name ?? '';
             })
             ->addColumn('created_by_name', function ($row) {
-                return $row->adjustment && $row->adjustment->createdBy
-                    ? $row->adjustment->createdBy->name
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->adjustment ? $row->adjustment->createdBy : null;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $createdByUser
+                    ? $createdByUser->name
                     : '';
             })
             ->editColumn('qty', function ($row) {
@@ -132,7 +144,7 @@ class StockAdjustmentReportDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('adjustment_date')->title('Date'),
             Column::make('reference_no')->title('Reference No'),
             Column::make('adjustment_type')->title('Type'),
@@ -140,9 +152,14 @@ class StockAdjustmentReportDataTable extends DataTable
             Column::make('qty')->title('Qty'),
             Column::make('unit_cost')->title('Unit Cost'),
             Column::make('amount')->title('Amount (Gh¢)'),
-            Column::make('created_by_name')->title('Created By'),
             Column::make('description')->title('Description'),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            $columns[] = Column::make('created_by_name')->title('Created By');
+        }
+
+        return $columns;
     }
 
     /**

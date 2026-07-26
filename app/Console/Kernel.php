@@ -15,10 +15,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Send daily transaction email report at configured time (6pm-12am range)
+        // Attempt auto-send every 10 minutes from configured hour to end of day.
+        // Controller-level duplicate guard ensures only one email per day.
         $emailHour = (int) config('pos.daily_email_report_time', 18);
+        $emailHour = max(0, min(23, $emailHour));
         $schedule->command('email:send-daily-transaction')
-            ->dailyAt(str_pad($emailHour, 2, '0', STR_PAD_LEFT) . ':00')
+            ->everyTenMinutes()
+            ->between(str_pad((string) $emailHour, 2, '0', STR_PAD_LEFT) . ':00', '23:59')
+            ->timezone(config('app.timezone'))
             ->description('Send daily transaction email report')
             ->withoutOverlapping();
     }

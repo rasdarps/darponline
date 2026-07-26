@@ -29,6 +29,25 @@
                         <br><br>
 
                         <h4 class="card-title">All Daily Cash Reconciliations</h4>
+                        @if(!empty($isRestrictedToOwnReconciles))
+                            <div class="alert alert-info py-2 mb-3" role="alert">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Showing your reconciles only.
+                            </div>
+                        @endif
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="filter_from_date">From Date</label>
+                                <input type="date" id="filter_from_date" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filter_to_date">To Date</label>
+                                <input type="date" id="filter_to_date" class="form-control">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end mt-2 mt-md-0">
+                                <button id="reset_filters" class="btn btn-dark w-100">Reset Filters</button>
+                            </div>
+                        </div>
                         <div class="table-responsive">
                             {!! $dataTable->table() !!}
                         </div>
@@ -42,6 +61,26 @@
 
 @section('scripts')
 {{ $dataTable->scripts() }}
+<script>
+    $(function () {
+        let table = $('#cash-reconciliation-table').DataTable();
+
+        $('#filter_from_date, #filter_to_date').on('change', function () {
+            table.ajax.reload();
+        });
+
+        $('#reset_filters').on('click', function () {
+            $('#filter_from_date').val('');
+            $('#filter_to_date').val('');
+            table.ajax.reload();
+        });
+
+        table.on('preXhr.dt', function (e, settings, data) {
+            data.from_date = $('#filter_from_date').val();
+            data.to_date = $('#filter_to_date').val();
+        });
+    });
+</script>
 @endsection
 
 @stack('scripts')

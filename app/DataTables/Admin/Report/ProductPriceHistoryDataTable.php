@@ -5,6 +5,7 @@ namespace App\DataTables\Admin\Report;
 use App\Models\ProductPrice;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -22,7 +23,18 @@ class ProductPriceHistoryDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->addColumn('action', 'productpricehistory.action')
             ->addColumn('created_by_name', function ($row) {
-                return optional($row->createdBy)->name ?? 'N/A';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->createdBy;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return optional($createdByUser)->name ?? 'N/A';
             })
              ->editColumn('created_at', function($row)
             {
@@ -89,13 +101,18 @@ class ProductPriceHistoryDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('created_at')->title('Date Created'),
             Column::make('product.name')->title('Product Name'),
             Column::make('cost_price')->title('Cost Price'),
             Column::make('selling_price')->title('Selling Price'),
-            Column::make('created_by_name')->title('Created By'),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            $columns[] = Column::make('created_by_name')->title('Created By');
+        }
+
+        return $columns;
     }
 
     /**

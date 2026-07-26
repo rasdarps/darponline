@@ -5,6 +5,7 @@ namespace App\DataTables\Admin\Report;
 use App\Models\ExpenseVoucherItem;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -32,13 +33,35 @@ class ExpenseReportDataTable extends DataTable
                 return $row->category->name ?? '';
             })
             ->addColumn('created_by_name', function ($row) {
-                return $row->voucher && $row->voucher->createdBy
-                    ? $row->voucher->createdBy->name
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->voucher ? $row->voucher->createdBy : null;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $createdByUser
+                    ? $createdByUser->name
                     : '';
             })
             ->addColumn('updated_by_name', function ($row) {
-                return $row->voucher && $row->voucher->updatedBy
-                    ? $row->voucher->updatedBy->name
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $updatedByUser = $row->voucher ? $row->voucher->updatedBy : null;
+
+                if (!$viewerIsSuperAdmin && $updatedByUser && strtolower((string) ($updatedByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $updatedByUser
+                    ? $updatedByUser->name
                     : '';
             })
             ->editColumn('amount', function ($row) {
@@ -155,15 +178,20 @@ class ExpenseReportDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('expense_date')->title('Date'),
             Column::make('reference_no')->title('Reference No'),
             Column::make('category_name')->title('Category'),
             Column::make('amount')->title('Amount (Gh¢)'),
-            Column::make('created_by_name')->title('Created By'),
-            Column::make('updated_by_name')->title('Updated By'),
             Column::make('description')->title('Description'),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            $columns[] = Column::make('created_by_name')->title('Created By');
+            $columns[] = Column::make('updated_by_name')->title('Updated By');
+        }
+
+        return $columns;
     }
 
     /**

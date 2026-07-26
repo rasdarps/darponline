@@ -369,29 +369,65 @@
                     @csrf
 
                     <div class="mb-3">
+                        @php
+                            $loginErrorMessage = $errors->first('login') ?: $errors->first('email') ?: $errors->first('username');
+                            $isLockoutMessage = $loginErrorMessage && \Illuminate\Support\Str::contains($loginErrorMessage, 'Too many login attempts');
+                            $isCredentialMismatch = $loginErrorMessage && \Illuminate\Support\Str::contains($loginErrorMessage, 'These credentials do not match our records.');
+                            $lockoutAlertMessage = null;
+
+                            if ($isLockoutMessage) {
+                                $lockoutMinutes = 1;
+
+                                if (preg_match('/(\d+)\s*seconds?/i', $loginErrorMessage, $matches)) {
+                                    $lockoutMinutes = max(1, (int) ceil(((int) $matches[1]) / 60));
+                                } elseif (preg_match('/(\d+)\s*minutes?/i', $loginErrorMessage, $matches)) {
+                                    $lockoutMinutes = max(1, (int) $matches[1]);
+                                }
+
+                                $lockoutAlertMessage = str_replace(':minutes', (string) $lockoutMinutes, 'Too many login attempts. Please wait :minutes minutes before trying again');
+                            }
+
+                            $topAuthAlertMessage = $isLockoutMessage ? $lockoutAlertMessage : ($isCredentialMismatch ? $loginErrorMessage : null);
+                        @endphp
+
+                        <div id="loginTopAlert" class="alert {{ $isLockoutMessage ? 'alert-warning' : 'alert-danger' }} {{ $topAuthAlertMessage ? '' : 'd-none' }}" role="alert" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                            <span>
+                                <strong>Login failed:</strong>
+                                <span id="loginTopAlertText">{{ $topAuthAlertMessage ? ' ' . $topAuthAlertMessage : '' }}</span>
+                            </span>
+                            <button type="button" id="loginTopAlertClose" aria-label="Close" style="border:none; background:transparent; font-size:20px; line-height:1; font-weight:700; color:inherit; cursor:pointer; padding:0 4px;">&times;</button>
+                        </div>
+
                         <label for="login">{{ __('Email or Username') }}</label>
                         <input id="login" type="text" class="form-control @error('login') @error('email') @error('username') is-invalid @enderror @enderror @enderror" name="login" value="{{ old('login') }}" required autocomplete="login" autofocus placeholder="Enter email or username">
 
                         @error('login')
-                            <span class="invalid-feedback d-block" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
+                            @if(!\Illuminate\Support\Str::contains($message, 'Too many login attempts') && !\Illuminate\Support\Str::contains($message, 'These credentials do not match our records.'))
+                                <span class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @endif
                         @enderror
                         @error('email')
-                            <span class="invalid-feedback d-block" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
+                            @if(!\Illuminate\Support\Str::contains($message, 'Too many login attempts') && !\Illuminate\Support\Str::contains($message, 'These credentials do not match our records.'))
+                                <span class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @endif
                         @enderror
                         @error('username')
-                            <span class="invalid-feedback d-block" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
+                            @if(!\Illuminate\Support\Str::contains($message, 'Too many login attempts') && !\Illuminate\Support\Str::contains($message, 'These credentials do not match our records.'))
+                                <span class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @endif
                         @enderror
                     </div>
 
                     <div class="mb-3">
                         <label for="password">{{ __('Password') }}</label>
                         <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Enter password">
+                        <small class="form-text text-muted d-block mt-1">For your security, 3 failed login attempts will lock the system for 3 minutes.</small>
 
                         @error('password')
                             <span class="invalid-feedback d-block" role="alert">
@@ -424,6 +460,17 @@
 @endsection
 
 @section('scripts')
+    @php
+        $authNotifyMessage = $errors->first('login')
+            ?: $errors->first('email')
+            ?: $errors->first('username')
+            ?: $errors->first('password');
+
+        if (!$authNotifyMessage && session('error')) {
+            $authNotifyMessage = session('error');
+        }
+    @endphp
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof Notiflix !== 'undefined') {
@@ -438,6 +485,11 @@
             var loginInput = document.getElementById('login');
             var passwordInput = document.getElementById('password');
             var submitBtn = document.getElementById('loginSubmitBtn');
+            var topAlert = document.getElementById('loginTopAlert');
+            var topAlertText = document.getElementById('loginTopAlertText');
+            var topAlertClose = document.getElementById('loginTopAlertClose');
+            var authNotifyMessage = @json($authNotifyMessage);
+            var hasShownAuthNotify = false;
 
             function notify(msg) {
                 if (typeof Notiflix !== 'undefined') {
@@ -447,12 +499,51 @@
                 }
             }
 
+            function showTopAlert(msg, type) {
+                if (!topAlert) {
+                    return;
+                }
+
+                var finalMessage = String(msg || '').replace(/^login failed\s*:\s*/i, '');
+                topAlert.classList.remove('d-none', 'alert-warning', 'alert-danger');
+                topAlert.classList.add(type === 'warning' ? 'alert-warning' : 'alert-danger');
+                if (topAlertText) {
+                    topAlertText.textContent = ' ' + finalMessage;
+                }
+            }
+
+            if (topAlertClose && topAlert) {
+                topAlertClose.addEventListener('click', function () {
+                    topAlert.classList.add('d-none');
+                });
+            }
+
+            function showAuthNotifyOnce() {
+                if (!authNotifyMessage || hasShownAuthNotify) {
+                    return;
+                }
+
+                hasShownAuthNotify = true;
+                notify(authNotifyMessage);
+            }
+
+            if (authNotifyMessage) {
+                showAuthNotifyOnce();
+                window.setTimeout(showAuthNotifyOnce, 200);
+                window.addEventListener('load', showAuthNotifyOnce, { once: true });
+            }
+
+            if (!form || !loginInput || !passwordInput || !submitBtn) {
+                return;
+            }
+
             form.addEventListener('submit', function (e) {
                 var login = (loginInput.value || '').trim();
                 var password = (passwordInput.value || '').trim();
 
                 if (!login) {
                     e.preventDefault();
+                    showTopAlert('Please enter your email or username.', 'danger');
                     notify('Please enter your email or username.');
                     loginInput.focus();
                     return;
@@ -460,6 +551,7 @@
 
                 if (!password) {
                     e.preventDefault();
+                    showTopAlert('Please enter your password.', 'danger');
                     notify('Please enter your password.');
                     passwordInput.focus();
                     return;
@@ -471,6 +563,11 @@
 
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Please wait...';
+            });
+
+            window.addEventListener('pageshow', function () {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
             });
         });
     </script>

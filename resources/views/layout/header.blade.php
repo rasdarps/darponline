@@ -1,4 +1,32 @@
 <style>
+    #page-topbar .header-quick-actions {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
+        gap: 6px;
+        padding-bottom: 2px;
+    }
+
+    #page-topbar .header-quick-actions::-webkit-scrollbar {
+        height: 5px;
+    }
+
+    #page-topbar .header-quick-actions::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #page-topbar .header-quick-actions::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.45);
+        border-radius: 12px;
+    }
+
+    #page-topbar .header-quick-actions .quick-action-btn {
+        flex: 0 0 auto;
+    }
+
     @media (max-width: 991.98px) {
         #page-topbar .navbar-header {
             height: auto;
@@ -24,7 +52,7 @@
         #page-topbar .header-quick-actions {
             flex: 1 1 100%;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center !important;
             gap: 6px;
             margin-top: 4px;
@@ -50,9 +78,18 @@
         }
 
         #page-topbar .header-quick-actions {
+            display: grid;
+            grid-template-rows: repeat(3, minmax(34px, auto));
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(34px, auto);
+            align-content: start;
+            column-gap: 8px;
             row-gap: 8px;
             margin-top: 8px;
             margin-bottom: 4px;
+            max-height: 126px;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
 
         #page-topbar .header-quick-actions .quick-action-btn {
@@ -118,6 +155,17 @@
                 <i class="ri-file-list-3-line align-middle"></i>
             </a>
         @endcan
+        <!-- Cash Reconciliations -->
+        @can('cash-reconciliation-create')
+            <a href="{{ route('cash-reconciliations.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Cash Reconciliation">
+                <i class="ri-wallet-3-line align-middle"></i>
+            </a>
+        @endcan
+        @canany(['cash-reconciliation-list', 'cash-reconciliation-show'])
+            <a href="{{ route('cash-reconciliations.index') }}" class="btn quick-action-btn header-item waves-effect" title="View Cash Reconciliations">
+                <i class="ri-file-list-3-line align-middle"></i>
+            </a>
+        @endcanany
         <!-- Products -->
         @can('product-create')
             <a href="{{ route('products.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Product">

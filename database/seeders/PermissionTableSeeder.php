@@ -78,7 +78,7 @@ class PermissionTableSeeder extends Seeder
         ];
 
         $stock_adjustment_permissions = [
-            'stock-adjustment-list','stock-adjustment-create','stock-adjustment-edit','stock-adjustment-delete',
+            'stock-adjustment-list','stock-adjustment-create','stock-adjustment-edit','stock-adjustment-delete','stock_adjustment-print',
         ];
 
         $company_management_permissions = [
@@ -109,6 +109,8 @@ class PermissionTableSeeder extends Seeder
         $settings_permissions = [
             'settings-manage',
             'daily-transaction-email-send',
+            'user-audit-view',
+            'user-filter-view',
         ];
 
 
@@ -332,6 +334,8 @@ class PermissionTableSeeder extends Seeder
             'cash-reconciliation-show',
             'cash-reconciliation-approve',
             'cash-reconciliation-reverse-approval',
+            'user-audit-view',
+            'user-filter-view',
         ];
 
         foreach ($supervisor_permissions as $supervisor_permission) {

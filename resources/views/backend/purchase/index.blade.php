@@ -2,7 +2,7 @@
 @section('title') {{'View Purchases'}} @endsection
 
 @section('content')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 
 <div class="page-content">
     <div class="container-fluid">
@@ -22,9 +22,11 @@
                 <div class="card">
                     <div class="card-body">
 
-                        <a href="{{ route('purchases.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;">
-                            <i class="fas fa-plus-circle"></i> Add Purchase
-                        </a> 
+                        @can('purchase-create')
+                            <a href="{{ route('purchases.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;">
+                                <i class="fas fa-plus-circle"></i> Add Purchase
+                            </a>
+                        @endcan
                         <br><br>               
 
                         <h4 class="card-title">Purchases Data</h4>
@@ -60,15 +62,22 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-3">
-                                <label>Created By</label>
-                                <select id="filter_created_by" class="form-control select2">
-                                    <option value="">All Users</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @can('user-filter-view')
+                                <div class="col-md-3">
+                                    <label>Created By</label>
+                                    <select id="filter_created_by" class="form-control select2">
+                                        <option value="">All Users</option>
+                                        @php
+                                            $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                                        @endphp
+                                        @foreach($users as $user)
+                                            @if($viewerIsSuperAdmin || strtolower((string) ($user->user_type ?? '')) !== 'super admin')
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
                             <div class="col-md-3 d-flex align-items-end">
                                 <button id="reset_filters" class="btn btn-dark w-100">Reset Filters</button>
                             </div>
@@ -84,44 +93,46 @@
     </div> <!-- container-fluid -->
 </div>
 
-{{-- Cancel Purchase Modal --}}
-<div class="modal fade" id="cancelPurchaseModal" tabindex="-1" aria-labelledby="cancelPurchaseModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="cancelPurchaseModalLabel">Cancel Purchase <span id="cancelPurchaseModalNo" class="text-danger"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger py-2">
-                    <i class="fas fa-exclamation-triangle me-1"></i>
-                    <strong>Warning:</strong> This will reverse stock added by this purchase and zero its financial values.
+@can('purchase-cancel')
+    {{-- Cancel Purchase Modal --}}
+    <div class="modal fade" id="cancelPurchaseModal" tabindex="-1" aria-labelledby="cancelPurchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelPurchaseModalLabel">Cancel Purchase <span id="cancelPurchaseModalNo" class="text-danger"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-3">
-                    <label for="purchase_cancellation_reason" class="form-label">
-                        Reason for Cancellation <span class="text-danger">*</span>
-                    </label>
-                    <textarea class="form-control" id="purchase_cancellation_reason" rows="3"
-                        placeholder="Enter reason for cancellation..."></textarea>
-                    <div id="purchase_reason_error" class="text-danger small mt-1" style="display:none;">
-                        Please provide a reason for cancellation.
+                <div class="modal-body">
+                    <div class="alert alert-danger py-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>Warning:</strong> This will reverse stock added by this purchase and zero its financial values.
+                    </div>
+                    <div class="mb-3">
+                        <label for="purchase_cancellation_reason" class="form-label">
+                            Reason for Cancellation <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="purchase_cancellation_reason" rows="3"
+                            placeholder="Enter reason for cancellation..."></textarea>
+                        <div id="purchase_reason_error" class="text-danger small mt-1" style="display:none;">
+                            Please provide a reason for cancellation.
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" id="confirmCancelPurchase">
-                    <i class="fas fa-ban me-1"></i> Confirm Cancellation
-                </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="confirmCancelPurchase">
+                        <i class="fas fa-ban me-1"></i> Confirm Cancellation
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+@endcan
 @endsection
 
 @section('scripts')
     {{ $dataTable->scripts() }}
-    <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.6/dist/notiflix-aio-3.2.6.min.js"></script>
+    <script src="{{ asset('notiflix/notiflix-aio-3.2.8.min.js') }}"></script>
     <script>
         $(function() {
             let table = $('#allpurchases-table').DataTable();
@@ -156,52 +167,54 @@
                 Notiflix.Notify.failure("DataTables error: " + message);
             });
 
-            // ── Cancel Purchase ──────────────────────────────────────
-            let cancelPurchaseId = null;
-            const cancelUrl = '{{ route("purchases.cancel", "__ID__") }}';
+            @can('purchase-cancel')
+                // Cancel Purchase
+                let cancelPurchaseId = null;
+                const cancelUrl = '{{ route("purchases.cancel", "__ID__") }}';
 
-            $(document).on('click', '.btn-cancel-purchase', function() {
-                cancelPurchaseId = $(this).data('id');
-                $('#cancelPurchaseModalNo').text('#' + $(this).data('no'));
-                $('#purchase_cancellation_reason').val('');
-                $('#purchase_reason_error').hide();
-                $('#cancelPurchaseModal').modal('show');
-            });
-
-            $('#confirmCancelPurchase').on('click', function() {
-                let reason = $('#purchase_cancellation_reason').val().trim();
-                if (!reason) {
-                    $('#purchase_reason_error').show();
-                    return;
-                }
-
-                let $btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...');
-
-                $.ajax({
-                    url: cancelUrl.replace('__ID__', cancelPurchaseId),
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        reason: reason,
-                    },
-                    success: function(response) {
-                        $('#cancelPurchaseModal').modal('hide');
-                        if (response.status === 200) {
-                            Notiflix.Notify.success(response.message);
-                            table.ajax.reload(null, false);
-                        } else {
-                            Notiflix.Notify.failure(response.message || 'Failed to cancel purchase.');
-                        }
-                    },
-                    error: function(xhr) {
-                        let msg = xhr.responseJSON?.message || 'Failed to cancel purchase.';
-                        Notiflix.Notify.failure(msg);
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).html('<i class="fas fa-ban me-1"></i> Confirm Cancellation');
-                    }
+                $(document).on('click', '.btn-cancel-purchase', function() {
+                    cancelPurchaseId = $(this).data('id');
+                    $('#cancelPurchaseModalNo').text('#' + $(this).data('no'));
+                    $('#purchase_cancellation_reason').val('');
+                    $('#purchase_reason_error').hide();
+                    $('#cancelPurchaseModal').modal('show');
                 });
-            });
+
+                $('#confirmCancelPurchase').on('click', function() {
+                    let reason = $('#purchase_cancellation_reason').val().trim();
+                    if (!reason) {
+                        $('#purchase_reason_error').show();
+                        return;
+                    }
+
+                    let $btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...');
+
+                    $.ajax({
+                        url: cancelUrl.replace('__ID__', cancelPurchaseId),
+                        method: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            reason: reason,
+                        },
+                        success: function(response) {
+                            $('#cancelPurchaseModal').modal('hide');
+                            if (response.status === 200) {
+                                Notiflix.Notify.success(response.message);
+                                table.ajax.reload(null, false);
+                            } else {
+                                Notiflix.Notify.failure(response.message || 'Failed to cancel purchase.');
+                            }
+                        },
+                        error: function(xhr) {
+                            let msg = xhr.responseJSON?.message || 'Failed to cancel purchase.';
+                            Notiflix.Notify.failure(msg);
+                        },
+                        complete: function() {
+                            $btn.prop('disabled', false).html('<i class="fas fa-ban me-1"></i> Confirm Cancellation');
+                        }
+                    });
+                });
+            @endcan
         });
     </script>
 @endsection

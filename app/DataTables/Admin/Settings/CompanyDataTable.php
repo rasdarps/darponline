@@ -6,6 +6,7 @@ use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -28,21 +29,34 @@ class CompanyDataTable extends DataTable
                     $csrf = csrf_field();
                     $method = method_field('DELETE');
 
-                    return '
+                    $buttons = [];
+
+                    if (Gate::allows('company-edit')) {
+                        $buttons[] = '
                         <form style="display:inline-block" action="'.$editUrl.'" method="GET">
                             '.$csrf.'
                             <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
                                 <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
                             </button>
-                        </form>
+                        </form>';
+                    }
+
+                    if (Gate::allows('company-delete')) {
+                        $buttons[] = '
                         <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
                             '.$csrf.'
                             '.$method.'
                             <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete delete-confirm-btn btn btn-sm btn-danger">
                                 <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                             </button>
-                        </form>
-                    ';
+                        </form>';
+                    }
+
+                    if (empty($buttons)) {
+                        return '<span class="text-muted">No actions</span>';
+                    }
+
+                    return implode(' ', $buttons);
                 })
             
             ->editColumn('created_at', function($row)
@@ -90,16 +104,21 @@ class CompanyDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('name')->title('Company Name'),
             Column::make('email')->title('Company Email'),
             Column::make('phone')->title('Company Phone'),
             Column::make('tin_number')->title('Company TIN Number'),
             // Column::make('created_at'),
             // Column::make('updated_at'),
-            Column::make('edit_button')->title('Actions')
-            ->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('company-edit') || Gate::allows('company-delete')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

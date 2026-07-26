@@ -7,7 +7,6 @@ use App\Http\Controllers\Backend\CompanyController;
 use App\Http\Controllers\Backend\CustomerController;
 use App\Http\Controllers\Backend\DailyTransactionEmailController;
 use App\Http\Controllers\Backend\DashboardController;
-use App\Http\Controllers\Backend\DefaultController;
 use App\Http\Controllers\Backend\ExpenseCategoryController;
 use App\Http\Controllers\Backend\ExpenseVoucherController;
 use App\Http\Controllers\Backend\SaleController;
@@ -54,6 +53,7 @@ Route::prefix('admin')->group(function () {
         Route::middleware(['auth', 'force.password.change'])->group(function(){
           
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+            Route::get('/insight', [DashboardController::class, 'insight'])->name('insight');
 
 
              // Admin All Route 
@@ -272,6 +272,7 @@ Route::prefix('admin')->group(function () {
             Route::prefix('sales')->name('sales.')->group(function () {
                 Route::get('/', [SaleController::class, 'index'])->name('index');
                 Route::get('/create', [SaleController::class, 'create'])->name('create');
+                Route::get('/daily-total-sales', [SaleController::class, 'dailyTotalSales'])->name('daily-total-sales');
                 Route::post('/store', [SaleController::class, 'store'])->name('store');
                 Route::post('/cancel/{id}', [SaleController::class, 'cancel'])->name('cancel');
             });
@@ -318,19 +319,3 @@ Route::prefix('admin')->group(function () {
     }); // End Group Middleware
   
 });
-
-  // Default All Route 
-  Route::controller(DefaultController::class)->group(function () {
-    Route::get('/get-category', 'GetCategory')->name('get-category'); 
-    Route::get('/get-product', 'GetProduct')->name('get-product'); 
-    Route::get('/get-unit', 'GetUnit')->name('get-unit'); 
-    Route::get('/check-product', 'GetStock')->name('check-product-stock'); 
-    
-});
-
- 
-
-
-
-
- 

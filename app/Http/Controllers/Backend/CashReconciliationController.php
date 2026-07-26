@@ -26,7 +26,14 @@ class CashReconciliationController extends Controller
 
     public function index(CashReconciliationDataTable $dataTable)
     {
-        return $dataTable->render('backend.cash_reconciliation.index');
+        $currentUser = Auth::user();
+        $viewerIsSuperAdmin = $currentUser && strtolower((string) ($currentUser->user_type ?? '')) === 'super admin';
+        $viewerCanSeeAllCashiers = $currentUser
+            && ($viewerIsSuperAdmin || $currentUser->hasRole('Manager') || $currentUser->hasRole('Supervisor'));
+
+        $isRestrictedToOwnReconciles = ! $viewerCanSeeAllCashiers;
+
+        return $dataTable->render('backend.cash_reconciliation.index', compact('isRestrictedToOwnReconciles'));
     }
 
     public function create()

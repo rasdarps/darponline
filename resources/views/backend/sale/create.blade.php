@@ -2,7 +2,7 @@
 @section('title') {{'Create Sales Sale'}} @endsection
 
 @section('content')
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ <script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 
     <div class="page-content">
         <div class="container-fluid">
@@ -27,39 +27,71 @@
                                 </div>
                                 <form method="post" action="{{ route('sales.store') }}" id="invoiceForm" novalidate>
                                     @csrf
-                                        <div class="row mb-2">
-                                            <div class="col-md-4 d-flex align-items-center">
-                                                <input class="form-control" name="sale_no" type="text" value="{{ $sale_no }}" id="sale_no" readonly style="background-color:#ddd;">
+                                        <div class="row mb-2 align-items-center">
+                                            {{-- barcode field for product lookup --}}
+                                            <div class="col-md-3 d-flex align-items-center mb-2 mb-md-0">
+                                                <div class="form-group mb-1 w-100">
+                                                    <input type="text" id="barcode" class="form-control" placeholder="Scan Barcode" autofocus>
+                                                </div>
                                             </div>
-                                            <div class="col-md-4 d-flex align-items-center">
-                                                <input class="form-control" name="current_stock_qty" type="text" id="current_stock_qty" readonly style="background-color:#ddd">
+
+                                            <div class="col-md-2 d-flex align-items-center mb-2 mb-md-0">
+                                                <div class="form-group mb-1 w-100">
+                                                    <div class="d-flex align-items-center camera-scan-actions">
+                                                        <button type="button" id="startCameraScan" class="btn btn-outline-primary camera-scan-btn">
+                                                            <i class="fas fa-camera mr-1"></i> Scan
+                                                        </button>
+                                                        <button type="button" id="stopCameraScan" class="btn btn-outline-secondary ml-2 w-100 camera-scan-btn" style="display:none;">Stop Camera</button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="col-md-4 d-flex align-items-center justify-content-end">
+
+                                            <div class="col-md-2 d-flex align-items-center mb-2 mb-md-0">
+                                                <input class="form-control" name="sale_no" type="text" value="{{ $sale_no }}" id="sale_no" readonly style="background-color:#ddd;" placeholder="Sale #">
+                                            </div>
+
+                                            <div class="col-md-2 d-flex align-items-center mb-2 mb-md-0">
+                                                <input class="form-control" name="current_stock_qty" type="text" id="current_stock_qty" readonly style="background-color:#ddd" placeholder="Current Stock">
+                                            </div>
+
+                                            <div class="col-md-3 d-flex align-items-center justify-content-end mb-2 mb-md-0">
                                                 <input class="form-control" value="{{ $date }}" name="date" type="date" id="date" {{ !empty($preventBackdatedInvoices) ? 'min='.$date : '' }}>
                                             </div>
                                         </div>
 
-                                        <div class="row align-items-end mb-2">
-                                            {{-- //barcode field for product lookup --}}
-                                            <div class="col-md-4">
-                                                <div class="form-group mb-1">
-                                                    <input type="text" id="barcode" class="form-control" placeholder="Scan Barcode" autofocus>
-                                                    <div class="mt-2 d-flex align-items-center">
-                                                        <button type="button" id="startCameraScan" class="btn btn-outline-primary camera-scan-btn">
-                                                            <i class="fas fa-camera mr-1"></i> Scan With Camera
-                                                        </button>
-                                                        <button type="button" id="stopCameraScan" class="btn btn-outline-secondary ml-2 camera-scan-btn" style="display:none;">Stop Camera</button>
-                                                    </div>
-                                                    {{-- <small class="form-text text-muted">Scan product barcode here</small> --}}
-                                                </div>
-                                                <div id="cameraScanWrap" class="mt-2" style="display:none;">
+                                        <div class="row mb-2">
+                                            <div class="col-6">
+                                                <div id="cameraScanWrap" class="mb-1" style="display:none;">
                                                     <video id="barcodeCameraPreview" autoplay playsinline muted style="width:100%;max-height:220px;border:1px solid #ddd;border-radius:4px;background:#111;"></video>
-                                                    <small class="text-muted">Point camera at barcode. Works best over HTTPS on phone and desktop browsers.</small>
+                                                    <small class="text-muted d-block mt-1">Point camera at barcode. Works best over HTTPS on phone and desktop browsers.</small>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div class="row align-items-end mb-2">
+                                            <div class="col-md-5">
+                                                <div class="form-group mb-1 d-flex align-items-center">
+                                                    <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
+                                                        <option disabled selected value="">Select Product</option>
+                                                        @foreach($products as $product)
+                                                            <option value="{{ $product->id }}"
+                                                                data-category-id="{{ $product->category_id }}"
+                                                                data-category-name="{{ $product->category->name ?? '' }}"
+                                                                data-unit-id="{{ $product->unit_id }}"
+                                                                data-unit-name="{{ $product->unit->name ?? '' }}"
+                                                                data-price="{{ (float) ($product->selling_price ?? 0) }}"
+                                                                data-qty="{{ (float) ($product->quantity ?? 0) }}"
+                                                                data-barcode="{{ $product->barcode ?? '' }}">
+                                                                {{ $product->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-4">
                                                 <div class="form-group mb-1 d-flex align-items-center">
-                                                    <select name="category_id" id="category_id" class="form-control select2" aria-label="Select category">
+                                                    <select name="category_id" id="category_id" class="form-control select2" aria-label="Selected category" disabled>
                                                         <option disabled selected value="">Select Category</option>
                                                         @foreach($category as $cat)
                                                             <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -67,17 +99,9 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                           
-                                             <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <div class="form-group mb-1 d-flex align-items-center">
-                                                    <select name="product_id" id="product_id" class="form-control select2" aria-label="Select product">
-                                                        <option disabled selected value="">Select Product</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="form-group mb-1 d-flex align-items-center">
-                                                    <select name="unit_id" id="unit_id" class="form-control select2" aria-label="Select unit">
+                                                    <select name="unit_id" id="unit_id" class="form-control select2" aria-label="Selected unit" disabled>
                                                         <option disabled selected value="">Select Unit</option>
                                                     </select>
                                                 </div>
@@ -333,6 +357,20 @@
             .mobile-item-table {
                 min-width: 860px;
             }
+
+            .camera-scan-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 6px;
+            }
+
+            .camera-scan-btn {
+                width: 100%;
+            }
+
+            #stopCameraScan.camera-scan-btn {
+                margin-left: 0 !important;
+            }
         }
 
         @media (max-width: 575.98px) {
@@ -377,7 +415,7 @@
 @endsection
 
 @section('scripts')
-    <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+    <script src="{{ asset('vendor/zxing/zxing-library-0.21.3.min.js') }}"></script>
     <script type="text/javascript">
         const ALLOW_NEGATIVE_STOCK = @json((bool) ($allowNegativeStock ?? false));
         const PREVENT_BACKDATED_INVOICES = @json((bool) ($preventBackdatedInvoices ?? false));
@@ -418,16 +456,8 @@
                 }
                 var addedItemsCount = $('#addRow').children('tr').length;
                 if (addedItemsCount === 0) {
-                    if(!$('#category_id').val()) {
-                        notify('Please select a category');
-                        return;
-                    }
                     if(!$('#product_id').val()) {
                         notify('Please select a product');
-                        return;
-                    }
-                    if(!$('#unit_id').val()) {
-                        notify('Please select a unit');
                         return;
                     }
 
@@ -940,8 +970,8 @@
             });
 
             function resetProductSelectionFields() {
+                $('#product_id').val(null).trigger('change');
                 $('#category_id').val(null).trigger('change');
-                $('#product_id').html('<option value="">Select Product</option>').val(null).trigger('change');
                 $('#unit_id').html('<option value="">Select Unit</option>').val(null).trigger('change');
                 $('#current_stock_qty').val('');
             }
@@ -957,14 +987,19 @@
                     data: { barcode: barcode },
                     success: function(product){
                         if(product && product.id){
+                            var availableQty = parseFloat(product.quantity);
+                            if (isNaN(availableQty) || availableQty <= 0) {
+                                Notiflix.Notify.failure('Cannot add this item. Available stock is 0. Please restock before adding to invoice.');
+                                $('#barcode').val('');
+                                $('#barcode').focus();
+                                return;
+                            }
+
                             var date = $('#date').val();
                             var sale_no = $('#sale_no').val();
 
-                            // ðŸ”¹ Update dropdowns and stock field so barcode flow matches manual flow
-                        $('#category_id').val(product.category_id).trigger('change');
-                        $('#product_id').html('<option value="'+product.id+'" selected>'+product.name+'</option>');
-                        $('#unit_id').html('<option value="'+product.unit_id+'" selected>'+product.unit.name+'</option>');
-                        $('#current_stock_qty').val(product.quantity);
+                            // Keep product list intact and drive selection from product dropdown.
+                            $('#product_id').val(String(product.id)).trigger('change');
 
                             // Prepare data for Handlebars row
                             var source = $("#document-template").html();
@@ -977,7 +1012,7 @@
                                 category_name: product.category.name,
                                 product_id: product.id,
                                 product_name: product.name,
-                                available_qty: product.quantity,
+                                available_qty: availableQty,
                                 unit_id: product.unit_id,
                                 unit_name: product.unit.name,
                                 unit_selling_price: product.selling_price // ðŸ”¹ add this
@@ -1020,6 +1055,7 @@
                 var product_name = $('#product_id').find('option:selected').text();
                 var selling_price = $('#product_id').find('option:selected').data('price'); // ðŸ”¹ new
                 var available_qty = $('#product_id').find('option:selected').data('qty');
+                var available_qty_num = parseFloat(available_qty);
                 var unit_id  = $('#unit_id').val();
                 var unit_name = $('#unit_id').find('option:selected').text();
 
@@ -1035,16 +1071,16 @@
                     notifyPop("Date is Required");
                     return false;
                 }
-                if(category_id == '' || category_name.trim() === 'Select Category'){
-                    notifyPop("Category is Required");
-                    return false;
-                }
                 if(product_id == '' || product_name.trim() === 'Select Product'){
                     notifyPop("Product Field is Required");
                     return false;
                 }
-                if(unit_id == '' || unit_name.trim() === 'Select Unit'){
-                    notifyPop("Unit Field is Required");
+                if(category_id == '' || unit_id == ''){
+                    notifyPop("Selected product is missing category or unit setup");
+                    return false;
+                }
+                if(isNaN(available_qty_num) || available_qty_num <= 0){
+                    notifyPop("Cannot add this item. Available stock is 0. Please restock before adding to invoice.");
                     return false;
                 }
 
@@ -1139,65 +1175,26 @@
  
 
     <script type="text/javascript">
-
-        //auto pull product when category selected
-        $(function(){
-            $(document).on('change','#category_id',function(){
-                var category_id = $(this).val();
-                $.ajax({
-                    url:"{{ route('get-product') }}",
-                    type: "GET",
-                    data:{category_id:category_id},
-                    success:function(data){
-                        var html = '<option value="">Select Product</option>';
-                        $.each(data,function(key,v){
-                            html += '<option value=" '+v.id+' " data-price="'+v.selling_price+'" data-qty="'+v.quantity+'"> '+v.name+'</option>';
-                        });
-                        $('#product_id').html(html);
-                    }
-                })
-            });
-        });
-
-    </script>
-
-    <!--Select Product to pull related Unit-->
-    <script type="text/javascript">
         $(function(){
             $(document).on('change','#product_id',function(){
-                var product_id = $(this).val();
-                $.ajax({
-                    url:"{{ route('get-unit') }}",
-                    type: "GET",
-                    data:{product_id:product_id},
-                    success:function(data){
-                        var html = '<option value="">Select Unit</option>';
-                        $.each(data,function(key,v){
-                            html += '<option value=" '+v.unit_id+' "> '+v.unit.name+'</option>';
-                        });
-                        $('#unit_id').html(html);
-                    }
-                })
-            });
-        });
-    </script>
- 
-    <script type="text/javascript">
-    //get current stock quantity when product selected
-        $(function(){
-            $(document).on('change','#product_id',function(){
-                var product_id = $(this).val();
-                $.ajax({
-                    url:"{{ route('check-product-stock') }}",
-                    type: "GET",
-                    data:{product_id:product_id},
-                    success:function(data){                   
-                        $('#current_stock_qty').val(data);
-                    }
-                });
-            });
-        });
+                var $selected = $(this).find('option:selected');
+                var categoryId = $selected.data('category-id');
+                var unitId = $selected.data('unit-id');
+                var unitName = $selected.data('unit-name');
+                var currentQty = $selected.data('qty');
 
+                if (!$(this).val()) {
+                    $('#category_id').val(null).trigger('change');
+                    $('#unit_id').html('<option value="">Select Unit</option>').val(null).trigger('change');
+                    $('#current_stock_qty').val('');
+                    return;
+                }
+
+                $('#category_id').val(String(categoryId)).trigger('change');
+                $('#unit_id').html('<option value="' + unitId + '" selected>' + unitName + '</option>').val(String(unitId)).trigger('change');
+                $('#current_stock_qty').val(currentQty);
+            });
+        });
     </script>
 
     {{-- check quantity script --}}

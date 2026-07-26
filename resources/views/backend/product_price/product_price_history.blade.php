@@ -46,15 +46,22 @@
                                 <label>To Date</label>
                                 <input type="date" id="filter_to_date" class="form-control">
                             </div>
-                            <div class="col-md-3">
-                                <label>Created By</label>
-                                <select id="filter_created_by" class="form-control select2">
-                                    <option value="">All Users</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @can('user-filter-view')
+                                <div class="col-md-3">
+                                    <label>Created By</label>
+                                    <select id="filter_created_by" class="form-control select2">
+                                        <option value="">All Users</option>
+                                        @php
+                                            $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                                        @endphp
+                                        @foreach($users as $user)
+                                            @if($viewerIsSuperAdmin || strtolower((string) ($user->user_type ?? '')) !== 'super admin')
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
                             <div class="col-md-3 d-flex align-items-end mt-3">
                                 <button id="reset_filters" class="btn btn-dark w-100">Reset Filters</button>
                             </div>

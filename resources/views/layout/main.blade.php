@@ -20,10 +20,9 @@
         <!--select 2-->
         <link href="{{ asset('backend/assets/libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
         
-        <!-- Yajra DataTables CSS -->
-       <link href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css" rel="stylesheet">
-       <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('backend/datatables/jquery.dataTables.min.css') }}" />  
+        <!-- Yajra DataTables CSS (local vendor baseline) -->
+        <link href="{{ asset('vendor/datatables/css/buttons.dataTables-2.2.3.min.css') }}" rel="stylesheet">
+        <link href="{{ asset('vendor/datatables/css/jquery.dataTables-1.13.6.min.css') }}" rel="stylesheet">
 
         {{-- notiflix --}}
         <link rel="stylesheet" href=  "{{ asset('notiflix/notiflix-3.2.8.min.css') }}"/>

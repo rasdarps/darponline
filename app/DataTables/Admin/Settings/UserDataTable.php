@@ -6,6 +6,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -33,24 +34,41 @@ class UserDataTable extends DataTable
 
                 $showUrl = route('users.show', $encryptedId);
 
-                return '
+                $buttons = [];
+
+                if (Gate::allows('user-list')) {
+                    $buttons[] = '
                     <a href="'.$showUrl.'" class="btn btn-sm btn-info" title="View">
                         <i class="fas fa-eye" style="color:#fff;"></i>
-                    </a>
+                    </a>';
+                }
+
+                if (Gate::allows('user-edit')) {
+                    $buttons[] = '
                     <form style="display:inline-block" action="'.$editUrl.'" method="GET">
                         '.$csrf.'
                         <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
                             <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
                         </button>
-                    </form>
+                    </form>';
+                }
+
+                if (Gate::allows('user-delete')) {
+                    $buttons[] = '
                     <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
                         '.$csrf.'
                         '.$method.'
                         <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete delete-confirm-btn btn btn-sm btn-danger">
                             <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                         </button>
-                    </form>
-                ';
+                    </form>';
+                }
+
+                if (empty($buttons)) {
+                    return '<span class="text-muted">No actions</span>';
+                }
+
+                return implode(' ', $buttons);
             })
             ->editColumn('created_at', function ($row) {
                 return Carbon::parse($row->created_at)->format('jS F, Y g:i A');
@@ -69,9 +87,14 @@ class UserDataTable extends DataTable
      */
     public function query(User $model): QueryBuilder
     {
-        return $model->newQuery()
-            ->where('user_type', '!=', 'Super Admin')
-            ->orderBy('id', 'DESC');
+        $query = $model->newQuery()
+            ->where('user_type', '!=', 'Super Admin');
+
+        if (auth()->check()) {
+            $query->where('id', '!=', auth()->id());
+        }
+
+        return $query->orderBy('id', 'DESC');
     }
 
     /**
@@ -96,15 +119,21 @@ class UserDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('name'),
+            Column::make('username'),
             Column::make('email'),
             Column::make('roles')->searchable(false),
             Column::make('created_at'),
             Column::make('updated_at'),
-            Column::make('edit_button')->title('Actions')
-                ->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('user-list') || Gate::allows('user-edit') || Gate::allows('user-delete')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

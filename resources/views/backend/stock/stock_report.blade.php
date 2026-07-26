@@ -2,7 +2,7 @@
 @section('title') {{'View Stock Report'}} @endsection
 
 @section('content')
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ <script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 
  <div class="page-content">
     <div class="container-fluid">
@@ -64,7 +64,7 @@
 
 @section('scripts')
     {{ $dataTable->scripts() }}
-    <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.6/dist/notiflix-aio-3.2.6.min.js"></script>
+    <script src="{{ asset('notiflix/notiflix-aio-3.2.8.min.js') }}"></script>
     <script>
         $(function() {
             let table = $('#stocks-table').DataTable();

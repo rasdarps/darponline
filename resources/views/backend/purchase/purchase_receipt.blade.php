@@ -2,7 +2,7 @@
 @section('title') {{'Purchase Receipt'}} @endsection
 
 @section('content')
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ <script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 
 <div class="page-content">
     <div class="container-fluid">
@@ -98,9 +98,9 @@
                                         
                                             <td class="text-center"><strong>Quantity</strong>
                                             </td>
-                                            <td class="text-center"><strong>Unit Price (GhÂ¢) </strong>
+                                            <td class="text-center"><strong>Unit Price (Gh¢) </strong>
                                             </td>
-                                            <td class="text-end"><strong>Total Price (GhÂ¢)</strong>
+                                            <td class="text-end"><strong>Total Price (Gh¢)</strong>
                                             </td>
                                             
                                         </tr>
@@ -175,20 +175,26 @@
                                                 <td class="no-line"></td>
                                                 <td class="no-line text-center">
                                                     <strong>Grand Amount</strong></td>
-                                                <td class="no-line text-end"><h4 class="m-0">GhÂ¢{{ number_format($purchase_payment->total_amount, 2) }}</h4></td>
+                                                <td class="no-line text-end"><h4 class="m-0">Gh¢{{ number_format($purchase_payment->total_amount, 2) }}</h4></td>
                                             </tr>
                                         </tbody>
                                     </table>
                                     </div>
                                     <div class="d-print-none">
                                         <div class="float-end">
-                                            <a href="javascript:window.print()" class="btn btn-success waves-effect waves-light"><i class="fa fa-print"></i></a>
-                                            <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
-                                                <i class="fa fa-download"></i> Download
-                                            </a>
-                                            <a href="{{ route('purchases.create') }}"  class="btn btn-info waves-effect waves-light ms-2">
-                                                <i class="fa fa-plus"></i> New Purchase
-                                            </a>
+                                            @can('purchase-print')
+                                                <a href="javascript:window.print()" class="btn btn-success waves-effect waves-light"><i class="fa fa-print"></i></a>
+                                            @endcan
+                                            @can('purchase-print')
+                                                <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
+                                                    <i class="fa fa-download"></i> Download
+                                                </a>
+                                            @endcan
+                                            @can('purchase-create')
+                                                <a href="{{ route('purchases.create') }}"  class="btn btn-info waves-effect waves-light ms-2">
+                                                    <i class="fa fa-plus"></i> New Purchase
+                                                </a>
+                                            @endcan
                                         </div>
                                     </div>
                                     </div>

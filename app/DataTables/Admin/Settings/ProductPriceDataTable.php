@@ -6,6 +6,7 @@ use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -23,12 +24,26 @@ class ProductPriceDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->addColumn('action', 'productprice.action')
             ->addColumn('created_by_name', function ($row) {
-                return optional($row->createdBy)->name ?? 'N/A';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->createdBy;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return optional($createdByUser)->name ?? 'N/A';
             })
             ->addColumn('edit_button', function($row) {
                     $editUrl = route('product-prices.edit', Crypt::encrypt($row->id));
                     $csrf = csrf_field();
-                    $method = method_field('DELETE');
+
+                    if (!Gate::allows('product-price-edit')) {
+                        return '<span class="text-muted">No actions</span>';
+                    }
 
                     return '
                         <form style="display:inline-block" action="'.$editUrl.'" method="GET">
@@ -87,15 +102,23 @@ class ProductPriceDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('name')->title('Product Name'),
             Column::make('cost_price')->title('Cost Price'),
             Column::make('selling_price')->title('Selling Price'),
-            Column::make('created_by_name')->title('Created By'),
             Column::make('created_at'),
-            Column::make('edit_button')->title('Actions')
-            ->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            array_splice($columns, 3, 0, [Column::make('created_by_name')->title('Created By')]);
+        }
+
+        if (Gate::allows('product-price-edit')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -78,23 +79,38 @@ class ProductDataTable extends DataTable
             $viewUrl = route('products.show', $row->id);
             $encryptedId = Crypt::encrypt($row->id);
             $editUrl = route('products.edit', $encryptedId);
-            
-            return '
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-info view-product" 
-                            data-id="' . $row->id . '" 
+
+            $buttons = [];
+
+            if (Gate::allows('product-list')) {
+                $buttons[] = '
+                    <button type="button" class="btn btn-sm btn-info view-product"
+                            data-id="' . $row->id . '"
                             data-name="' . e($row->name) . '">
                         <i class="fas fa-eye"></i>
-                    </button>
+                    </button>';
+            }
+
+            if (Gate::allows('product-edit')) {
+                $buttons[] = '
                     <a href="' . $editUrl . '" class="btn btn-sm btn-primary">
                         <i class="fas fa-edit"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm btn-danger delete-product" 
+                    </a>';
+            }
+
+            if (Gate::allows('product-delete')) {
+                $buttons[] = '
+                    <button type="button" class="btn btn-sm btn-danger delete-product"
                             data-id="' . e($encryptedId) . '" data-name="' . e($row->name) . '">
                         <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            ';
+                    </button>';
+            }
+
+            if (empty($buttons)) {
+                return '<span class="text-muted">No actions</span>';
+            }
+
+            return '<div class="btn-group" role="group">' . implode('', $buttons) . '</div>';
         })
         ->editColumn('created_at', function($row) {
             return Carbon::parse($row->created_at)->format('d M, Y');
@@ -188,7 +204,7 @@ class ProductDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('checkbox')->title('<input type="checkbox" id="select-all">')->width(30)
                 ->searchable(false)->orderable(false)->exportable(false)->printable(false),
             Column::make('product_info')->title('Product')->width(250),
@@ -198,9 +214,14 @@ class ProductDataTable extends DataTable
             Column::make('selling_price')->title('Selling_Price')->width(120),
             Column::make('stock')->title('Stock')->width(100),
             Column::make('created_at')->title('Added')->width(100),
-            Column::make('actions')->title('Actions')->width(120)
-                ->searchable(false)->orderable(false)->exportable(false)->printable(false),
         ];
+
+        if (Gate::allows('product-list') || Gate::allows('product-edit') || Gate::allows('product-delete')) {
+            $columns[] = Column::make('actions')->title('Actions')->width(120)
+                ->searchable(false)->orderable(false)->exportable(false)->printable(false);
+        }
+
+        return $columns;
     }
 
     /**

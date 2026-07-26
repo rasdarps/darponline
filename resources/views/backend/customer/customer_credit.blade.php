@@ -35,7 +35,7 @@
                             <th>Customer Name</th> 
                             <th>Sale No </th>
                             <th>Date</th>
-                            <th class="text-end">Due Amount (GhÂ¢)</th> 
+                            <th class="text-end">Due Amount (Gh¢)</th>
                             <th>Action</th>
                             
                         </thead>

@@ -14,24 +14,19 @@
         <script src="{{ asset('backend/assets/libs/admin-resources/jquery.vectormap/maps/jquery-jvectormap-us-merc-en.js') }}"></script>
         
         {{-- Yajra Data Table Scripts --}}
-         <!-- CDN Scripts -->
-         <!-- JQUERY DataTables -->
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <!-- Local vendor baseline -->
+        <script src="{{ asset('vendor/datatables/js/jquery.dataTables-1.13.6.min.js') }}"></script>
         <script src="{{ asset('uppy/dist/uppy.min.js') }}"></script>
 
-        <!-- Responsive -->
-        <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
-        <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap4.min.js"></script>
-        <!-- Buttons -->
-        <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
-        <!-- Export dependencies -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-        <!-- Buttons features -->
-        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.colVis.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+        <script src="{{ asset('vendor/datatables/js/dataTables.responsive-2.4.1.min.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/responsive.bootstrap4-2.4.1.min.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/dataTables.buttons-2.2.3.min.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/jszip-3.1.3.min.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/pdfmake-0.1.53.min.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/vfs_fonts-0.1.53.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/buttons.html5-2.2.3.min.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/buttons.colVis-2.2.3.min.js') }}"></script>
+        <script src="{{ asset('vendor/datatables/js/buttons.print-2.2.3.min.js') }}"></script>
         
         <!-- Datatable init js -->
         <script src="{{ asset('backend/assets/js/pages/datatables.init.js') }}"></script>
@@ -108,8 +103,6 @@
 
  <!-- field Validation -->
  <script src="{{ asset('backend/assets/js/validate.min.js') }}"></script>
-
- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
  <script src="{{ asset('backend/assets/js/code.js') }}"></script>
  <script src="{{ asset('backend/assets/js/handlebars.js') }}"></script>
@@ -200,8 +193,8 @@
 </script>
 
 {{-- //Download JS --}}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="{{ asset('vendor/jspdf/jspdf.umd-2.5.1.min.js') }}"></script>
+<script src="{{ asset('vendor/html2canvas/html2canvas-1.4.1.min.js') }}"></script>
 
 <script>
     async function downloadPDF() {

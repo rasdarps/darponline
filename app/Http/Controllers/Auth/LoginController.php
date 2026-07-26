@@ -85,7 +85,7 @@ class LoginController extends Controller
      */
     public function maxAttempts()
     {
-        return 5;
+        return 3;
     }
 
     /**
@@ -93,6 +93,6 @@ class LoginController extends Controller
      */
     public function decayMinutes()
     {
-        return 15;
+        return 3;
     }
 }

@@ -6,6 +6,35 @@
     .buy-card{ background:#0b5f59 !important; }
     .purchase_count{ background:#14b8a6 !important; }
     .invoice_count{ background:#0d9488 !important; }
+
+    .instruction-card {
+        border: 1px solid #f5c2c7;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .instruction-header {
+        background: linear-gradient(90deg, teal 0%, teal 100%);
+        color: #fff;
+        padding: 12px 18px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+    }
+
+    .instruction-welcome {
+        font-size: 1.65rem;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .instruction-note {
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+
+    .instruction-quick-actions .btn {
+        margin: 0 10px 10px 0;
+    }
 </style>
 
 @section('content')
@@ -116,60 +145,6 @@
         </div>
     </div><!-- end row -->
 
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body metric-chart-card">
-                    <h4 class="card-title">Sales Trend (Last 30 Days)</h4>
-                    <div style="position: relative; height: 320px;">
-                        <canvas id="salesTrendChart"></canvas>
-                    </div>
-                    <small class="text-muted d-block mt-2">Shows total sales per day for the last 30 days, with a dashed 7-day moving average to reveal the underlying trend.</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-xl-6">
-            <div class="card">
-                <div class="card-body metric-chart-card">
-                    <h4 class="card-title">Top Category Contribution</h4>
-                    <div style="position: relative; height: 360px;">
-                        <canvas id="topCategoriesChart"></canvas>
-                    </div>
-                    <small class="text-muted d-block mt-2">Ranks the highest-performing categories by total sales value so you can see which categories contribute most to revenue.</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-6">
-            <div class="card">
-                <div class="card-body metric-chart-card">
-                    <h4 class="card-title">Stock Health Risk (Shortfall)</h4>
-                    <div style="position: relative; height: 360px;">
-                        <canvas id="stockRiskChart"></canvas>
-                    </div>
-                    <small class="text-muted d-block mt-2">Displays products below stock level and the quantity shortfall, helping you prioritize urgent restocking.</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-4 justify-content-center">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body metric-chart-card">
-                    <h4 class="card-title">Monthly Sales ({{ $currentYear }})</h4>
-                    <div style="position: relative; height: 340px;">
-                        <canvas id="monthlySalesChart"></canvas>
-                    </div>
-                    <small class="text-muted d-block mt-2">Shows total sales for each month in the current year only (January to December).</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Daily Transaction Email Widget -->
     @if(config('pos.enable_daily_email_report', false))
     <div class="row mt-4">
@@ -256,6 +231,66 @@
             </div><!-- end card -->
         </div><!-- end col -->
     </div><!-- end row -->
+    @else
+    <div class="row">
+        <div class="col-12">
+            <div class="card instruction-card">
+                <div class="instruction-header">
+                    ATTENTION
+                </div>
+                <div class="card-body">
+                    <h2 class="instruction-welcome">
+                        Welcome, {{ auth()->user()->username ?? auth()->user()->name ?? 'User' }}
+                    </h2>
+
+                    <p class="instruction-note">Follow these quick instructions to continue your daily operations.</p>
+
+                    <div class="instruction-quick-actions mb-3">
+                        <a href="{{ route('change.password') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+
+                        @can('invoice-create')
+                        <a href="{{ route('invoices.create') }}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-cart-plus"></i> Create Sale
+                        </a>
+                        @endcan
+
+                        @can('invoice-list')
+                        <a href="{{ route('invoices.index') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list"></i> All Sales
+                        </a>
+                        <a href="{{ route('print.daily_total_sales') }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-calendar-day"></i> Daily Sales
+                        </a>
+                        @endcan
+
+                        @can('cash-reconciliation-create')
+                        <a href="{{ route('cash-reconciliations.create') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-balance-scale"></i> Create Reconciliation
+                        </a>
+                        @endcan
+
+                        @can('cash-reconciliation-list')
+                        <a href="{{ route('cash-reconciliations.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-file-invoice-dollar"></i> Reconciled List
+                        </a>
+                        @endcan
+                    </div>
+
+                    <ol class="mb-0" style="line-height:1.9;">
+                        <li>Change your password if you have not by clicking on the profile image at the top right corner.</li>
+                        <li>To start selling, Click Manage Transactions -&gt; Sales -&gt; Create or the Cart Icon on the topbar (1st Icon).</li>
+                        <li>To view your Sales, Click Manage Transactions -&gt; Sales -&gt; All Sales or on the Sales Report Icon on the topbar (2nd Icon).</li>
+                        <li>To view your daily Sales, Click Manage Transactions -&gt; Sales -&gt; Daily Total Sales.</li>
+                        <li>To balance for the day, Click Manage Transactions -&gt; Cash Reconciliation -&gt; Create or the Cash Reconciliation Icon on the topbar (3rd Icon).</li>
+                        <li>To view Cash Reconciliation, Click Manage Transactions -&gt; Cash Reconciliation -&gt; Reconciled or on the Cash Reconciliation Report Icon on the topbar (4th Icon).</li>
+                        <li style="color:red;">Always Logout when leaving your desk by clicking on the profile image at the top right corner and selecting "Logout".</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 @endcan
 
 </div><!-- end container-fluid -->
@@ -263,255 +298,7 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
-    const isMobileChartView = window.matchMedia('(max-width: 767.98px)').matches;
-    const isWideChartView = window.matchMedia('(min-width: 1600px)').matches;
-
-    function money(value) {
-        return 'Gh¢ ' + Number(value || 0).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-    }
-
-    const salesTrendEl = document.getElementById('salesTrendChart');
-    if (salesTrendEl) {
-        new Chart(salesTrendEl.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: @json($salesTrendLabels),
-                datasets: [
-                    {
-                        label: 'Daily Sales',
-                        data: @json($salesTrendTotals),
-                        borderColor: '#0f766e',
-                        backgroundColor: 'rgba(20, 184, 166, 0.16)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 2,
-                    },
-                    {
-                        label: '7-Day Moving Average',
-                        data: @json($salesTrendMovingAverage),
-                        borderColor: '#0d9488',
-                        backgroundColor: 'rgba(13, 148, 136, 0.08)',
-                        fill: false,
-                        tension: 0.35,
-                        pointRadius: 0,
-                        borderDash: [6, 4],
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        display: false,
-                    },
-                    legend: {
-                        labels: {
-                            boxWidth: isMobileChartView ? 8 : 12,
-                            font: {
-                                size: isMobileChartView ? 10 : 12,
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            maxRotation: 0,
-                            autoSkip: true,
-                            maxTicksLimit: isMobileChartView ? 6 : (isWideChartView ? 15 : 10),
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            maxTicksLimit: isMobileChartView ? 5 : 7,
-                            callback: function(value) {
-                                return money(value);
-                            }
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
-    const topCategoriesEl = document.getElementById('topCategoriesChart');
-    if (topCategoriesEl) {
-        new Chart(topCategoriesEl.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: @json($topCategoryLabels),
-                datasets: [{
-                    label: 'Sales (Gh¢)',
-                    data: @json($topCategoryTotals),
-                    backgroundColor: '#14b8a6',
-                    borderRadius: 6,
-                    maxBarThickness: 40,
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        display: !isMobileChartView,
-                        anchor: 'end',
-                        align: 'right',
-                        color: '#0f172a',
-                        formatter: function(value) {
-                            return money(value);
-                        }
-                    },
-                    legend: {
-                        display: false,
-                    }
-                },
-                scales: {
-                    y: {
-                        ticks: {
-                            callback: function(value) {
-                                var label = this.getLabelForValue(value);
-                                if (typeof label !== 'string') {
-                                    return label;
-                                }
-                                return label.length > 20 ? label.slice(0, 20) + '...' : label;
-                            }
-                        }
-                    },
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return money(value);
-                            }
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
-    const stockRiskEl = document.getElementById('stockRiskChart');
-    if (stockRiskEl) {
-        new Chart(stockRiskEl.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: @json($stockRiskLabels),
-                datasets: [{
-                    label: 'Stock Shortfall Qty',
-                    data: @json($stockRiskShortfall),
-                    backgroundColor: '#dc2626',
-                    borderRadius: 6,
-                    maxBarThickness: 40,
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        display: !isMobileChartView,
-                        anchor: 'end',
-                        align: 'right',
-                        color: '#0f172a',
-                        formatter: function(value) {
-                            return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
-                        }
-                    },
-                    legend: {
-                        display: false,
-                    }
-                },
-                scales: {
-                    y: {
-                        ticks: {
-                            callback: function(value) {
-                                var label = this.getLabelForValue(value);
-                                if (typeof label !== 'string') {
-                                    return label;
-                                }
-                                return label.length > 20 ? label.slice(0, 20) + '...' : label;
-                            }
-                        }
-                    },
-                    x: {
-                        beginAtZero: true,
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
-    const monthlySalesEl = document.getElementById('monthlySalesChart');
-    if (monthlySalesEl) {
-        const monthlyBarColors = [
-            '#0f766e', '#14b8a6', '#0d9488', '#2dd4bf', '#115e59', '#134e4a',
-            '#0f766e', '#14b8a6', '#0d9488', '#2dd4bf', '#115e59', '#134e4a'
-        ];
-
-        new Chart(monthlySalesEl.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: @json($monthlySalesLabels),
-                datasets: [{
-                    label: 'Sales (Gh¢)',
-                    data: @json($monthlySalesTotals),
-                    backgroundColor: monthlyBarColors,
-                    borderColor: monthlyBarColors,
-                    borderRadius: 6,
-                    maxBarThickness: 36,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        display: !isMobileChartView,
-                        anchor: 'end',
-                        align: 'end',
-                        color: '#0f172a',
-                        formatter: function(value) {
-                            return money(value);
-                        }
-                    },
-                    legend: {
-                        display: false,
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            maxRotation: 0,
-                            autoSkip: false,
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return money(value);
-                            }
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
     // Daily Transaction Email Functions
     function checkEmailStatus() {
         fetch('{{ route("daily-transaction-email.status") }}')

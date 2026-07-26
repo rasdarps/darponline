@@ -2,7 +2,7 @@
 @section('title') {{'Reset Password'}} @endsection
 
 @section('content')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 
 <div class="container">
     <div class="row justify-content-center">
@@ -68,8 +68,8 @@
 @endsection
 @section('scripts')
     <!-- Notiflix CSS & JS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notiflix/dist/notiflix-3.2.6.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/notiflix/dist/notiflix-3.2.6.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('notiflix/notiflix-3.2.8.min.css') }}" />
+    <script src="{{ asset('notiflix/notiflix-3.2.8.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             $('#resetForm').on('submit', function(e) {

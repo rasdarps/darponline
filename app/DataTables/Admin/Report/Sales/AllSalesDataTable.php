@@ -6,6 +6,7 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -21,16 +22,21 @@ class AllSalesDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
-            ->addColumn('action', 'allsales.action')
-
             ->addColumn('edit_button', function($row) {
                 $printUrl = route('print.sale', Crypt::encrypt($row->id));
 
-                $html = '<a href="' . $printUrl . '" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+                $canPrint = Gate::allows('sale-print');
+                $canCancel = Gate::allows('sale-cancel');
 
-                if (!$row->cancelled_at) {
+                $buttons = [];
+
+                if ($canPrint) {
+                    $buttons[] = '<a href="' . $printUrl . '" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+                }
+
+                if ($canCancel && !$row->cancelled_at) {
                     $encryptedId = Crypt::encrypt($row->id);
-                    $html .= ' <button type="button"
+                    $buttons[] = '<button type="button"
                         class="btn btn-sm btn-warning btn-cancel-sale ms-1"
                         data-id="' . $encryptedId . '"
                         data-no="' . e($row->sale_no) . '">
@@ -38,7 +44,11 @@ class AllSalesDataTable extends DataTable
                     </button>';
                 }
 
-                return $html;
+                if (empty($buttons)) {
+                    return '<span class="text-muted">No actions</span>';
+                }
+
+                return implode(' ', $buttons);
             })
 
             ->addColumn('cancelled_status', function($row) {
@@ -55,11 +65,33 @@ class AllSalesDataTable extends DataTable
             })
 
             ->addColumn('created_by_name', function($row) {
-                return $row->createdBy ? $row->createdBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->createdBy;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $createdByUser ? $createdByUser->name : '';
             })
 
             ->addColumn('cancelled_by_name', function($row) {
-                return $row->cancelledBy ? $row->cancelledBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $cancelledByUser = $row->cancelledBy;
+
+                if (!$viewerIsSuperAdmin && $cancelledByUser && strtolower((string) ($cancelledByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $cancelledByUser ? $cancelledByUser->name : '';
             })
 
             ->addColumn('amount', function($row) {
@@ -96,6 +128,12 @@ class AllSalesDataTable extends DataTable
         $query = $model->newQuery()
             ->with(['payment.customer', 'createdBy', 'cancelledBy'])
             ->orderBy('date', 'ASC');
+
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = auth()->user();
+        if ($currentUser && $currentUser->hasRole('Cashier')) {
+            $query->where('created_by', $currentUser->id);
+        }
 
         // Apply filters
         if ($saleId = $this->request()->get('sale_id')) {
@@ -188,19 +226,25 @@ class AllSalesDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('date'),
             Column::make('sale_no'),
             Column::make('customer_name')->title('Customer Name'),
-            Column::make('amount')->title('Amount (GhÂ¢)'),
-            // Column::make('cancelled_status')->title('Status')
-            //     ->searchable(true)->printable(true)->exportable(true),
-            Column::make('created_by_name')->title('Created By'),
-            Column::make('cancelled_by_name')->title('Cancelled By')
-                ->searchable(true)->printable(true)->exportable(true),
-            Column::make('edit_button')->title('Actions')
-                ->searchable(false)->printable(false)->exportable(false),
+            Column::make('amount')->title('Amount (Gh¢)'),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            $columns[] = Column::make('created_by_name')->title('Created By');
+            $columns[] = Column::make('cancelled_by_name')->title('Cancelled By')
+                ->searchable(true)->printable(true)->exportable(true);
+        }
+
+        if (Gate::allows('sale-print') || Gate::allows('sale-cancel')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

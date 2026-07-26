@@ -6,6 +6,7 @@ use App\Models\Purchase;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -21,15 +22,21 @@ class AllPurchasesDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
-            ->addColumn('action', 'allpurchases.action')
              ->addColumn('edit_button', function($row) {
                 $printUrl = route('print.purchase', Crypt::encrypt($row->id));
 
-                $html = '<a href="'.$printUrl.'" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+                $canPrint = Gate::allows('purchase-print');
+                $canCancel = Gate::allows('purchase-cancel');
 
-                if (!$row->cancelled_at) {
+                $buttons = [];
+
+                if ($canPrint) {
+                    $buttons[] = '<a href="' . $printUrl . '" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+                }
+
+                if ($canCancel && !$row->cancelled_at) {
                     $encryptedId = Crypt::encrypt($row->id);
-                    $html .= ' <button type="button"
+                    $buttons[] = '<button type="button"
                         class="btn btn-sm btn-warning btn-cancel-purchase ms-1"
                         data-id="' . $encryptedId . '"
                         data-no="' . e($row->purchase_no) . '">
@@ -37,7 +44,11 @@ class AllPurchasesDataTable extends DataTable
                     </button>';
                 }
 
-                return $html;
+                if (empty($buttons)) {
+                    return '<span class="text-muted">No actions</span>';
+                }
+
+                return implode(' ', $buttons);
             })
 
             ->addColumn('cancelled_status', function($row) {
@@ -48,11 +59,33 @@ class AllPurchasesDataTable extends DataTable
             })
 
               ->addColumn('created_by_name', function($row) {
-                return $row->createdBy ? $row->createdBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->createdBy;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $createdByUser ? $createdByUser->name : '';
             })
 
             ->addColumn('cancelled_by_name', function($row) {
-                return $row->cancelledBy ? $row->cancelledBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $cancelledByUser = $row->cancelledBy;
+
+                if (!$viewerIsSuperAdmin && $cancelledByUser && strtolower((string) ($cancelledByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $cancelledByUser ? $cancelledByUser->name : '';
             })
 
             ->addColumn('supplier_name', function($row) {
@@ -187,19 +220,25 @@ class AllPurchasesDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('date'),
             Column::make('purchase_no'),
             Column::make('supplier_name')->title('Supplier Name'),
             Column::make('amount')->title('Amount (Gh¢)'),
-            // Column::make('cancelled_status')->title('Status')
-            // ->searchable(true)->printable(true)->exportable(true),
-            Column::make('created_by_name')->title('Created By'),
-            Column::make('cancelled_by_name')->title('Cancelled By')
-            ->searchable(true)->printable(true)->exportable(true),
-            Column::make('edit_button')->title('Actions')
-            ->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            $columns[] = Column::make('created_by_name')->title('Created By');
+            $columns[] = Column::make('cancelled_by_name')->title('Cancelled By')
+                ->searchable(true)->printable(true)->exportable(true);
+        }
+
+        if (Gate::allows('purchase-print') || Gate::allows('purchase-cancel')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

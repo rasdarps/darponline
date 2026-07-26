@@ -6,6 +6,7 @@ use App\Models\StockAdjustment;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -22,7 +23,18 @@ class StockAdjustmentDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->addColumn('created_by_name', function ($row) {
-                return $row->createdBy ? $row->createdBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->createdBy;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $createdByUser ? $createdByUser->name : '';
             })
             ->addColumn('type_badge', function ($row) {
                 if ($row->adjustment_type === 'increase') {
@@ -41,16 +53,34 @@ class StockAdjustmentDataTable extends DataTable
                 $csrf = csrf_field();
                 $method = method_field('DELETE');
 
-                return '
-                    <a class="btn btn-sm btn-primary" href="' . $showUrl . '"><i class="fas fa-eye"></i></a>
-                    <a class="btn btn-sm btn-secondary" target="_blank" href="' . $printUrl . '"><i class="fas fa-print"></i></a>
-                    <a class="btn btn-sm btn-success" href="' . $editUrl . '"><i class="fas fa-edit"></i></a>
+                $buttons = [];
+
+                if (Gate::allows('stock-adjustment-list')) {
+                    $buttons[] = '<a class="btn btn-sm btn-primary" href="' . $showUrl . '"><i class="fas fa-eye"></i></a>';
+                }
+
+                if (Gate::allows('stock_adjustment-print')) {
+                    $buttons[] = '<a class="btn btn-sm btn-secondary" target="_blank" href="' . $printUrl . '"><i class="fas fa-print"></i></a>';
+                }
+
+                if (Gate::allows('stock-adjustment-edit')) {
+                    $buttons[] = '<a class="btn btn-sm btn-success" href="' . $editUrl . '"><i class="fas fa-edit"></i></a>';
+                }
+
+                if (Gate::allows('stock-adjustment-delete')) {
+                    $buttons[] = '
                     <form style="display:inline-block" action="' . $deleteUrl . '" method="POST">
                         ' . $csrf . '
                         ' . $method . '
                         <button type="button" class="btn-delete delete-confirm-btn btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                    </form>
-                ';
+                    </form>';
+                }
+
+                if (empty($buttons)) {
+                    return '<span class="text-muted">No actions</span>';
+                }
+
+                return implode(' ', $buttons);
             })
             ->editColumn('adjustment_date', function ($row) {
                 return $row->adjustment_date
@@ -100,16 +130,24 @@ class StockAdjustmentDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('adjustment_date')->title('Date'),
             Column::make('reference_no')->title('Reference No'),
             Column::make('type_badge')->title('Type'),
             Column::make('reason')->title('Reason'),
             Column::make('total_qty')->title('Total Qty'),
             Column::make('total_value')->title('Total Value'),
-            Column::make('created_by_name')->title('Created By'),
-            Column::make('action_button')->title('Actions')->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            array_splice($columns, 6, 0, [Column::make('created_by_name')->title('Created By')]);
+        }
+
+        if (Gate::allows('stock-adjustment-list') || Gate::allows('stock_adjustment-print') || Gate::allows('stock-adjustment-edit') || Gate::allows('stock-adjustment-delete')) {
+            $columns[] = Column::make('action_button')->title('Actions')->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

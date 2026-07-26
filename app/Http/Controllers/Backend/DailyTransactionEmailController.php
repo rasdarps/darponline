@@ -12,6 +12,7 @@ use App\Models\ExpenseVoucherItem;
 use App\Models\Payment;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -124,20 +125,25 @@ class DailyTransactionEmailController extends Controller
         // Check if feature is enabled
         if (!$this->isEmailFeatureEnabled()) {
             Log::info('Daily transaction email feature is disabled.');
-            return;
+            return ['status' => 'skipped', 'message' => 'Feature is disabled'];
         }
 
         try {
             $company = Company::first();
             if (!$company) {
                 Log::warning('No company found for auto-send.');
-                return;
+                return ['status' => 'skipped', 'message' => 'No company found'];
+            }
+
+            if (empty($company->email)) {
+                Log::warning('Company email is empty for auto-send.', ['company_id' => $company->id]);
+                return ['status' => 'skipped', 'message' => 'Company email is empty'];
             }
 
             // Check if already sent today
             if (DailyTransactionEmail::alreadySentToday($company->id)) {
                 Log::info('Email already sent today for company: ' . $company->id);
-                return;
+                return ['status' => 'skipped', 'message' => 'Already sent today'];
             }
 
             // Calculate totals
@@ -161,8 +167,10 @@ class DailyTransactionEmailController extends Controller
             Mail::to($company->email)->send(new DailyTransactionMail($emailRecord, $company->name));
 
             Log::info('Auto-send daily transaction email sent successfully to ' . $company->email);
+            return ['status' => 'sent', 'message' => 'Email sent', 'recipient' => $company->email];
         } catch (\Throwable $e) {
             Log::error('Error auto-sending daily transaction email: ' . $e->getMessage());
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
@@ -175,6 +183,7 @@ class DailyTransactionEmailController extends Controller
         $configuredHour = (int) config('pos.daily_email_report_time', 18);
         $configuredTimeLabel = str_pad((string) $configuredHour, 2, '0', STR_PAD_LEFT) . ':00';
         $businessDate = now()->toDateString();
+        $schedulerHealth = $this->getSchedulerHealthSnapshot();
 
         try {
             $company = Company::first();
@@ -192,6 +201,7 @@ class DailyTransactionEmailController extends Controller
                     'recipient_email' => null,
                     'auto_send_enabled' => $enabled,
                     'configured_auto_send_time_label' => $configuredTimeLabel,
+                    'scheduler_health' => $schedulerHealth,
                     'business_date' => $businessDate,
                     'can_send' => false,
                     'message' => 'No company found.',
@@ -221,6 +231,7 @@ class DailyTransactionEmailController extends Controller
                 'recipient_email' => $company->email,
                 'auto_send_enabled' => $enabled,
                 'configured_auto_send_time_label' => $configuredTimeLabel,
+                'scheduler_health' => $schedulerHealth,
                 'business_date' => $businessDate,
                 'can_send' => $canSend,
             ]);
@@ -238,6 +249,7 @@ class DailyTransactionEmailController extends Controller
                 'recipient_email' => null,
                 'auto_send_enabled' => $enabled,
                 'configured_auto_send_time_label' => $configuredTimeLabel,
+                'scheduler_health' => $schedulerHealth,
                 'business_date' => $businessDate,
                 'can_send' => false,
                 'message' => 'Error: ' . $e->getMessage(),
@@ -287,5 +299,49 @@ class DailyTransactionEmailController extends Controller
         }
 
         return filter_var($raw, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function getSchedulerHealthSnapshot(): array
+    {
+        $maxAgeMinutes = 20;
+        $lastRunRaw = Cache::get('health:daily-email-scheduler:last_run_at');
+
+        if (!$lastRunRaw) {
+            return [
+                'status' => 'missing',
+                'healthy' => false,
+                'last_run_at' => null,
+                'age_minutes' => null,
+                'max_age_minutes' => $maxAgeMinutes,
+                'message' => 'No scheduler heartbeat recorded yet.',
+            ];
+        }
+
+        try {
+            $lastRun = Carbon::parse($lastRunRaw);
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'invalid',
+                'healthy' => false,
+                'last_run_at' => (string) $lastRunRaw,
+                'age_minutes' => null,
+                'max_age_minutes' => $maxAgeMinutes,
+                'message' => 'Scheduler heartbeat value is invalid.',
+            ];
+        }
+
+        $ageMinutes = $lastRun->diffInMinutes(now());
+        $healthy = $ageMinutes <= $maxAgeMinutes;
+
+        return [
+            'status' => $healthy ? 'ok' : 'stale',
+            'healthy' => $healthy,
+            'last_run_at' => $lastRun->format('Y-m-d H:i:s'),
+            'age_minutes' => $ageMinutes,
+            'max_age_minutes' => $maxAgeMinutes,
+            'message' => $healthy
+                ? 'Scheduler heartbeat is healthy.'
+                : 'Scheduler heartbeat is stale.',
+        ];
     }
 }

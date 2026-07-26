@@ -4,6 +4,7 @@ namespace App\DataTables\Admin\Settings;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
@@ -30,24 +31,41 @@ class RoleDataTable extends DataTable
 
                 $showUrl = route('roles.show', $encryptedId);
 
-                return '
+                $buttons = [];
+
+                if (Gate::allows('role-list')) {
+                    $buttons[] = '
                     <a href="'.$showUrl.'" class="btn btn-sm btn-info" title="View">
                         <i class="fas fa-eye" style="color:#fff;"></i>
-                    </a>
+                    </a>';
+                }
+
+                if (Gate::allows('role-edit')) {
+                    $buttons[] = '
                     <form style="display:inline-block" action="'.$editUrl.'" method="GET">
                         '.$csrf.'
                         <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
                             <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
                         </button>
-                    </form>
+                    </form>';
+                }
+
+                if (Gate::allows('role-delete')) {
+                    $buttons[] = '
                     <form style="display:inline-block" action="'.$deleteUrl.'" method="POST">
                         '.$csrf.'
                         '.$method.'
                         <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete delete-confirm-btn btn btn-sm btn-danger">
                             <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                         </button>
-                    </form>
-                ';
+                    </form>';
+                }
+
+                if (empty($buttons)) {
+                    return '<span class="text-muted">No actions</span>';
+                }
+
+                return implode(' ', $buttons);
             })
             ->editColumn('created_at', function ($row) {
                 return Carbon::parse($row->created_at)->format('jS F, Y g:i A');
@@ -93,13 +111,18 @@ class RoleDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('name'),
             Column::make('created_at'),
             Column::make('updated_at'),
-            Column::make('edit_button')->title('Actions')
-                ->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('role-list') || Gate::allows('role-edit') || Gate::allows('role-delete')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

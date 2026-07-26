@@ -4,7 +4,7 @@
 
 @section('content')
 @php use Illuminate\Support\Facades\Crypt; @endphp
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
 <div class="page-content">
     <div class="container-fluid">
         <div class="row">
@@ -85,20 +85,37 @@
                                         <th>Notes</th>
                                         <td>{{ $reconciliation->notes ?: '-' }}</td>
                                     </tr>
-                                    <tr>
-                                        <th>Created By</th>
-                                        <td>{{ optional($reconciliation->createdBy)->name ?: '-' }}</td>
-                                    </tr>
+                                    @php
+                                        $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                                    @endphp
+                                    @can('user-audit-view')
+                                        <tr>
+                                            <th>Created By</th>
+                                            @php
+                                                $createdBy = $reconciliation->createdBy;
+                                                $maskCreatedBy = !$viewerIsSuperAdmin && $createdBy && strtolower((string) ($createdBy->user_type ?? '')) === 'super admin';
+                                            @endphp
+                                            <td>{{ $maskCreatedBy ? '-' : (optional($createdBy)->name ?: '-') }}</td>
+                                        </tr>
+                                    @endcan
                                     @if($reconciliation->approved_at)
                                         <tr>
                                             <th>Approved By</th>
-                                            <td>{{ optional($reconciliation->approvedBy)->name ?: '-' }} @if($reconciliation->approved_at) on {{ Carbon::parse($reconciliation->approved_at)->format('d-m-Y H:i') }} @endif</td>
+                                            @php
+                                                $approvedBy = $reconciliation->approvedBy;
+                                                $maskApprovedBy = !$viewerIsSuperAdmin && $approvedBy && strtolower((string) ($approvedBy->user_type ?? '')) === 'super admin';
+                                            @endphp
+                                            <td>{{ $maskApprovedBy ? '-' : (optional($approvedBy)->name ?: '-') }} @if($reconciliation->approved_at) on {{ Carbon::parse($reconciliation->approved_at)->format('d-m-Y H:i') }} @endif</td>
                                         </tr>
                                     @endif
                                     @if($reconciliation->reversed_at)
                                         <tr>
                                             <th>Reversed By</th>
-                                            <td>{{ optional($reconciliation->reversedBy)->name ?: '-' }} @if($reconciliation->reversed_at) on {{ Carbon::parse($reconciliation->reversed_at)->format('d-m-Y H:i') }} @endif</td>
+                                            @php
+                                                $reversedBy = $reconciliation->reversedBy;
+                                                $maskReversedBy = !$viewerIsSuperAdmin && $reversedBy && strtolower((string) ($reversedBy->user_type ?? '')) === 'super admin';
+                                            @endphp
+                                            <td>{{ $maskReversedBy ? '-' : (optional($reversedBy)->name ?: '-') }} @if($reconciliation->reversed_at) on {{ Carbon::parse($reconciliation->reversed_at)->format('d-m-Y H:i') }} @endif</td>
                                         </tr>
                                         <tr>
                                             <th>Reversal Reason</th>

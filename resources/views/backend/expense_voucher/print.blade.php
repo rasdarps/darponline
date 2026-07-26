@@ -33,7 +33,14 @@
 
     <div class="meta">
         <div><strong>Reference:</strong> {{ $voucher->reference_no ?: '-' }}</div>
-        <div><strong>Created By:</strong> {{ optional($voucher->createdBy)->name ?: '-' }}</div>
+        @can('user-audit-view')
+            @php
+                $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                $createdBy = $voucher->createdBy;
+                $maskCreatedBy = !$viewerIsSuperAdmin && $createdBy && strtolower((string) ($createdBy->user_type ?? '')) === 'super admin';
+            @endphp
+            <div><strong>Created By:</strong> {{ $maskCreatedBy ? '-' : (optional($createdBy)->name ?: '-') }}</div>
+        @endcan
         <div><strong>Notes:</strong> {{ $voucher->notes ?: '-' }}</div>
     </div>
 

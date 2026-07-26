@@ -17,6 +17,12 @@
                                     <span>Dashboard</span>
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ route('insight') }}" class="waves-effect">
+                                    <i class="ri-line-chart-line"></i>
+                                    <span>Insight</span>
+                                </a>
+                            </li>
                         @endcan
                             {{-- transaction menu starts --}}
                             @canany(['purchase-list', 'purchase-create', 'sale-list', 'sale-create', 'expense-list', 'expense-create', 'stock-adjustment-list', 'stock-adjustment-create', 'cash-reconciliation-list', 'cash-reconciliation-create', 'cash-reconciliation-show'])
@@ -57,6 +63,7 @@
                                                 @endcan
                                                 @can('sale-list')
                                                     <li><a href="{{ route('sales.index') }}">All Sales</a></li>
+                                                    <li><a href="{{ route('sales.daily-total-sales') }}">Daily Total Sales</a></li>
                                                 @endcan
                                                 
                                             </ul>

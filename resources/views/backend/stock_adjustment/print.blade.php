@@ -35,7 +35,14 @@
         <div><strong>Reference:</strong> {{ $adjustment->reference_no ?: '-' }}</div>
         <div><strong>Type:</strong> {{ ucfirst($adjustment->adjustment_type) }}</div>
         <div><strong>Reason:</strong> {{ $adjustment->reason ?: '-' }}</div>
-        <div><strong>Created By:</strong> {{ optional($adjustment->createdBy)->name ?: '-' }}</div>
+        @can('user-audit-view')
+            @php
+                $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                $createdBy = $adjustment->createdBy;
+                $maskCreatedBy = !$viewerIsSuperAdmin && $createdBy && strtolower((string) ($createdBy->user_type ?? '')) === 'super admin';
+            @endphp
+            <div><strong>Created By:</strong> {{ $maskCreatedBy ? '-' : (optional($createdBy)->name ?: '-') }}</div>
+        @endcan
         <div><strong>Notes:</strong> {{ $adjustment->notes ?: '-' }}</div>
     </div>
 

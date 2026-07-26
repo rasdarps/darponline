@@ -141,7 +141,7 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="{{ asset('vendor/jsbarcode/JsBarcode.all-3.11.6.min.js') }}"></script>
 <script>
     (function () {
         if (typeof JsBarcode === 'undefined') {

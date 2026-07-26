@@ -32,6 +32,7 @@ class SaleController extends Controller
     $this->middleware('permission:sale-create', ['only' => ['create', 'store']]);
     $this->middleware('permission:sale-cancel', ['only' => ['cancel']]);
     $this->middleware('permission:sale-print', ['only' => ['printSaleList', 'printSale']]);
+    $this->middleware('permission:sale-list', ['only' => ['dailyTotalSales']]);
     }
 
      public function index(AllSalesDataTable $dataTable){
@@ -39,7 +40,8 @@ class SaleController extends Controller
           $customers = Customer::orderBy('name')->get();
           $sales = Sale::orderBy('sale_no')->get();
           $users = User::orderBy('name')->get();
-          return $dataTable->render('backend.sale.index', compact('customers', 'sales', 'users'));
+                    $isRestrictedToOwnSales = auth()->check() && auth()->user()->hasRole('Cashier');
+                    return $dataTable->render('backend.sale.index', compact('customers', 'sales', 'users', 'isRestrictedToOwnSales'));
 
     }
 
@@ -53,6 +55,7 @@ class SaleController extends Controller
 
         $unit = Unit::all();
         $category = Category::all();
+        $products = Product::with(['category', 'unit'])->orderBy('name')->get();
         $costomer = Customer::all();
 
         // Get the maximum numeric sale_no
@@ -73,6 +76,7 @@ class SaleController extends Controller
             'category',
             'date',
             'costomer',
+            'products',
             'unit',
             'allowNegativeStock',
             'preventBackdatedInvoices',
@@ -136,12 +140,14 @@ class SaleController extends Controller
         // Validation rules
         $rules = [
             'date' => ['required', 'date'],
-            'category_id' => ['required', 'array', 'min:1'],
-            'category_id.*' => ['required'],
             'product_id' => ['required', 'array', 'min:1'],
-            'product_id.*' => ['required'],
-            'unit_id' => ['required', 'array', 'min:1'],
-            'unit_id.*' => ['required'],
+            'product_id.*' => ['required', 'exists:products,id'],
+            'selling_qty' => ['required', 'array', 'min:1'],
+            'selling_qty.*' => ['required', 'numeric', 'min:0.01'],
+            'unit_selling_price' => ['required', 'array', 'min:1'],
+            'unit_selling_price.*' => ['required', 'numeric', 'min:0.01'],
+            'selling_price' => ['required', 'array', 'min:1'],
+            'selling_price.*' => ['required', 'numeric', 'min:0.01'],
             'paid_status' => ['required', 'in:full_paid,full_due,partial_paid'],
         ];
 
@@ -192,21 +198,31 @@ class SaleController extends Controller
                         'created_by' => Auth::id(),
                     ]);
 
-                    $count_category = count($request->category_id);
-                    for ($i = 0; $i < $count_category; $i++) {
+                    $countProducts = count($request->product_id);
+                    for ($i = 0; $i < $countProducts; $i++) {
+                        $product = Product::whereKey($request->product_id[$i])->lockForUpdate()->firstOrFail();
+
+                        $categoryId = $product->category_id;
+                        $unitId = $product->unit_id;
+
+                        if (!$categoryId || !$unitId) {
+                            throw ValidationException::withMessages([
+                                'product_id.' . $i => 'Selected product is missing category or unit setup.',
+                            ]);
+                        }
+
                         $sale_details = new SaleDetail();
                         $sale_details->date = date('Y-m-d', strtotime($request->date));
                         $sale_details->sale_id = $Sale->id;
-                        $sale_details->category_id = $request->category_id[$i];
+                        $sale_details->category_id = $categoryId;
                         $sale_details->product_id = $request->product_id[$i];
                         $sale_details->selling_qty = $request->selling_qty[$i];
                         $sale_details->unit_selling_price = $request->unit_selling_price[$i];
                         $sale_details->selling_price = $request->selling_price[$i];
-                        $sale_details->unit_id = $request->unit_id[$i];
+                        $sale_details->unit_id = $unitId;
                         $sale_details->save();
 
-                        // Lock row to prevent lost updates under concurrent sales.
-                        $product = Product::whereKey($request->product_id[$i])->lockForUpdate()->firstOrFail();
+                        // Product row already locked at loop start.
                         $beforeQty = (float) $product->quantity;
                         $lineQty = (float) $sale_details->selling_qty;
 
@@ -511,6 +527,66 @@ class SaleController extends Controller
         return view('backend.sale.sale_receipt',compact('Sale','companyInfo'));
 
     } // End Method
+
+    public function dailyTotalSales(Request $request)
+    {
+        $currentUser = Auth::user();
+        $canSelectCashier = $currentUser && $currentUser->hasAnyRole(['Super Admin', 'Manager', 'Supervisor']);
+
+        $validationRules = [
+            'date' => ['nullable', 'date'],
+        ];
+
+        if ($canSelectCashier) {
+            $validationRules['user_id'] = ['nullable', 'integer', 'exists:users,id'];
+        }
+
+        $validated = $request->validate($validationRules);
+        $selectedDate = $validated['date'] ?? Carbon::now()->toDateString();
+
+        $cashiers = collect();
+        $selectedUserId = (int) $currentUser->id;
+        $selectedUser = $currentUser;
+
+        if ($canSelectCashier) {
+            $cashiers = User::role('Cashier')->orderBy('name')->get(['id', 'name', 'username']);
+
+            $selectedUserId = (int) ($validated['user_id'] ?? 0);
+            if (! $selectedUserId && $cashiers->isNotEmpty()) {
+                $selectedUserId = (int) $cashiers->first()->id;
+            }
+
+            $selectedUser = $cashiers->firstWhere('id', $selectedUserId);
+            if (! $selectedUser && $cashiers->isNotEmpty()) {
+                $selectedUser = $cashiers->first();
+                $selectedUserId = (int) $selectedUser->id;
+            }
+
+            if (! $selectedUser) {
+                $selectedUser = $currentUser;
+                $selectedUserId = (int) $currentUser->id;
+            }
+        }
+
+        $totalSalesAmount = Payment::query()
+            ->join('sales', 'payments.sale_id', '=', 'sales.id')
+            ->whereDate('sales.date', $selectedDate)
+            ->whereNull('sales.cancelled_at')
+            ->where('sales.created_by', $selectedUserId)
+            ->sum('payments.total_amount');
+
+        $companyInfo = Company::first();
+
+        return view('backend.sale.daily_total_sales', [
+            'selectedDate' => $selectedDate,
+            'username' => $selectedUser->username ?? $selectedUser->name,
+            'canSelectCashier' => $canSelectCashier,
+            'cashiers' => $cashiers,
+            'selectedUserId' => $selectedUserId,
+            'totalSalesAmount' => (float) $totalSalesAmount,
+            'companyInfo' => $companyInfo,
+        ]);
+    }
 
 }
  

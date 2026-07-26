@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\ExpenseVoucherItem;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Purchase;
@@ -33,7 +34,20 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        
+        $dashboardData = $this->buildDashboardData();
+
+        return view('admin.index', $dashboardData);
+    }
+
+    public function insight()
+    {
+        $dashboardData = $this->buildDashboardData();
+
+        return view('admin.insight', $dashboardData);
+    }
+
+    private function buildDashboardData(): array
+    {
         $total_purchase = Purchase::get()->count(); 
         $total_invoice = Sale::get()->count();
         $pending_purchase = Purchase::get()->count();
@@ -113,6 +127,26 @@ class DashboardController extends Controller
             ->values()
             ->all();
 
+        // Expense insight: spent amount grouped by expense category.
+        $expenseInsightRows = ExpenseVoucherItem::query()
+            ->join('expense_categories', 'expense_voucher_items.expense_category_id', '=', 'expense_categories.id')
+            ->select(
+                'expense_categories.name as category_name',
+                DB::raw('SUM(expense_voucher_items.amount) as total_spent')
+            )
+            ->groupBy('expense_categories.id', 'expense_categories.name')
+            ->havingRaw('SUM(expense_voucher_items.amount) > 0')
+            ->orderByDesc('total_spent')
+            ->limit(8)
+            ->get();
+
+        $expenseInsightLabels = $expenseInsightRows->pluck('category_name')->values()->all();
+        $expenseInsightTotals = $expenseInsightRows
+            ->pluck('total_spent')
+            ->map(fn ($value) => round((float) $value, 2))
+            ->values()
+            ->all();
+
         // Monthly sales for current year only (Jan-Dec).
         $currentYear = Carbon::today()->year;
         $monthlySalesRaw = DB::table('sales')
@@ -135,7 +169,7 @@ class DashboardController extends Controller
         }
 
         $company = Company::first();
-        return view('admin.index', compact(
+        return compact(
             'total_purchase',
             'total_invoice',
             'total_sales',
@@ -152,11 +186,13 @@ class DashboardController extends Controller
             'topCategoryTotals',
             'stockRiskLabels',
             'stockRiskShortfall',
+            'expenseInsightLabels',
+            'expenseInsightTotals',
             'currentYear',
             'monthlySalesLabels',
             'monthlySalesTotals',
             'company'
-        ));
+        );
     }
 
     

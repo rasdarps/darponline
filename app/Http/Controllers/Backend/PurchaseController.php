@@ -47,6 +47,7 @@ class PurchaseController extends Controller
     public function create(){ 
         $unit = Unit::all();
         $category = Category::all();
+        $products = Product::with(['category', 'unit'])->orderBy('name')->get();
         $suppliers = Supplier::all();
 
         // Get the maximum numeric purchase_no
@@ -59,7 +60,7 @@ class PurchaseController extends Controller
 
         $date = Carbon::now()->format('Y-m-d');        
        
-       return view('backend.purchase.create',compact('purchase_no','category','date','suppliers','unit'));
+         return view('backend.purchase.create',compact('purchase_no','category','date','suppliers','unit', 'products'));
     } // End Method
 
 
@@ -68,12 +69,8 @@ class PurchaseController extends Controller
         // Backend validation
         $rules = [
             'date' => ['required', 'date'],
-            'category_id' => ['required', 'array', 'min:1'],
-            'category_id.*' => ['required'],
             'product_id' => ['required', 'array', 'min:1'],
-            'product_id.*' => ['required'],
-            'unit_id' => ['required', 'array', 'min:1'],
-            'unit_id.*' => ['required'],
+            'product_id.*' => ['required', 'exists:products,id'],
             'buying_qty' => ['required', 'array', 'min:1'],
             'buying_qty.*' => ['required', 'numeric', 'min:1'],
             'unit_cost_price' => ['required', 'array', 'min:1'],
@@ -127,21 +124,31 @@ class PurchaseController extends Controller
                         'created_by' => Auth::id(),
                     ]);
 
-                    $count_category = count($request->category_id);
-                    for ($i = 0; $i < $count_category; $i++) {
+                    $countProducts = count($request->product_id);
+                    for ($i = 0; $i < $countProducts; $i++) {
+                        $product = Product::whereKey($request->product_id[$i])->lockForUpdate()->firstOrFail();
+
+                        $categoryId = $product->category_id;
+                        $unitId = $product->unit_id;
+
+                        if (!$categoryId || !$unitId) {
+                            throw ValidationException::withMessages([
+                                'product_id.' . $i => 'Selected product is missing category or unit setup.',
+                            ]);
+                        }
+
                         $purchase_details = new PurchaseDetail();
                         $purchase_details->date = date('Y-m-d', strtotime($request->date));
                         $purchase_details->purchase_id = $purchase->id;
-                        $purchase_details->category_id = $request->category_id[$i];
+                        $purchase_details->category_id = $categoryId;
                         $purchase_details->product_id = $request->product_id[$i];
                         $purchase_details->buying_qty = $request->buying_qty[$i];
                         $purchase_details->unit_cost_price = $request->unit_cost_price[$i];
                         $purchase_details->buying_price = $request->buying_price[$i];
-                        $purchase_details->unit_id = $request->unit_id[$i];
+                        $purchase_details->unit_id = $unitId;
                         $purchase_details->save();
 
-                        // Lock row to prevent lost updates under concurrent writes.
-                        $product = Product::whereKey($request->product_id[$i])->lockForUpdate()->firstOrFail();
+                        // Product row already locked at loop start.
                         $beforeQty = (float) $product->quantity;
                         $lineQty = (float) $purchase_details->buying_qty;
                         $afterQty = $beforeQty + $lineQty;

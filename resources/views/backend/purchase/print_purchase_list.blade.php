@@ -24,7 +24,10 @@
             <div class="card">
                 <div class="card-body">
 
-    <a href="{{ route('purchases.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;"><i class="fas fa-plus-circle"></i> Add Purchase </a> <br>  <br>               
+    @can('purchase-create')
+        <a href="{{ route('purchases.create') }}" class="btn btn-dark btn-rounded waves-effect waves-light" style="float:right;"><i class="fas fa-plus-circle"></i> Add Purchase </a>
+    @endcan
+    <br>  <br>               
 
                     <h4 class="card-title">Purchase | All Data </h4>
                     
@@ -53,7 +56,9 @@
                 <td> {{ $item['purchase_payment']['total_amount'] }} </td>
 
                 <td>
-     <a href="{{ route('print.purchase',$item->id) }}" class="btn btn-danger sm" title="Print purchase" >  <i class="fa fa-print"></i> </a>
+                    @can('purchase-print')
+                        <a href="{{ route('print.purchase',$item->id) }}" class="btn btn-danger sm" title="Print purchase" >  <i class="fa fa-print"></i> </a>
+                    @endcan
                 </td>
                
             </tr>

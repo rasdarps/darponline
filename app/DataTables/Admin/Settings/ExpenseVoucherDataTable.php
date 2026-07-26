@@ -6,6 +6,7 @@ use App\Models\ExpenseVoucher;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
@@ -22,7 +23,18 @@ class ExpenseVoucherDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->addColumn('created_by_name', function ($row) {
-                return $row->createdBy ? $row->createdBy->name : '';
+                if (!Gate::allows('user-audit-view')) {
+                    return '';
+                }
+                $viewer = auth()->user();
+                $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+                $createdByUser = $row->createdBy;
+
+                if (!$viewerIsSuperAdmin && $createdByUser && strtolower((string) ($createdByUser->user_type ?? '')) === 'super admin') {
+                    return '';
+                }
+
+                return $createdByUser ? $createdByUser->name : '';
             })
             ->addColumn('items_count', function ($row) {
                 return (string) ($row->items_count ?? 0);
@@ -35,27 +47,45 @@ class ExpenseVoucherDataTable extends DataTable
                 $csrf = csrf_field();
                 $method = method_field('DELETE');
 
-                return '
+                $buttons = [];
+
+                if (Gate::allows('expense-list')) {
+                    $buttons[] = '
                     <a style="border:none; background:#0d6efd; cursor:pointer;" class="btn btn-sm btn-primary" href="' . $showUrl . '">
                         <i class="fas fa-eye" style="color:#fff; justify-content:center;"></i>
-                    </a>
+                    </a>';
+                    $buttons[] = '
                     <a style="border:none; background:#6f42c1; cursor:pointer;" class="btn btn-sm btn-secondary" href="' . $printUrl . '" target="_blank" rel="noopener">
                         <i class="fas fa-print" style="color:#fff; justify-content:center;"></i>
-                    </a>
+                    </a>';
+                }
+
+                if (Gate::allows('expense-edit')) {
+                    $buttons[] = '
                     <form style="display:inline-block" action="' . $editUrl . '" method="GET">
                         ' . $csrf . '
                         <button style="border:none; background:green; cursor:pointer;" class="table-edit-btn btn btn-sm btn-success">
                             <i class="fas fa-edit" style="color:#fff; justify-content:center;"></i>
                         </button>
-                    </form>
+                    </form>';
+                }
+
+                if (Gate::allows('expense-delete')) {
+                    $buttons[] = '
                     <form style="display:inline-block" action="' . $deleteUrl . '" method="POST">
                         ' . $csrf . '
                         ' . $method . '
                         <button type="button" style="border:none; background:red; cursor:pointer;" class="btn-delete delete-confirm-btn btn btn-sm btn-danger">
                             <i class="fas fa-trash" style="color:#fff; justify-content:center;"></i>
                         </button>
-                    </form>
-                ';
+                    </form>';
+                }
+
+                if (empty($buttons)) {
+                    return '<span class="text-muted">No actions</span>';
+                }
+
+                return implode(' ', $buttons);
             })
             ->editColumn('voucher_date', function ($row) {
                 return $row->voucher_date
@@ -103,16 +133,24 @@ class ExpenseVoucherDataTable extends DataTable
      */
     public function getColumns(): array
     {
-        return [
+        $columns = [
             Column::make('voucher_date')->title('Date'),
             Column::make('reference_no')->title('Reference No'),
             Column::make('items_count')->title('Lines'),
             Column::make('total_amount')->title('Total Amount'),
-            Column::make('created_by_name')->title('Created By'),
             Column::make('notes')->title('Notes'),
-            Column::make('edit_button')->title('Actions')
-                ->searchable(false)->printable(false)->exportable(false),
         ];
+
+        if (Gate::allows('user-audit-view')) {
+            array_splice($columns, 4, 0, [Column::make('created_by_name')->title('Created By')]);
+        }
+
+        if (Gate::allows('expense-list') || Gate::allows('expense-edit') || Gate::allows('expense-delete')) {
+            $columns[] = Column::make('edit_button')->title('Actions')
+                ->searchable(false)->printable(false)->exportable(false);
+        }
+
+        return $columns;
     }
 
     /**

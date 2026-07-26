@@ -30,7 +30,14 @@
                         <div class="row mb-3">
                             <div class="col-md-3"><strong>Date:</strong> {{ optional($voucher->voucher_date)->format('d-m-Y') }}</div>
                             <div class="col-md-3"><strong>Reference:</strong> {{ $voucher->reference_no ?: '-' }}</div>
-                            <div class="col-md-3"><strong>Created By:</strong> {{ optional($voucher->createdBy)->name ?: '-' }}</div>
+                            @can('user-audit-view')
+                                @php
+                                    $viewerIsSuperAdmin = auth()->check() && strtolower((string) (auth()->user()->user_type ?? '')) === 'super admin';
+                                    $createdBy = $voucher->createdBy;
+                                    $maskCreatedBy = !$viewerIsSuperAdmin && $createdBy && strtolower((string) ($createdBy->user_type ?? '')) === 'super admin';
+                                @endphp
+                                <div class="col-md-3"><strong>Created By:</strong> {{ $maskCreatedBy ? '-' : (optional($createdBy)->name ?: '-') }}</div>
+                            @endcan
                             <div class="col-md-3"><strong>Total:</strong> {{ number_format((float) $voucher->total_amount, 2) }}</div>
                         </div>
 
