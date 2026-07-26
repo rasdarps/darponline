@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CashReconciliation;
 use App\Models\ExpenseVoucherItem;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -26,6 +27,7 @@ class CashReconciliationController extends Controller
 
     public function index(CashReconciliationDataTable $dataTable)
     {
+        /** @var User|null $currentUser */
         $currentUser = Auth::user();
         $viewerIsSuperAdmin = $currentUser && strtolower((string) ($currentUser->user_type ?? '')) === 'super admin';
         $viewerCanSeeAllCashiers = $currentUser

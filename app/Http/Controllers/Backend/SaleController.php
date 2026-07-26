@@ -39,7 +39,9 @@ class SaleController extends Controller
           $customers = Customer::orderBy('name')->get();
           $sales = Sale::orderBy('sale_no')->get();
           $users = User::orderBy('name')->get();
-                    $isRestrictedToOwnSales = auth()->check() && auth()->user()->hasRole('Cashier');
+                                        /** @var User|null $currentUser */
+                                        $currentUser = Auth::user();
+                                        $isRestrictedToOwnSales = $currentUser && $currentUser->hasRole('Cashier');
                     return $dataTable->render('backend.sale.index', compact('customers', 'sales', 'users', 'isRestrictedToOwnSales'));
 
     }
@@ -496,6 +498,7 @@ class SaleController extends Controller
 
     public function dailyTotalSales(Request $request)
     {
+        /** @var User|null $currentUser */
         $currentUser = Auth::user();
         $canSelectCashier = $currentUser && $currentUser->hasAnyRole(['Super Admin', 'Manager', 'Supervisor']);
 
