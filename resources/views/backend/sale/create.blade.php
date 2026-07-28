@@ -763,6 +763,8 @@
             <td>
                 <!-- ðŸ”¹ Unit selling price auto-filled from products.selling_price -->
                 <input type="number" 
+                    step="0.01"
+                    min="0"
                     class="form-control unit_selling_price text-right" 
                     name="unit_selling_price[]"
                     value="@{{unit_selling_price}}" 
@@ -777,7 +779,7 @@
 
 
             <td>
-                <input type="number" class="form-control selling_price text-right" name="selling_price[]" value="0" readonly> 
+                <input type="number" step="0.01" min="0" class="form-control selling_price text-right" name="selling_price[]" value="0" readonly> 
                 
             </td>
 

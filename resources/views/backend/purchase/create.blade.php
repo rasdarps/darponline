@@ -625,11 +625,11 @@
             </td>
 
             <td>
-                <input type="number" class="form-control unit_cost_price text-right" name="unit_cost_price[]" value=""> 
+                <input type="number" step="0.01" min="0" class="form-control unit_cost_price text-right" name="unit_cost_price[]" value=""> 
             </td>
 
             <td>
-                <input type="number" class="form-control unit_selling_price text-right" name="unit_selling_price[]" value=""> 
+                <input type="number" step="0.01" min="0" class="form-control unit_selling_price text-right" name="unit_selling_price[]" value=""> 
             </td>
 
             <td>
@@ -638,7 +638,7 @@
             </td>
 
             <td>
-                <input type="number" class="form-control buying_price text-right" name="buying_price[]" value="" readonly> 
+                <input type="number" step="0.01" min="0" class="form-control buying_price text-right" name="buying_price[]" value="" readonly> 
             </td>
 
             <td>
