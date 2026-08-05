@@ -86,9 +86,9 @@
                                                 $minQty       = $rawMin > 0 ? (int) ceil($rawMin) : 0;
                                             @endphp
                                             <tr>
-                                                <td>{{ $index + 1 }}</td>
-                                                <td><strong>{{ $detail->product->name ?? 'Unknown Product' }}</strong></td>
-                                                <td>{{ $detail->unit->name ?? '—' }}</td>
+                                                <td class="bg-light">{{ $index + 1 }}</td>
+                                                <td class="bg-light"><strong>{{ $detail->product->name ?? 'Unknown Product' }}</strong></td>
+                                                <td class="bg-light">{{ $detail->unit->name ?? '—' }}</td>
                                                 <td>
                                                     <input
                                                         type="number"
@@ -102,8 +102,8 @@
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </td>
-                                                <td class="text-center">{{ $detail->buying_qty }}</td>
-                                                <td class="text-center">
+                                                <td class="text-center bg-light">{{ $detail->buying_qty }}</td>
+                                                <td class="text-center bg-light">
                                                     @if($minQty > 0)
                                                         <span class="badge bg-warning text-dark" title="This many units have been sold">{{ $minQty }}</span>
                                                     @else
