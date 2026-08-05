@@ -54,8 +54,10 @@
 
                         <div class="alert alert-warning py-2">
                             <i class="fas fa-exclamation-triangle me-1"></i>
-                            <strong>Note:</strong> Only quantities can be edited. The <em>Already Sold (Min)</em> column shows the minimum quantity you must keep per item.
+                            <strong>Note:</strong> You can edit <strong>quantity</strong> and <strong>unit cost price</strong> per line.
+                            The <em>Already Sold (Min)</em> column shows the minimum quantity you must keep.
                             Setting a quantity to <strong>0</strong> removes that item from the purchase.
+                            If this is the latest purchase for a product, updating its cost price will also update the product's current cost price.
                         </div>
 
                         <form action="{{ route('purchases.update', $encryptedId) }}" method="POST" novalidate>
@@ -69,7 +71,7 @@
                                             <th>#</th>
                                             <th>Product</th>
                                             <th>Unit</th>
-                                            <th class="text-end">Cost Price</th>
+                                            <th class="text-center" style="width:150px;">Unit Cost Price</th>
                                             <th class="text-center">Original Qty</th>
                                             <th class="text-center">Already Sold (Min)</th>
                                             <th class="text-center" style="width:150px;">New Qty</th>
@@ -87,7 +89,19 @@
                                                 <td>{{ $index + 1 }}</td>
                                                 <td><strong>{{ $detail->product->name ?? 'Unknown Product' }}</strong></td>
                                                 <td>{{ $detail->unit->name ?? '—' }}</td>
-                                                <td class="text-end">{{ number_format($detail->unit_cost_price, 2) }}</td>
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        name="unit_cost_price[{{ $detail->id }}]"
+                                                        class="form-control cost-input @error('unit_cost_price.' . $detail->id) is-invalid @enderror"
+                                                        value="{{ old('unit_cost_price.' . $detail->id, $detail->unit_cost_price) }}"
+                                                        min="0.01"
+                                                        step="0.01"
+                                                    >
+                                                    @error('unit_cost_price.' . $detail->id)
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
                                                 <td class="text-center">{{ $detail->buying_qty }}</td>
                                                 <td class="text-center">
                                                     @if($minQty > 0)
@@ -104,7 +118,6 @@
                                                         value="{{ old('buying_qty.' . $detail->id, $detail->buying_qty) }}"
                                                         min="{{ $minQty }}"
                                                         step="1"
-                                                        data-cost="{{ $detail->unit_cost_price }}"
                                                         data-old="{{ $detail->buying_qty }}"
                                                         data-product="{{ $detail->product->name ?? 'Item' }}"
                                                     >
@@ -212,14 +225,17 @@
 <script src="{{ asset('notiflix/notiflix-aio-3.2.8.min.js') }}"></script>
 <script>
     // Live row total update + zero warning
-    document.querySelectorAll('.qty-input').forEach(function (input) {
+    function recalcRow(row) {
+        const qty  = parseFloat(row.querySelector('.qty-input').value) || 0;
+        const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
+        const total = (qty * cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        row.querySelector('.row-total').textContent = total;
+        row.querySelector('.zero-warning').style.display = qty === 0 ? '' : 'none';
+    }
+
+    document.querySelectorAll('.qty-input, .cost-input').forEach(function (input) {
         input.addEventListener('input', function () {
-            const qty     = parseFloat(this.value) || 0;
-            const cost    = parseFloat(this.dataset.cost) || 0;
-            const row     = this.closest('tr');
-            const total   = (qty * cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            row.querySelector('.row-total').textContent = total;
-            row.querySelector('.zero-warning').style.display = qty === 0 ? '' : 'none';
+            recalcRow(this.closest('tr'));
         });
     });
 

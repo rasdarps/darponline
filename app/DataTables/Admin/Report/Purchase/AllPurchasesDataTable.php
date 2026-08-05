@@ -36,8 +36,14 @@ class AllPurchasesDataTable extends DataTable
                 }
 
                 if ($canEdit && !$row->cancelled_at) {
-                    $editUrl = route('purchases.edit', Crypt::encrypt($row->id));
-                    $buttons[] = '<a href="' . $editUrl . '" class="btn btn-sm btn-primary ms-1"><i class="fas fa-edit"></i> Edit</a>';
+                    $allowPurchaseEdit = filter_var(\App\Models\AppSetting::getValue('allow_purchase_edit') ?? '1', FILTER_VALIDATE_BOOLEAN);
+                    $windowHours = (int) (\App\Models\AppSetting::getValue('purchase_edit_window_hours') ?? 24);
+                    $withinWindow = $row->created_at && $row->created_at->diffInHours(now()) <= $windowHours;
+
+                    if ($allowPurchaseEdit && $withinWindow) {
+                        $editUrl = route('purchases.edit', Crypt::encrypt($row->id));
+                        $buttons[] = '<a href="' . $editUrl . '" class="btn btn-sm btn-primary ms-1"><i class="fas fa-edit"></i> Edit</a>';
+                    }
                 }
 
                 if ($canCancel && !$row->cancelled_at) {

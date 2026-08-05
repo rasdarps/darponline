@@ -364,6 +364,19 @@ class PurchaseController extends Controller
                 ->with(['message' => 'Cannot edit a cancelled purchase.', 'alert-type' => 'error']);
         }
 
+        // Check purchase edit setting
+        $allowPurchaseEdit = filter_var(\App\Models\AppSetting::getValue('allow_purchase_edit') ?? '1', FILTER_VALIDATE_BOOLEAN);
+        if (! $allowPurchaseEdit) {
+            return redirect()->route('purchases.index')
+                ->with(['message' => 'Purchase editing is currently disabled in system settings.', 'alert-type' => 'error']);
+        }
+
+        $windowHours = (int) (\App\Models\AppSetting::getValue('purchase_edit_window_hours') ?? 24);
+        if ($purchase->created_at->diffInHours(now()) > $windowHours) {
+            return redirect()->route('purchases.index')
+                ->with(['message' => 'This purchase can no longer be edited — the ' . $windowHours . '-hour edit window has passed.', 'alert-type' => 'error']);
+        }
+
         return view('backend.purchase.edit', compact('purchase', 'encryptedId'));
     } // End Method
 
@@ -381,13 +394,27 @@ class PurchaseController extends Controller
             return back()->withErrors(['edit_reason' => 'Cannot edit a cancelled purchase.'])->withInput();
         }
 
+        // Check purchase edit setting
+        $allowPurchaseEdit = filter_var(\App\Models\AppSetting::getValue('allow_purchase_edit') ?? '1', FILTER_VALIDATE_BOOLEAN);
+        if (! $allowPurchaseEdit) {
+            return back()->withErrors(['edit_reason' => 'Purchase editing is currently disabled in system settings.'])->withInput();
+        }
+
+        $windowHours = (int) (\App\Models\AppSetting::getValue('purchase_edit_window_hours') ?? 24);
+        if ($purchase->created_at->diffInHours(now()) > $windowHours) {
+            return back()->withErrors(['edit_reason' => 'The ' . $windowHours . '-hour edit window for this purchase has passed.'])->withInput();
+        }
+
         $request->validate([
-            'buying_qty'   => ['required', 'array', 'min:1'],
-            'buying_qty.*' => ['required', 'numeric', 'min:0'],
-            'edit_reason'  => ['required', 'string', 'max:500'],
+            'buying_qty'        => ['required', 'array', 'min:1'],
+            'buying_qty.*'      => ['required', 'numeric', 'min:0'],
+            'unit_cost_price'   => ['required', 'array', 'min:1'],
+            'unit_cost_price.*' => ['required', 'numeric', 'min:0.01'],
+            'edit_reason'       => ['required', 'string', 'max:500'],
         ]);
 
-        $quantities = $request->buying_qty; // [ detail_id => new_qty ]
+        $quantities  = $request->buying_qty;   // [ detail_id => new_qty ]
+        $costPrices  = $request->unit_cost_price; // [ detail_id => new_cost ]
 
         // Guard: at least one line must remain with qty > 0
         $anyNonZero = collect($quantities)->contains(fn($q) => (float) $q > 0);
@@ -397,7 +424,7 @@ class PurchaseController extends Controller
             ]);
         }
 
-        // Pre-validate stock guards before touching the DB
+        // Pre-validate stock guards (qty reductions only)
         $guardErrors = [];
         foreach ($quantities as $detailId => $newQty) {
             $newQty = (float) $newQty;
@@ -407,11 +434,11 @@ class PurchaseController extends Controller
             }
             $oldQty = (float) $detail->buying_qty;
             if ($newQty >= $oldQty) {
-                continue; // increase or unchanged — no guard needed
+                continue;
             }
-            $product     = $detail->product;
+            $product      = $detail->product;
             $currentStock = (float) ($product->quantity ?? 0);
-            $reduction   = $oldQty - $newQty;
+            $reduction    = $oldQty - $newQty;
             if ($reduction > $currentStock) {
                 $guardErrors["buying_qty.{$detailId}"] = [
                     "{$product->name}: Cannot reduce by {$reduction} — only {$currentStock} units remain in stock (minimum allowed: " . ceil($oldQty - $currentStock) . ").",
@@ -423,73 +450,121 @@ class PurchaseController extends Controller
             return back()->withInput()->withErrors($guardErrors);
         }
 
-        DB::transaction(function () use ($purchase, $quantities, $request) {
+        DB::transaction(function () use ($purchase, $quantities, $costPrices, $request) {
             foreach ($quantities as $detailId => $newQty) {
-                $newQty = (float) $newQty;
+                $newQty       = (float) $newQty;
+                $newCostPrice = (float) ($costPrices[$detailId] ?? 0);
 
                 $detail = PurchaseDetail::where('id', $detailId)
                     ->where('purchase_id', $purchase->id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                $oldQty = (float) $detail->buying_qty;
-                if ($newQty == $oldQty) {
-                    continue; // no change
+                $oldQty       = (float) $detail->buying_qty;
+                $oldCostPrice = (float) $detail->unit_cost_price;
+
+                $qtyChanged  = $newQty != $oldQty;
+                $costChanged = round($newCostPrice, 4) != round($oldCostPrice, 4);
+
+                if (! $qtyChanged && ! $costChanged) {
+                    continue; // nothing to do
                 }
 
-                $product      = Product::whereKey($detail->product_id)->lockForUpdate()->firstOrFail();
-                $beforeStock  = (float) $product->quantity;
-                $delta        = $newQty - $oldQty;
-                $afterStock   = $beforeStock + $delta;
+                $product     = Product::whereKey($detail->product_id)->lockForUpdate()->firstOrFail();
+                $beforeStock = (float) $product->quantity;
+                $delta       = $newQty - $oldQty;
+                $afterStock  = $beforeStock + $delta;
 
-                // Race-condition guard inside transaction
+                // Race-condition guard
                 if ($afterStock < 0) {
                     throw ValidationException::withMessages([
                         "buying_qty.{$detailId}" => ["{$product->name}: Edit would cause negative stock. Rejected."],
                     ]);
                 }
 
+                // Determine stock ledger movement type (qty-driven)
                 if ($newQty == 0) {
                     $detail->delete();
                     $movementType = 'purchase_edit_decrease';
                     $qtyIn  = 0;
                     $qtyOut = $oldQty;
                 } elseif ($delta > 0) {
-                    $detail->buying_qty  = $newQty;
-                    $detail->buying_price = round($newQty * (float) $detail->unit_cost_price, 2);
+                    $detail->buying_qty   = $newQty;
+                    $detail->unit_cost_price = $newCostPrice;
+                    $detail->buying_price = round($newQty * $newCostPrice, 2);
                     $detail->save();
                     $movementType = 'purchase_edit_increase';
                     $qtyIn  = $delta;
                     $qtyOut = 0;
-                } else {
-                    $detail->buying_qty  = $newQty;
-                    $detail->buying_price = round($newQty * (float) $detail->unit_cost_price, 2);
+                } elseif ($delta < 0) {
+                    $detail->buying_qty   = $newQty;
+                    $detail->unit_cost_price = $newCostPrice;
+                    $detail->buying_price = round($newQty * $newCostPrice, 2);
                     $detail->save();
                     $movementType = 'purchase_edit_decrease';
                     $qtyIn  = 0;
                     $qtyOut = abs($delta);
+                } else {
+                    // Only cost price changed — no stock movement, just update detail
+                    $detail->unit_cost_price = $newCostPrice;
+                    $detail->buying_price    = round($oldQty * $newCostPrice, 2);
+                    $detail->save();
+                    $movementType = null;
                 }
 
-                $product->quantity = $afterStock;
+                // Update product stock quantity (only if qty changed)
+                if ($qtyChanged) {
+                    $product->quantity = $afterStock;
+                }
+
+                // Update product cost_price if this is the most recent purchase for this product
+                if ($costChanged) {
+                    $latestPurchaseId = PurchaseDetail::where('product_id', $product->id)
+                        ->whereHas('purchase', fn($q) => $q->whereNull('cancelled_at')->whereNull('deleted_at'))
+                        ->orderByDesc('purchase_id')
+                        ->value('purchase_id');
+
+                    if ($latestPurchaseId == $purchase->id) {
+                        $product->cost_price = $newCostPrice;
+
+                        ProductPrice::create([
+                            'product_id'    => $product->id,
+                            'cost_price'    => $newCostPrice,
+                            'selling_price' => $product->selling_price,
+                            'created_by'    => Auth::id(),
+                        ]);
+                    }
+                }
+
                 $product->save();
 
-                app(StockLedgerService::class)->record([
-                    'product_id'          => $product->id,
-                    'movement_type'       => $movementType,
-                    'reference_type'      => 'purchase',
-                    'reference_id'        => $purchase->id,
-                    'reference_detail_id' => $detailId,
-                    'movement_at'         => now(),
-                    'qty_in'              => $qtyIn,
-                    'qty_out'             => $qtyOut,
-                    'balance_before'      => $beforeStock,
-                    'balance_after'       => $afterStock,
-                    'unit_cost'           => $detail->unit_cost_price,
-                    'reason'              => 'Purchase quantity edit',
-                    'notes'               => $request->edit_reason,
-                    'created_by'          => Auth::id(),
-                ]);
+                // Log stock movement (only when qty actually changed)
+                if ($movementType !== null) {
+                    app(StockLedgerService::class)->record([
+                        'product_id'          => $product->id,
+                        'movement_type'       => $movementType,
+                        'reference_type'      => 'purchase',
+                        'reference_id'        => $purchase->id,
+                        'reference_detail_id' => $detailId,
+                        'movement_at'         => now(),
+                        'qty_in'              => $qtyIn,
+                        'qty_out'             => $qtyOut,
+                        'balance_before'      => $beforeStock,
+                        'balance_after'       => $afterStock,
+                        'unit_cost'           => $newCostPrice,
+                        'reason'              => 'Purchase quantity/cost edit',
+                        'notes'               => $request->edit_reason,
+                        'created_by'          => Auth::id(),
+                    ]);
+                }
             }
+
+            // Recalculate purchase payment total from remaining line items
+            $newTotal = PurchaseDetail::where('purchase_id', $purchase->id)->sum('buying_price');
+            PurchasePayment::where('purchase_id', $purchase->id)->update([
+                'total_amount' => $newTotal,
+                'paid_amount'  => $newTotal,
+            ]);
 
             // Stamp edit — Auditable trait auto-sets updated_by; updated_at is automatic
             $purchase->edit_reason = $request->edit_reason;

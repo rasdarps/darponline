@@ -60,6 +60,14 @@ class SettingsController extends Controller
                 'daily_email_report_time',
                 (int) config('pos.daily_email_report_time', 18)
             ),
+            'allowPurchaseEdit' => $this->getBoolSetting(
+                'allow_purchase_edit',
+                (bool) config('pos.allow_purchase_edit', true)
+            ),
+            'purchaseEditWindowHours' => $this->getIntSetting(
+                'purchase_edit_window_hours',
+                (int) config('pos.purchase_edit_window_hours', 24)
+            ),
         ]);
     }
 
@@ -91,6 +99,8 @@ class SettingsController extends Controller
             'require_password_change_on_first_login' => ['nullable', 'boolean'],
             'enable_daily_email_report' => ['nullable', 'boolean'],
             'daily_email_report_time' => ['required_if:enable_daily_email_report,true', 'integer', 'min:18', 'max:23'],
+            'allow_purchase_edit' => ['nullable', 'boolean'],
+            'purchase_edit_window_hours' => ['required_if:allow_purchase_edit,true', 'integer', 'in:24,48,72,96,120,144,168'],
         ]);
 
         $values = [
@@ -105,6 +115,8 @@ class SettingsController extends Controller
             'require_password_change_on_first_login' => $request->boolean('require_password_change_on_first_login') ? '1' : '0',
             'enable_daily_email_report' => $request->boolean('enable_daily_email_report') ? '1' : '0',
             'daily_email_report_time' => (string) ($validated['daily_email_report_time'] ?? 18),
+            'allow_purchase_edit' => $request->boolean('allow_purchase_edit') ? '1' : '0',
+            'purchase_edit_window_hours' => (string) ($validated['purchase_edit_window_hours'] ?? 24),
         ];
 
         DB::transaction(function () use ($values) {

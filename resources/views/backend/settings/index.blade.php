@@ -252,6 +252,45 @@
                                 </div>
                             </div>
 
+                            <!-- Purchase Edit Settings -->
+                            <div class="row mt-2">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-group border rounded p-3 h-100">
+                                        <input type="hidden" name="allow_purchase_edit" value="0">
+                                        <div class="custom-control custom-switch mb-2">
+                                            <input
+                                                type="checkbox"
+                                                class="custom-control-input"
+                                                id="allow_purchase_edit"
+                                                name="allow_purchase_edit"
+                                                value="1"
+                                                onchange="togglePurchaseEditField()"
+                                                {{ old('allow_purchase_edit', $allowPurchaseEdit) ? 'checked' : '' }}
+                                            >
+                                            <label class="custom-control-label" for="allow_purchase_edit">
+                                                <strong>Allow Purchase Invoice Editing</strong>
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mb-3">When enabled, purchase invoices can be edited within the configured time window.</small>
+
+                                        <label for="purchase_edit_window_hours"><strong>Edit Window</strong></label>
+                                        <select
+                                            id="purchase_edit_window_hours"
+                                            name="purchase_edit_window_hours"
+                                            class="form-control"
+                                            {{ old('allow_purchase_edit', $allowPurchaseEdit) ? '' : 'disabled' }}
+                                        >
+                                            @foreach([24 => '24 hours (1 day)', 48 => '48 hours (2 days)', 72 => '72 hours (3 days)', 96 => '96 hours (4 days)', 120 => '120 hours (5 days)', 144 => '144 hours (6 days)', 168 => '168 hours (7 days)'] as $hours => $label)
+                                                <option value="{{ $hours }}" {{ old('purchase_edit_window_hours', $purchaseEditWindowHours) == $hours ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted d-block mt-2">Purchases older than this window cannot be edited.</small>
+                                    </div>
+                                </div>
+                            </div>
+
 
 
                             <div class="row">
@@ -288,9 +327,17 @@ function toggleReconciliationTimeField() {
     timeSelect.disabled = !checkbox.checked;
 }
 
+function togglePurchaseEditField() {
+    const checkbox  = document.getElementById('allow_purchase_edit');
+    const select    = document.getElementById('purchase_edit_window_hours');
+    if (!checkbox || !select) return;
+    select.disabled = !checkbox.checked;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     toggleEmailTimeField();
     toggleReconciliationTimeField();
+    togglePurchaseEditField();
 });
 </script>
 @endsection
