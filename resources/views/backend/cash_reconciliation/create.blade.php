@@ -29,12 +29,84 @@
                             </div>
                         @endif
 
-                        @if(session('error'))
+                        @if(session('reconciliation_gate'))
+                            @php($gate = session('reconciliation_gate'))
+                            <div class="alert alert-warning border-warning" role="alert">
+                                <h5 class="alert-heading mb-2"><i class="fas fa-exclamation-triangle me-1"></i> Pending Cash Reconciliation Required</h5>
+                                <p class="mb-2">{{ $gate['message'] ?? session('error') }}</p>
+
+                                @if(!empty($gate['missing_dates']))
+                                    <p class="mb-1"><strong>Missing Reconciliation Date(s):</strong></p>
+                                    <ul class="mb-2">
+                                        @foreach($gate['missing_dates'] as $date)
+                                            <li>{{ \Illuminate\Support\Carbon::parse($date)->format('d-m-Y') }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+
+                                @if(!empty($gate['unapproved_dates']))
+                                    <p class="mb-1"><strong>Submitted But Not Approved Date(s):</strong></p>
+                                    <ul class="mb-2">
+                                        @foreach($gate['unapproved_dates'] as $date)
+                                            <li>{{ \Illuminate\Support\Carbon::parse($date)->format('d-m-Y') }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+
+                                <hr>
+                                <p class="mb-0">{{ $gate['action'] ?? session('info') }}</p>
+                            </div>
+                        @elseif(session('error'))
                             <div class="alert alert-danger">{{ session('error') }}</div>
+                        @endif
+
+                        @php($timeGate = $timingGate ?? session('reconciliation_time_gate'))
+                        @if($timeGate)
+                            <div class="alert alert-warning border-warning" role="alert">
+                                <h5 class="alert-heading mb-2"><i class="fas fa-clock me-1"></i> Reconciliation Time Gate</h5>
+                                <p class="mb-2">{{ $timeGate['message'] ?? session('error') }}</p>
+                                <p class="mb-0">{{ $timeGate['action'] ?? session('info') }}</p>
+                            </div>
+                        @endif
+
+                        @if(session('info') && !session('reconciliation_gate'))
+                            <div class="alert alert-info">{{ session('info') }}</div>
+                        @endif
+
+                        @if(!empty($businessDateStatuses))
+                            <div class="card border mb-4">
+                                <div class="card-body py-3">
+                                    <h5 class="card-title mb-3">Business-Date Status Tracking</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Business Date</th>
+                                                    <th>Status</th>
+                                                    <th>Details</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($businessDateStatuses as $dateStatus)
+                                                    <tr>
+                                                        <td>{{ $dateStatus['business_date_label'] }}</td>
+                                                        <td><span class="{{ $dateStatus['badge_class'] }}">{{ $dateStatus['status_label'] }}</span></td>
+                                                        <td>{{ $dateStatus['status_note'] }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        Open: can reconcile. Reconciled: approved. Pending Approval: waiting for Manager/Supervisor. Blocked: prior sales date with no submitted reconciliation.
+                                    </small>
+                                </div>
+                            </div>
                         @endif
 
                         <h4 class="card-title">Enter Physical Cash For The Day</h4>
 
+                        @if(!$timeGate)
                         <form action="{{ route('cash-reconciliations.store') }}" method="POST" id="cash-reconciliation-create-form">
                             @csrf
 
@@ -92,6 +164,7 @@
                                 </div>
                             </div>
                         </form>
+                        @endif
                     </div>
                 </div>
             </div>

@@ -17,7 +17,7 @@ class PurchaseDetail extends Model
         'category_id',
         'product_id',
         'buying_qty',
-        'unit_price',
+        'unit_cost_price',
         'buying_price',
         'unit_id',
     ];

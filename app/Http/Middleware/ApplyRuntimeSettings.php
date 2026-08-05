@@ -23,6 +23,8 @@ class ApplyRuntimeSettings
                             'session_lifetime_minutes',
                             'session_expire_on_close',
                             'enforce_previous_day_reconciliation',
+                            'enforce_reconciliation_timing',
+                            'reconciliation_start_time',
                             'allow_negative_stock',
                             'prevent_backdated_invoices',
                             'allow_manual_discount_entry_by_staff',
@@ -49,6 +51,21 @@ class ApplyRuntimeSettings
                     config([
                         'pos.enforce_previous_day_reconciliation' => filter_var($settings['enforce_previous_day_reconciliation'], FILTER_VALIDATE_BOOLEAN),
                     ]);
+                }
+
+                if (array_key_exists('enforce_reconciliation_timing', $settings)) {
+                    config([
+                        'pos.enforce_reconciliation_timing' => filter_var($settings['enforce_reconciliation_timing'], FILTER_VALIDATE_BOOLEAN),
+                    ]);
+                }
+
+                if (array_key_exists('reconciliation_start_time', $settings)) {
+                    $rawTime = (string) $settings['reconciliation_start_time'];
+                    if (preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $rawTime) === 1) {
+                        config([
+                            'pos.reconciliation_start_time' => $rawTime,
+                        ]);
+                    }
                 }
 
                 if (array_key_exists('allow_negative_stock', $settings)) {

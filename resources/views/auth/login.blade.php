@@ -348,8 +348,8 @@
 <div class="auth-shell">
     <div class="auth-stage">
         <div class="auth-hero">
-            <p class="auth-kicker">Rasdarps POS</p>
-            <p class="auth-welcome">Welcome to Rasdarps Enterprise POS System</p>
+            <p class="auth-kicker">DarpPOS Sales and Inventory System v1.0</p>
+            <p class="auth-welcome">Welcome to DarpPOS Sales and Inventory System</p>
             <p class="auth-subtext">Manage inventory, monitor sales, and keep operations in sync from one dashboard built for busy retail teams.</p>
             <ul class="auth-points">
                 <li>Fast Stock Tracking</li>

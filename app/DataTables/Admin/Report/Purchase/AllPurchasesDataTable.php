@@ -25,13 +25,19 @@ class AllPurchasesDataTable extends DataTable
              ->addColumn('edit_button', function($row) {
                 $printUrl = route('print.purchase', Crypt::encrypt($row->id));
 
-                $canPrint = Gate::allows('purchase-print');
+                $canPrint  = Gate::allows('purchase-print');
                 $canCancel = Gate::allows('purchase-cancel');
+                $canEdit   = Gate::allows('purchase-edit');
 
                 $buttons = [];
 
                 if ($canPrint) {
                     $buttons[] = '<a href="' . $printUrl . '" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+                }
+
+                if ($canEdit && !$row->cancelled_at) {
+                    $editUrl = route('purchases.edit', Crypt::encrypt($row->id));
+                    $buttons[] = '<a href="' . $editUrl . '" class="btn btn-sm btn-primary ms-1"><i class="fas fa-edit"></i> Edit</a>';
                 }
 
                 if ($canCancel && !$row->cancelled_at) {

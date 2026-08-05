@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\CashReconciliation;
 use App\Models\ExpenseVoucherItem;
 use App\Models\Payment;
+use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 
@@ -42,10 +44,14 @@ class CashReconciliationController extends Controller
     {
         $businessDate = now()->format('Y-m-d');
         $openingFloat = 0;
+        $userId = (int) Auth::id();
 
-        $expected = $this->computeExpectedForUser(Auth::id(), $businessDate, $openingFloat);
+        $expected = $this->computeExpectedForUser($userId, $businessDate, $openingFloat);
 
-        return view('backend.cash_reconciliation.create', compact('businessDate', 'openingFloat', 'expected'));
+        $timingGate = $this->reconciliationTimingGate();
+        $businessDateStatuses = $this->buildBusinessDateStatuses($userId);
+
+        return view('backend.cash_reconciliation.create', compact('businessDate', 'openingFloat', 'expected', 'timingGate', 'businessDateStatuses'));
     }
 
     public function edit($routeId)
@@ -103,6 +109,13 @@ class CashReconciliationController extends Controller
 
     public function store(Request $request)
     {
+        if ($gate = $this->reconciliationTimingGate()) {
+            return redirect()->route('cash-reconciliations.create')
+                ->with('reconciliation_time_gate', $gate)
+                ->with('error', $gate['message'])
+                ->with('info', $gate['action']);
+        }
+
         $validated = $request->validate([
             'business_date' => 'required|date',
             'opening_float' => 'required|numeric|min:0',
@@ -149,6 +162,118 @@ class CashReconciliationController extends Controller
         ]);
 
         return redirect()->route('cash-reconciliations.index')->with('success', 'Daily cash reconciliation submitted successfully.');
+    }
+
+    private function reconciliationTimingGate(): ?array
+    {
+        if (! config('pos.enforce_reconciliation_timing', false)) {
+            return null;
+        }
+
+        $startTime = (string) config('pos.reconciliation_start_time', '15:00');
+        if (preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $startTime) !== 1) {
+            $startTime = '15:00';
+        }
+
+        $now = now();
+        $currentTime = $now->format('H:i');
+        if ($currentTime >= $startTime) {
+            return null;
+        }
+
+        $startLabel = Carbon::createFromFormat('H:i', $startTime)->format('g:i A');
+        $currentLabel = $now->format('g:i A');
+
+        return [
+            'message' => 'Cash reconciliation is not open yet. You can start reconciliation after ' . $startLabel . '.',
+            'action' => 'Current time is ' . $currentLabel . '. Please wait until ' . $startLabel . ' or contact your Manager/Supervisor if this needs adjustment.',
+            'start_time' => $startTime,
+            'start_time_label' => $startLabel,
+            'current_time_label' => $currentLabel,
+        ];
+    }
+
+    private function buildBusinessDateStatuses(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $today = Carbon::today();
+        $todayString = $today->toDateString();
+
+        $salesDates = Sale::query()
+            ->where('created_by', $userId)
+            ->whereNull('cancelled_at')
+            ->whereDate('date', '<=', $todayString)
+            ->selectRaw('DATE(`date`) as business_date')
+            ->distinct()
+            ->pluck('business_date')
+            ->map(static function ($value) {
+                return Carbon::parse((string) $value)->toDateString();
+            })
+            ->values();
+
+        $reconciliations = CashReconciliation::query()
+            ->where('user_id', $userId)
+            ->whereDate('business_date', '<=', $todayString)
+            ->get(['business_date', 'status'])
+            ->keyBy(static function ($row) {
+                return optional($row->business_date)->format('Y-m-d');
+            });
+
+        $reconciliationDates = $reconciliations->keys()->filter()->values();
+
+        $trackedDates = collect([$todayString])
+            ->merge($salesDates)
+            ->merge($reconciliationDates)
+            ->unique()
+            ->sort()
+            ->values();
+
+        $salesDateLookup = array_flip($salesDates->all());
+
+        return $trackedDates
+            ->map(function (string $businessDate) use ($reconciliations, $salesDateLookup, $todayString) {
+                $reconciliation = $reconciliations->get($businessDate);
+                $hasSales = isset($salesDateLookup[$businessDate]);
+
+                $statusKey = 'open';
+                $statusLabel = 'Open';
+                $badgeClass = 'badge bg-primary';
+                $statusNote = 'Reconciliation can be started.';
+
+                if ($reconciliation) {
+                    if ((string) $reconciliation->status === 'approved') {
+                        $statusKey = 'reconciled';
+                        $statusLabel = 'Reconciled';
+                        $badgeClass = 'badge bg-success';
+                        $statusNote = 'Reconciliation has been approved.';
+                    } else {
+                        $statusKey = 'pending_approval';
+                        $statusLabel = 'Pending Approval';
+                        $badgeClass = 'badge bg-warning text-dark';
+                        $statusNote = 'Submitted and waiting for Manager/Supervisor approval.';
+                    }
+                } elseif ($hasSales && $businessDate < $todayString) {
+                    $statusKey = 'blocked';
+                    $statusLabel = 'Blocked';
+                    $badgeClass = 'badge bg-danger';
+                    $statusNote = 'Sales exist but reconciliation has not been submitted.';
+                }
+
+                return [
+                    'business_date' => $businessDate,
+                    'business_date_label' => Carbon::parse($businessDate)->format('d-m-Y'),
+                    'status_key' => $statusKey,
+                    'status_label' => $statusLabel,
+                    'badge_class' => $badgeClass,
+                    'status_note' => $statusNote,
+                ];
+            })
+            ->reverse()
+            ->values()
+            ->all();
     }
 
     public function show($routeId)

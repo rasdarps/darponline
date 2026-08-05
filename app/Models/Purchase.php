@@ -19,6 +19,7 @@ class Purchase extends Model
         'cancelled_at',
         'cancelled_by',
         'cancellation_reason',
+        'edit_reason',
         'created_by',
         'updated_by',
         'deleted_by',

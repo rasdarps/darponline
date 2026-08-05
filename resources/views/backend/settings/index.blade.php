@@ -25,10 +25,12 @@
                                 </div>
                             @endif
 
-                            <!-- Session Lifetime - Full Width -->
-                            <div class="row mb-3">
-                                <div class="col-12">
-                                    <div class="form-group">
+                            <!-- Toggles - 2 Columns per Row -->
+                            <div class="row">
+                                <!-- Session Settings -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-group border rounded p-3 h-100">
+
                                         <label for="session_lifetime_minutes"><strong>Session Lifetime (minutes)</strong></label>
                                         <input
                                             type="number"
@@ -40,18 +42,12 @@
                                             value="{{ old('session_lifetime_minutes', $sessionLifetimeMinutes) }}"
                                             required
                                         >
-                                        <small class="text-muted">Users are logged out after this many minutes of inactivity.</small>
-                                    </div>
-                                </div>
-                            </div>
+                                        <small class="text-muted d-block mb-3">Users are logged out after this many minutes of inactivity.</small>
 
-                            <!-- Toggles - 2 Columns per Row -->
-                            <div class="row">
-                                <!-- Session Expire on Close -->
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-group border rounded p-3 h-100">
+                                        <hr class="my-2">
+
                                         <input type="hidden" name="session_expire_on_close" value="0">
-                                        <div class="custom-control custom-switch">
+                                        <div class="custom-control custom-switch mb-2">
                                             <input
                                                 type="checkbox"
                                                 class="custom-control-input"
@@ -65,14 +61,16 @@
                                             </label>
                                         </div>
                                         <small class="text-muted d-block mt-2">When enabled, login ends when the browser is closed.</small>
+
                                     </div>
                                 </div>
 
-                                <!-- Enforce Previous Day Reconciliation -->
+                                <!-- Reconciliation Settings -->
                                 <div class="col-md-6 mb-3">
                                     <div class="form-group border rounded p-3 h-100">
+
                                         <input type="hidden" name="enforce_previous_day_reconciliation" value="0">
-                                        <div class="custom-control custom-switch">
+                                        <div class="custom-control custom-switch mb-2">
                                             <input
                                                 type="checkbox"
                                                 class="custom-control-input"
@@ -82,10 +80,46 @@
                                                 {{ old('enforce_previous_day_reconciliation', $enforcePreviousDayReconciliation) ? 'checked' : '' }}
                                             >
                                             <label class="custom-control-label" for="enforce_previous_day_reconciliation">
-                                                <strong>Require Yesterday Reconciliation Before Today's Sales</strong>
+                                                <strong>Require Previous Pending Reconciliation Before Today's Sales</strong>
                                             </label>
                                         </div>
-                                        <small class="text-muted d-block mt-2">When enabled, a cashier who sold yesterday must reconcile yesterday before selling today.</small>
+                                        <small class="text-muted d-block mb-3">When enabled, cashier must clear all previous pending reconciliation dates before creating sales for today.</small>
+
+                                        <hr class="my-2">
+
+                                        <input type="hidden" name="enforce_reconciliation_timing" value="0">
+                                        <div class="custom-control custom-switch mb-2">
+                                            <input
+                                                type="checkbox"
+                                                class="custom-control-input"
+                                                id="enforce_reconciliation_timing"
+                                                name="enforce_reconciliation_timing"
+                                                value="1"
+                                                onchange="toggleReconciliationTimeField()"
+                                                {{ old('enforce_reconciliation_timing', $enforceReconciliationTiming) ? 'checked' : '' }}
+                                            >
+                                            <label class="custom-control-label" for="enforce_reconciliation_timing">
+                                                <strong>Enable Reconciliation Start Time Rule</strong>
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mb-3">When enabled, cashier can only start reconciliation after configured time.</small>
+
+                                        <label for="reconciliation_start_time"><strong>Reconciliation Start Time</strong></label>
+                                        <select
+                                            id="reconciliation_start_time"
+                                            name="reconciliation_start_time"
+                                            class="form-control"
+                                            {{ old('enforce_reconciliation_timing', $enforceReconciliationTiming) ? '' : 'disabled' }}
+                                        >
+                                            @foreach($allowedReconciliationStartTimes as $timeValue)
+                                                @php($displayTime = \Illuminate\Support\Carbon::createFromFormat('H:i', $timeValue)->format('g:i A'))
+                                                <option value="{{ $timeValue }}" {{ old('reconciliation_start_time', $reconciliationStartTime) === $timeValue ? 'selected' : '' }}>
+                                                    {{ $displayTime }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted d-block mt-2">Allowed range: 3:00 PM to 11:30 PM (30-minute steps).</small>
+
                                     </div>
                                 </div>
 
@@ -173,7 +207,10 @@
                                     </div>
                                 </div>
 
-                                <!-- Enable Daily Email Report -->
+                            </div>
+
+                            <!-- Daily Email Report Settings -->
+                            <div class="row mt-2">
                                 <div class="col-md-6 mb-3">
                                     <div class="form-group border rounded p-3 h-100">
                                         <input type="hidden" name="enable_daily_email_report" value="0">
@@ -194,12 +231,9 @@
                                         <small class="text-muted d-block mt-2">When enabled, daily sales, expenses, and cash shortage summary is sent automatically or manually.</small>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Email Report Time Settings - Full Width -->
-                            <div class="row" id="emailTimeRow" style="{{ old('enable_daily_email_report', $enableDailyEmailReport) ? '' : 'display:none;' }}">
                                 <div class="col-md-6 mb-3">
-                                    <div class="form-group">
+                                    <div class="form-group border rounded p-3 h-100">
                                         <label for="daily_email_report_time"><strong>Daily Email Report Send Time</strong></label>
                                         <select
                                             id="daily_email_report_time"
@@ -213,10 +247,12 @@
                                                 </option>
                                             @endfor
                                         </select>
-                                        <small class="text-muted">Select the time between 6 PM and 12 AM for automatic email sending.</small>
+                                        <small class="text-muted d-block mt-2">Select the time between 6 PM and 12 AM for automatic email sending.</small>
                                     </div>
                                 </div>
                             </div>
+
+
 
                             <div class="row">
                             <div class="col-12">
@@ -234,16 +270,27 @@
 <script>
 function toggleEmailTimeField() {
     const checkbox = document.getElementById('enable_daily_email_report');
-    const timeRow = document.getElementById('emailTimeRow');
     const timeSelect = document.getElementById('daily_email_report_time');
-    
-    if (checkbox.checked) {
-        timeRow.style.display = '';
-        timeSelect.disabled = false;
-    } else {
-        timeRow.style.display = 'none';
-        timeSelect.disabled = true;
-    }
+
+    if (!checkbox || !timeSelect) return;
+
+    timeSelect.disabled = !checkbox.checked;
 }
+
+function toggleReconciliationTimeField() {
+    const checkbox = document.getElementById('enforce_reconciliation_timing');
+    const timeSelect = document.getElementById('reconciliation_start_time');
+
+    if (!checkbox || !timeSelect) {
+        return;
+    }
+
+    timeSelect.disabled = !checkbox.checked;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    toggleEmailTimeField();
+    toggleReconciliationTimeField();
+});
 </script>
 @endsection

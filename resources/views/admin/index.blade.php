@@ -250,17 +250,17 @@
                             <i class="fas fa-key"></i> Change Password
                         </a>
 
-                        @can('invoice-create')
-                        <a href="{{ route('invoices.create') }}" class="btn btn-danger btn-sm">
+                        @can('sale-create')
+                        <a href="{{ route('sales.create') }}" class="btn btn-danger btn-sm">
                             <i class="fas fa-cart-plus"></i> Create Sale
                         </a>
                         @endcan
 
-                        @can('invoice-list')
-                        <a href="{{ route('invoices.index') }}" class="btn btn-outline-primary btn-sm">
+                        @can('sale-list')
+                        <a href="{{ route('sales.index') }}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-list"></i> All Sales
                         </a>
-                        <a href="{{ route('print.daily_total_sales') }}" class="btn btn-outline-info btn-sm">
+                        <a href="{{ route('sales.daily-total-sales') }}" class="btn btn-outline-info btn-sm">
                             <i class="fas fa-calendar-day"></i> Daily Sales
                         </a>
                         @endcan

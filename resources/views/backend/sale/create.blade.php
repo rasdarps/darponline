@@ -10,10 +10,10 @@
                 <div class="col-12">
                     <div class="card" style="margin-top: 5px;">
                         <div class="card-header with-border">
-                            <span class="card-title mobile-page-title" style="font-size:20px;">Create | Sales Sale</span>
+                            <span class="card-title mobile-page-title" style="font-size:20px;">Create | Sales Invoice</span>
                             <a href="{{route('sales.index')}}" class="mobile-header-action" style="float:right">
                                 <button type="button" class="btn btn-dark modal_btn mobile-header-btn">
-                                    View Sales sales
+                                    View Sales Invoice
                                 </button>
                             </a>
                             <hr>

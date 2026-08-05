@@ -5,6 +5,12 @@ return [
     // (submitted or approved) before creating sales today.
     'enforce_previous_day_reconciliation' => env('POS_ENFORCE_PREVIOUS_DAY_RECONCILIATION', false),
 
+    // When enabled, reconciliation can only be started after the configured start time.
+    'enforce_reconciliation_timing' => env('POS_ENFORCE_RECONCILIATION_TIMING', false),
+
+    // Reconciliation start time (24-hour HH:MM). Allowed runtime setting range is 15:00 to 23:30.
+    'reconciliation_start_time' => env('POS_RECONCILIATION_START_TIME', '15:00'),
+
     // When enabled, sales can reduce stock below zero.
     'allow_negative_stock' => env('POS_ALLOW_NEGATIVE_STOCK', false),
 

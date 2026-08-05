@@ -20,6 +20,8 @@ class StockLedgerService
             'adjustment_decrease',
             'purchase_cancel',
             'sale_cancel',
+            'purchase_edit_increase',
+            'purchase_edit_decrease',
         ], true)) {
             throw new \InvalidArgumentException('Invalid stock ledger movement type.');
         }

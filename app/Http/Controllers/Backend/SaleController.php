@@ -50,6 +50,7 @@ class SaleController extends Controller
 
         if ($gate = $this->previousDayReconciliationGate()) {
             return redirect()->route('cash-reconciliations.create')
+                ->with('reconciliation_gate', $gate)
                 ->with('error', $gate['message'])
                 ->with('info', $gate['action']);
         }
@@ -451,31 +452,87 @@ class SaleController extends Controller
             return null;
         }
 
-        $previousDate = Carbon::yesterday()->toDateString();
+        $today = Carbon::today()->toDateString();
 
-        // Gate only applies if the cashier actually sold yesterday.
-        $hadSalesYesterday = Sale::query()
-            ->whereDate('date', $previousDate)
+        $salesDates = Sale::query()
             ->where('created_by', $userId)
-            ->exists();
+            ->whereDate('date', '<', $today)
+            ->whereNull('cancelled_at')
+            ->selectRaw('DATE(`date`) as business_date')
+            ->distinct()
+            ->orderBy('business_date')
+            ->pluck('business_date')
+            ->map(static function ($value) {
+                return Carbon::parse((string) $value)->toDateString();
+            })
+            ->values();
 
-        if (! $hadSalesYesterday) {
+        if ($salesDates->isEmpty()) {
             return null;
         }
 
-        $hasReconciliation = CashReconciliation::query()
-            ->whereDate('business_date', $previousDate)
+        $reconciliationsByDate = CashReconciliation::query()
             ->where('user_id', $userId)
-            ->whereIn('status', ['submitted', 'approved'])
-            ->exists();
+            ->whereIn('business_date', $salesDates->all())
+            ->get(['business_date', 'status'])
+            ->keyBy(static function ($row) {
+                return optional($row->business_date)->format('Y-m-d');
+            });
 
-        if ($hasReconciliation) {
+        $missingDates = [];
+        $unapprovedDates = [];
+
+        foreach ($salesDates as $date) {
+            $reconcile = $reconciliationsByDate->get($date);
+
+            if (! $reconcile) {
+                $missingDates[] = $date;
+                continue;
+            }
+
+            if ((string) $reconcile->status !== 'approved') {
+                $unapprovedDates[] = $date;
+            }
+        }
+
+        if (empty($missingDates) && empty($unapprovedDates)) {
             return null;
+        }
+
+        $allPendingDates = collect(array_merge($missingDates, $unapprovedDates))
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
+        $formatDates = static function (array $dates): string {
+            return collect($dates)
+                ->map(static function ($date) {
+                    return Carbon::parse((string) $date)->format('d-m-Y');
+                })
+                ->implode(', ');
+        };
+
+        $pendingDatesLabel = $formatDates($allPendingDates);
+        $missingDatesLabel = $formatDates($missingDates);
+        $unapprovedDatesLabel = $formatDates($unapprovedDates);
+
+        $message = 'Sales creation is blocked. You have pending cash reconciliation for previous date(s): ' . $pendingDatesLabel . '.';
+
+        $actionParts = [];
+        if (! empty($missingDates)) {
+            $actionParts[] = 'Submit reconciliation for missing date(s): ' . $missingDatesLabel . '.';
+        }
+        if (! empty($unapprovedDates)) {
+            $actionParts[] = 'Tell your Manager/Supervisor to approve submitted reconciliation for date(s): ' . $unapprovedDatesLabel . '.';
         }
 
         return [
-            'message' => 'Yesterday cash reconciliation is missing for your account.',
-            'action' => 'Action: submit yesterday reconciliation before creating today\'s Sale.',
+            'message' => $message,
+            'action' => 'Action: ' . implode(' ', $actionParts),
+            'missing_dates' => $missingDates,
+            'unapproved_dates' => $unapprovedDates,
+            'pending_dates' => $allPendingDates,
         ];
     }
 

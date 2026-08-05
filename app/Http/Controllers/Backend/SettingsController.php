@@ -18,6 +18,8 @@ class SettingsController extends Controller
 
     public function index()
     {
+        $allowedReconciliationStartTimes = $this->allowedReconciliationStartTimes();
+
         return view('backend.settings.index', [
             'sessionLifetimeMinutes' => $this->getIntSetting('session_lifetime_minutes', (int) config('session.lifetime', 120)),
             'sessionExpireOnClose' => $this->getBoolSetting('session_expire_on_close', (bool) config('session.expire_on_close', false)),
@@ -25,6 +27,15 @@ class SettingsController extends Controller
                 'enforce_previous_day_reconciliation',
                 (bool) config('pos.enforce_previous_day_reconciliation', false)
             ),
+            'enforceReconciliationTiming' => $this->getBoolSetting(
+                'enforce_reconciliation_timing',
+                (bool) config('pos.enforce_reconciliation_timing', false)
+            ),
+            'reconciliationStartTime' => $this->getStringSetting(
+                'reconciliation_start_time',
+                (string) config('pos.reconciliation_start_time', '15:00')
+            ),
+            'allowedReconciliationStartTimes' => $allowedReconciliationStartTimes,
             'allowNegativeStock' => $this->getBoolSetting(
                 'allow_negative_stock',
                 (bool) config('pos.allow_negative_stock', false)
@@ -54,10 +65,26 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
+        $allowedReconciliationStartTimes = $this->allowedReconciliationStartTimes();
+
         $validated = $request->validate([
             'session_lifetime_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
             'session_expire_on_close' => ['nullable', 'boolean'],
             'enforce_previous_day_reconciliation' => ['nullable', 'boolean'],
+            'enforce_reconciliation_timing' => ['nullable', 'boolean'],
+            'reconciliation_start_time' => [
+                'required_if:enforce_reconciliation_timing,true',
+                'date_format:H:i',
+                function ($attribute, $value, $fail) use ($allowedReconciliationStartTimes) {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    if (! in_array((string) $value, $allowedReconciliationStartTimes, true)) {
+                        $fail('Reconciliation start time must be between 3:00 PM and 11:30 PM in 30-minute steps.');
+                    }
+                },
+            ],
             'allow_negative_stock' => ['nullable', 'boolean'],
             'prevent_backdated_invoices' => ['nullable', 'boolean'],
             'allow_manual_discount_entry_by_staff' => ['nullable', 'boolean'],
@@ -70,6 +97,8 @@ class SettingsController extends Controller
             'session_lifetime_minutes' => (string) $validated['session_lifetime_minutes'],
             'session_expire_on_close' => $request->boolean('session_expire_on_close') ? '1' : '0',
             'enforce_previous_day_reconciliation' => $request->boolean('enforce_previous_day_reconciliation') ? '1' : '0',
+            'enforce_reconciliation_timing' => $request->boolean('enforce_reconciliation_timing') ? '1' : '0',
+            'reconciliation_start_time' => (string) ($validated['reconciliation_start_time'] ?? config('pos.reconciliation_start_time', '15:00')),
             'allow_negative_stock' => $request->boolean('allow_negative_stock') ? '1' : '0',
             'prevent_backdated_invoices' => $request->boolean('prevent_backdated_invoices') ? '1' : '0',
             'allow_manual_discount_entry_by_staff' => $request->boolean('allow_manual_discount_entry_by_staff') ? '1' : '0',
@@ -110,5 +139,27 @@ class SettingsController extends Controller
         }
 
         return filter_var($raw, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function getStringSetting(string $key, string $default): string
+    {
+        $raw = AppSetting::getValue($key);
+        if ($raw === null || $raw === '') {
+            return $default;
+        }
+
+        return (string) $raw;
+    }
+
+    private function allowedReconciliationStartTimes(): array
+    {
+        $times = [];
+
+        for ($hour = 15; $hour <= 23; $hour++) {
+            $times[] = sprintf('%02d:00', $hour);
+            $times[] = sprintf('%02d:30', $hour);
+        }
+
+        return $times;
     }
 }

@@ -64,9 +64,9 @@ class PermissionTableSeeder extends Seeder
             Permission::findOrCreate($customer_permission, $guardName);
         }
 
-          $transactions_management_permissions = [ 
+        $transactions_management_permissions = [ 
               'sale-list','sale-create','sale-cancel','sale-print',
-                'purchase-list','purchase-create','purchase-cancel','purchase-print',
+                'purchase-list','purchase-create','purchase-edit','purchase-cancel','purchase-print',
         ];
 
         $expense_management_permissions = [

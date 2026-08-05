@@ -201,11 +201,11 @@ Route::prefix('admin')->group(function () {
             // Purchase All Route 
             Route::prefix('purchases')->name('purchases.')->group(function () {
                 Route::get('/', [PurchaseController::class, 'index'])->name('index');
-                // Route::get('/show/{id}', [CategoryController::class, 'show'])->name('show');
                 Route::get('/create', [PurchaseController::class, 'create'])->name('create');
                 Route::post('/store', [PurchaseController::class, 'store'])->name('store');
+                Route::get('/edit/{id}', [PurchaseController::class, 'edit'])->name('edit');
+                Route::patch('/update/{id}', [PurchaseController::class, 'update'])->name('update');
                 Route::post('/cancel/{id}', [PurchaseController::class, 'cancel'])->name('cancel');
-            
             });
 
             Route::controller(PurchaseController::class)->group(function () {
