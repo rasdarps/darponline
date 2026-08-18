@@ -20,7 +20,6 @@ class ProductSeeder extends Seeder
             [
                 'id' => 1,
                 'name' => 'Rice Cooker 2litres',
-                'barcode' => 'RC0000001',
                 'quantity' => 0,
                 'unit_id' => 1,
                 'category_id' => 1,
@@ -32,7 +31,6 @@ class ProductSeeder extends Seeder
             [
                 'id' => 2,
                 'name' => 'Stanley Cup 1.5litres',
-                'barcode' => 'SC0000001',
                 'quantity' => 0,
                 'unit_id' => 1,
                 'category_id' => 2,
@@ -44,7 +42,6 @@ class ProductSeeder extends Seeder
             [
                 'id' => 3,
                 'name' => '4 in 1 Blender',
-                'barcode' => 'BL0000001',
                 'quantity' => 0,
                 'unit_id' => 1,
                 'category_id' => 1,
@@ -56,9 +53,11 @@ class ProductSeeder extends Seeder
          ];
 
         foreach ($products as $product) {
+            $barcode = Product::generateBarcode($product['name'], $product['id']);
+
             $this->upsertOnlyWhenChanged(Product::class, ['id' => $product['id']], [
                 'name' => $product['name'],
-                'barcode' => $product['barcode'],
+                'barcode' => $barcode,
                 'quantity' => $product['quantity'],
                 'unit_id' => $product['unit_id'],
                 'category_id' => $product['category_id'],
