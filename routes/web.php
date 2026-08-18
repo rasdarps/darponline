@@ -286,6 +286,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/summary-ledger', [ReportController::class, 'summaryLedger'])->name('summary-ledger');
                 Route::get('/expense', [ReportController::class, 'expenseReport'])->name('expense');
                 Route::get('/stock-adjustment', [ReportController::class, 'stockAdjustmentReport'])->name('stock-adjustment');
+                Route::get('/purchase-edit-trail', [ReportController::class, 'purchaseAuditReport'])->name('purchase-edit-trail');
 
             });
 

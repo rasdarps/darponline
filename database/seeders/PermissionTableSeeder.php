@@ -95,7 +95,7 @@ class PermissionTableSeeder extends Seeder
         ];
 
         $report_permissions = [
-            'report-profit','report-expense','report-stock-adjustment','report-summary-ledger',
+            'report-profit','report-expense','report-stock-adjustment','report-summary-ledger','view-purchase-edit-trail',
         ];
 
         $stock_report_permissions = [

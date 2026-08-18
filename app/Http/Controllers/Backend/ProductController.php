@@ -336,11 +336,11 @@ class ProductController extends Controller
                 ]);
             }
 
-            // Prevent deleting products that were already sold.
-            if ($product->invoicedetails()->exists()) {
+            // Prevent deleting products that are already part of purchase or sale history.
+            if ($product->purchasedetails()->exists() || $product->invoicedetails()->exists()) {
                 return response()->json([
                     'status' => 422,
-                    'message' => "Product '{$product->name}' cannot be deleted because it has sales records.",
+                    'message' => "Product '{$product->name}' cannot be deleted because it has purchase or sales records.",
                 ], 422);
             }
             

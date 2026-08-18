@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\DataTables\Admin\Report\ExpenseReportDataTable;
 use App\DataTables\Admin\Report\ProfitReportDataTable;
+use App\DataTables\Admin\Report\PurchaseEditTrailReportDataTable;
 use App\DataTables\Admin\Report\StockAdjustmentReportDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
@@ -13,6 +14,7 @@ use App\Models\ExpenseVoucherItem;
 use App\Models\Sale;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\PurchaseEditAudit;
 use App\Models\PurchasePayment;
 use App\Models\StockLedger;
 use App\Models\StockAdjustmentItem;
@@ -223,6 +225,14 @@ class ReportController extends Controller
         $overallTotal = StockAdjustmentItem::query()->sum('amount');
 
         return $dataTable->render('backend.report.stock_adjustment', compact('users', 'products', 'monthTotal', 'overallTotal'));
+    }
+
+    public function purchaseAuditReport(PurchaseEditTrailReportDataTable $dataTable)
+    {
+        $purchases = \App\Models\Purchase::orderBy('purchase_no')->get(['id', 'purchase_no']);
+        $users = User::orderBy('name')->get(['id', 'name']);
+
+        return $dataTable->render('backend.report.purchase_edit_trail', compact('purchases', 'users'));
     }
 
     public function summaryLedger()

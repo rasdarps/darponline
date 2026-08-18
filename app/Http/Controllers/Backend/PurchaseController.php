@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
+use App\Models\PurchaseEditAudit;
 use App\Models\PurchasePayment;
 use App\Models\Supplier;
 use App\Models\Unit;
@@ -450,7 +451,13 @@ class PurchaseController extends Controller
             return back()->withInput()->withErrors($guardErrors);
         }
 
-        DB::transaction(function () use ($purchase, $quantities, $costPrices, $request) {
+        $beforeTotal = (float) PurchaseDetail::where('purchase_id', $purchase->id)->sum('buying_price');
+
+        DB::transaction(function () use ($purchase, $quantities, $costPrices, $request, $beforeTotal) {
+            $audit = null;
+            $auditLines = [];
+            $changedDetails = [];
+
             foreach ($quantities as $detailId => $newQty) {
                 $newQty       = (float) $newQty;
                 $newCostPrice = (float) ($costPrices[$detailId] ?? 0);
@@ -465,6 +472,27 @@ class PurchaseController extends Controller
 
                 $qtyChanged  = $newQty != $oldQty;
                 $costChanged = round($newCostPrice, 4) != round($oldCostPrice, 4);
+
+                if (! $qtyChanged && ! $costChanged) {
+                    continue; // nothing to do
+                }
+
+                $lineAmountBefore = round($oldQty * $oldCostPrice, 2);
+                $lineAmountAfter = round($newQty * $newCostPrice, 2);
+                $auditLines[] = [
+                    'purchase_detail_id' => $detail->id,
+                    'product_id' => $detail->product_id,
+                    'product_name_snapshot' => optional($detail->product)->name,
+                    'quantity_from' => (float) $oldQty,
+                    'quantity_to' => (float) $newQty,
+                    'unit_cost_from' => round($oldCostPrice, 2),
+                    'unit_cost_to' => round($newCostPrice, 2),
+                    'line_amount_from' => round($lineAmountBefore, 2),
+                    'line_amount_to' => round($lineAmountAfter, 2),
+                    'quantity_delta' => (float) ($newQty - $oldQty),
+                    'amount_delta' => round($lineAmountAfter - $lineAmountBefore, 2),
+                ];
+                $changedDetails[] = $detail->id;
 
                 if (! $qtyChanged && ! $costChanged) {
                     continue; // nothing to do
@@ -565,6 +593,20 @@ class PurchaseController extends Controller
                 'total_amount' => $newTotal,
                 'paid_amount'  => $newTotal,
             ]);
+
+            if (! empty($auditLines)) {
+                $audit = PurchaseEditAudit::create([
+                    'purchase_id' => $purchase->id,
+                    'purchase_no' => $purchase->purchase_no,
+                    'edited_by' => Auth::id(),
+                    'edited_at' => now(),
+                    'reason' => $request->edit_reason,
+                    'before_total' => round($beforeTotal, 2),
+                    'after_total' => round($newTotal, 2),
+                ]);
+
+                $audit->lines()->createMany($auditLines);
+            }
 
             // Stamp edit — Auditable trait auto-sets updated_by; updated_at is automatic
             $purchase->edit_reason = $request->edit_reason;

@@ -125,7 +125,7 @@
                             @endcanany
                          {{-- transaction menu ends --}}
 
-                         @canany(['report-summary-ledger', 'report-profit', 'report-expense', 'report-stock-adjustment', 'stock-product-trail-report', 'stock-report', 'stock-value-report', 'stock-ledger-report', 'product-price-history-list'])
+                         @canany(['report-summary-ledger', 'report-profit', 'report-expense', 'report-stock-adjustment', 'stock-product-trail-report', 'stock-report', 'stock-value-report', 'stock-ledger-report', 'product-price-history-list', 'view-purchase-edit-trail'])
                          <li class="menu-title">Reports</li>
                             <li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -148,9 +148,7 @@
                                     @can('stock-value-report')
                                         <li><a href="{{ route('stock.stock_value') }}">Stock Value Report</a></li>
                                     @endcan
-                                    @can('stock-ledger-report')
-                                        <li><a href="{{ route('stock.ledger_report') }}">Stock Ledger Report</a></li>
-                                    @endcan
+                                   
                                     @can('report-stock-adjustment')
                                         <li><a href="{{ route('reports.stock-adjustment') }}">Stock Adjustment Report</a></li>
                                     @endcan           
@@ -162,6 +160,23 @@
                                     @endcan
                                 </ul>
                             </li>
+
+                             @canany(['view-purchase-edit-trail', 'stock-ledger-report'])
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                    <i class="fa-solid fa-chart-simple"></i>
+                                    <span>Audit Report</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    @can('view-purchase-edit-trail')
+                                        <li><a href="{{ route('reports.purchase-edit-trail') }}">Purchase Edit Trail</a></li>
+                                    @endcan
+                                    @can('stock-ledger-report')
+                                        <li><a href="{{ route('stock.ledger_report') }}">Stock Ledger Report</a></li>
+                                    @endcan
+                                </ul>
+                            </li>
+                            @endcanany
                         @endcanany
 
                         {{-- setup menu starts --}}
