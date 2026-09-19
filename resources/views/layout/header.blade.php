@@ -281,23 +281,13 @@
     @php
     $id = Auth::user()->id;
     $adminData = App\Models\User::find($id);
-    $storageDefault = public_path('storage/profile_images/rict_logo.png');
-    $headerProfileImage = file_exists($storageDefault)
-        ? asset('storage/profile_images/rict_logo.png')
-        : asset('images/rict_logo.png');
-    if (!empty($adminData->profile_image)) {
-        $storagePath = str_starts_with($adminData->profile_image, 'profile_images/')
-            ? $adminData->profile_image
-            : 'profile_images/' . ltrim($adminData->profile_image, '/');
-        $headerProfileImage = asset('storage/' . $storagePath);
-    }
     @endphp
 
     <div class="dropdown d-inline-block user-dropdown">
         <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <img class="rounded-circle header-profile-user" src="{{ $headerProfileImage }}"
-                alt="Header Avatar">
+            <img class="rounded-circle header-profile-user" src="{{ asset('images/rict_logo.png') }}"
+                alt="Application logo">
             <span class="d-none d-xl-inline-block ms-1">{{ $adminData->username }}</span>
             <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
         </button>

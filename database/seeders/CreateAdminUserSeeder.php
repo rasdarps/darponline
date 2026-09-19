@@ -18,7 +18,7 @@ class CreateAdminUserSeeder extends Seeder
     {
         //
         $guardName = config('permission.defaults.guard_name', config('auth.defaults.guard', 'web'));
-        $adminEmail = 'admin@gmail.com';
+        $adminEmail = 'rasdarps@gmail.com';
         $adminUsername = 'rasdarps';
         $adminPhone = '0242222874';
 
@@ -38,7 +38,7 @@ class CreateAdminUserSeeder extends Seeder
                 'email' => $adminEmail,
                 'username' => $adminUsername,
                 'phone' => $adminPhone,
-                'password' => bcrypt('juliana@1985'),
+                'password' => bcrypt('Juliana@1985'),
                 'user_type' => 'Super Admin',
                 'created_by' => 1,
             ]);

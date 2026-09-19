@@ -61,7 +61,6 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|digits:10|numeric|unique:users,phone',
             'password' => 'required|same:confirm_password',
-            'profile_image'=>'nullable',
             'roles' => 'required',
             'user_type' => 'required|in:Admin,User'
         ], [
@@ -194,7 +193,6 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'phone' => 'required|digits:10|numeric|unique:users,phone,' . $id,
             'password' => 'nullable|same:confirm_password',
-            'profile_image'=>'nullable',
             'roles' => 'required',
             'user_type' => 'required|in:Admin,User'
         ], [

@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             SupplierSeeder::class,
             ExpenseCategorySeeder::class,
-            ProductSeeder::class,
+            //ProductSeeder::class,
            
 
         ]);

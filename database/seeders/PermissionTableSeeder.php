@@ -173,10 +173,13 @@ class PermissionTableSeeder extends Seeder
         $role = Role::findOrCreate('Super Admin', $guardName);
         
         // Create Manager role if it doesn't exist, or retrieve it if it does
+        $managerRoleWasCreated = ! Role::where('name', 'Manager')->where('guard_name', $guardName)->exists();
         $manager_role = Role::findOrCreate('Manager', $guardName);
 
         // Create Cashier and Supervisor roles if they don't exist
+        $cashierRoleWasCreated = ! Role::where('name', 'Cashier')->where('guard_name', $guardName)->exists();
         $cashier_role = Role::findOrCreate('Cashier', $guardName);
+        $supervisorRoleWasCreated = ! Role::where('name', 'Supervisor')->where('guard_name', $guardName)->exists();
         $supervisor_role = Role::findOrCreate('Supervisor', $guardName);
 
 
@@ -187,7 +190,7 @@ class PermissionTableSeeder extends Seeder
                 $role->givePermissionTo($product_permission);
             }
             // Check if Manager doesn't have the permission, then assign it
-            if (!$manager_role->hasPermissionTo($product_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($product_permission)) {
                 $manager_role->givePermissionTo($product_permission);
             }
         }
@@ -201,7 +204,7 @@ class PermissionTableSeeder extends Seeder
             }
 
             // Check if Manager doesn't have the permission, then assign it
-            if (!$manager_role->hasPermissionTo($supplier_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($supplier_permission)) {
                 $manager_role->givePermissionTo($supplier_permission);
             }
            
@@ -215,7 +218,7 @@ class PermissionTableSeeder extends Seeder
                 $role->givePermissionTo($customer_permission);
             }
             // Check if Manager doesn't have the permission, then assign it
-            if (!$manager_role->hasPermissionTo($customer_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($customer_permission)) {
                 $manager_role->givePermissionTo($customer_permission);
             }
 
@@ -229,7 +232,7 @@ class PermissionTableSeeder extends Seeder
                 $role->givePermissionTo($transaction_permission);
             }
             // Check if Manager doesn't have the permission, then assign it
-            if (!$manager_role->hasPermissionTo($transaction_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($transaction_permission)) {
                 $manager_role->givePermissionTo($transaction_permission);
             }
         }
@@ -240,7 +243,7 @@ class PermissionTableSeeder extends Seeder
                 $role->givePermissionTo($expense_permission);
             }
 
-            if (!$manager_role->hasPermissionTo($expense_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($expense_permission)) {
                 $manager_role->givePermissionTo($expense_permission);
             }
         }
@@ -251,7 +254,7 @@ class PermissionTableSeeder extends Seeder
                 $role->givePermissionTo($expense_category_permission);
             }
 
-            if (!$manager_role->hasPermissionTo($expense_category_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($expense_category_permission)) {
                 $manager_role->givePermissionTo($expense_category_permission);
             }
         }
@@ -262,7 +265,7 @@ class PermissionTableSeeder extends Seeder
                 $role->givePermissionTo($stock_adjustment_permission);
             }
 
-            if (!$manager_role->hasPermissionTo($stock_adjustment_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($stock_adjustment_permission)) {
                 $manager_role->givePermissionTo($stock_adjustment_permission);
             }
         }
@@ -309,7 +312,7 @@ class PermissionTableSeeder extends Seeder
         );
 
         foreach ($manager_additional_permissions as $manager_permission) {
-            if (!$manager_role->hasPermissionTo($manager_permission)) {
+            if ($managerRoleWasCreated && !$manager_role->hasPermissionTo($manager_permission)) {
                 $manager_role->givePermissionTo($manager_permission);
             }
         }
@@ -323,7 +326,7 @@ class PermissionTableSeeder extends Seeder
         ];
 
         foreach ($cashier_permissions as $cashier_permission) {
-            if (!$cashier_role->hasPermissionTo($cashier_permission)) {
+            if ($cashierRoleWasCreated && !$cashier_role->hasPermissionTo($cashier_permission)) {
                 $cashier_role->givePermissionTo($cashier_permission);
             }
         }
@@ -339,7 +342,7 @@ class PermissionTableSeeder extends Seeder
         ];
 
         foreach ($supervisor_permissions as $supervisor_permission) {
-            if (!$supervisor_role->hasPermissionTo($supervisor_permission)) {
+            if ($supervisorRoleWasCreated && !$supervisor_role->hasPermissionTo($supervisor_permission)) {
                 $supervisor_role->givePermissionTo($supervisor_permission);
             }
         }

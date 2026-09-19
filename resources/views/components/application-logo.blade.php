@@ -1,1 +1,1 @@
-<img src="{{ asset('logo/logo_cart.png') }}" width="100px" >
+<img src="{{ asset('images/rict_logo.png') }}" width="100px" >

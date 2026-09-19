@@ -1,21 +1,6 @@
 @extends('layout.main')
 @section('title') {{'View Profile'}} @endsection
 
-@php
-    $profileImagePath = $adminData->profile_image ?? null;
-    $storageDefault = public_path('storage/profile_images/rict_logo.png');
-    $profileImageUrl = file_exists($storageDefault)
-        ? asset('storage/profile_images/rict_logo.png')
-        : asset('images/rict_logo.png');
-
-    if (!empty($profileImagePath)) {
-        $storagePath = str_starts_with($profileImagePath, 'profile_images/')
-            ? $profileImagePath
-            : 'profile_images/' . ltrim($profileImagePath, '/');
-        $profileImageUrl = asset('storage/' . $storagePath);
-    }
-@endphp
-
 @section('content')
 
 <div class="page-content">
@@ -35,7 +20,7 @@
             <div class="col-xl-4 col-lg-5">
                 <div class="card">
                     <div class="card-body text-center py-4">
-                        <img class="rounded-circle shadow-sm mb-3" width="120" height="120" src="{{ $profileImageUrl }}" alt="Profile Image">
+                        <img class="rounded-circle shadow-sm mb-3" width="120" height="120" src="{{ asset('images/rict_logo.png') }}" alt="Application logo">
                         <h5 class="mb-1">{{ $adminData->name }}</h5>
                         <p class="text-muted mb-0">{{ $adminData->username }}</p>
                     </div>
