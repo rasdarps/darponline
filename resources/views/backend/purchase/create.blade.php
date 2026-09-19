@@ -950,12 +950,12 @@
             });
 
             // Calculate row total
-            $(document).on('keyup click','.unit_cost_price,.buying_qty', function(){
-                var unit_cost_price = $(this).closest("tr").find("input.unit_cost_price").val();
-                var qty = $(this).closest("tr").find("input.buying_qty").val();
-                var total = unit_cost_price * qty;
-                $(this).closest("tr").find("input.buying_price").val(total);
-                $('#discount_amount').trigger('keyup');
+            $(document).on('input change keyup click','.unit_cost_price,.buying_qty', function(){
+                var $row = $(this).closest("tr");
+                var unit_cost_price = parseFloat($row.find("input.unit_cost_price").val()) || 0;
+                var qty = parseFloat($row.find("input.buying_qty").val()) || 0;
+                $row.find("input.buying_price").val((unit_cost_price * qty).toFixed(2));
+                totalAmountPrice();
             });
 
             // Discount recalculation

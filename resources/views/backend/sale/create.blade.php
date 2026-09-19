@@ -1124,12 +1124,12 @@
                 totalAmountPrice();
             });
 
-            $(document).on('keyup click','.unit_selling_price,.selling_qty', function(){
-                var unit_selling_price = $(this).closest("tr").find("input.unit_selling_price").val();
-                var qty = $(this).closest("tr").find("input.selling_qty").val();
-                var total = unit_selling_price * qty;
-                $(this).closest("tr").find("input.selling_price").val(total);
-                $('#discount_amount').trigger('keyup');
+            $(document).on('input change keyup click','.unit_selling_price,.selling_qty', function(){
+                var $row = $(this).closest("tr");
+                var unit_selling_price = parseFloat($row.find("input.unit_selling_price").val()) || 0;
+                var qty = parseFloat($row.find("input.selling_qty").val()) || 0;
+                $row.find("input.selling_price").val(round2(unit_selling_price * qty));
+                totalAmountPrice();
             });
 
             $(document).on('keyup','#discount_amount',function(){
