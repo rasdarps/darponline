@@ -657,7 +657,12 @@
             var scanRafId = null;
             var zxingReader = null;
             var zxingControls = null;
-            var scanLocked = false;
+            var barcodeScanState = {
+                inFlight: false,
+                lastCode: '',
+                lastCompletedAt: 0,
+                cooldownMs: 1500
+            };
 
             function notifyScan(message, type) {
                 if (typeof Notiflix !== 'undefined') {
@@ -673,9 +678,89 @@
                 }
             }
 
-            function triggerBarcodeLookup(scannedBarcode) {
-                if (!scannedBarcode) return;
-                $('#barcode').val(scannedBarcode).trigger('change');
+            function normalizeBarcode(code) {
+                return $.trim((code || '')).toUpperCase();
+            }
+
+            function canProcessBarcode(barcode) {
+                var now = Date.now();
+
+                if (!barcode || barcodeScanState.inFlight) {
+                    return false;
+                }
+
+                if (barcodeScanState.lastCode === barcode && (now - barcodeScanState.lastCompletedAt) < barcodeScanState.cooldownMs) {
+                    return false;
+                }
+
+                barcodeScanState.inFlight = true;
+                return true;
+            }
+
+            function finishBarcodeLookup(barcode) {
+                barcodeScanState.inFlight = false;
+                barcodeScanState.lastCode = barcode;
+                barcodeScanState.lastCompletedAt = Date.now();
+            }
+
+            function submitBarcodeLookup(scannedBarcode) {
+                var barcode = normalizeBarcode(scannedBarcode);
+                if (!canProcessBarcode(barcode)) {
+                    $('#barcode').val('').focus();
+                    return false;
+                }
+
+                $.ajax({
+                    url: "{{ route('products.findByBarcode') }}",
+                    type: "GET",
+                    data: { barcode: barcode },
+                    success: function(product){
+                        if(product && product.id){
+                            var date = $('#date').val();
+                            var purchase_no = $('#purchase_no').val();
+
+                            $('#product_id').val(String(product.id)).trigger('change');
+
+                            var source = $("#document-template").html();
+                            var template = Handlebars.compile(source);
+                            var data = {
+                                date: date,
+                                purchase_no: purchase_no,
+                                barcode: product.barcode,
+                                category_id: product.category_id,
+                                category_name: product.category.name,
+                                product_id: product.id,
+                                product_name: product.name,
+                                unit_id: product.unit_id,
+                                unit_name: product.unit.name,
+                            };
+                            var html = template(data);
+                            $("#addRow").append(html);
+
+                            finishBarcodeLookup(barcode);
+                            $('#barcode').val('');
+                            resetProductSelectionFields();
+
+                            Notiflix.Notify.success('Product added via barcode');
+                            $('#barcode').focus();
+                        } else {
+                            finishBarcodeLookup(barcode);
+                            var backendMessage = product && product.message ? product.message : 'Product not found for this barcode.';
+                            Notiflix.Notify.failure(backendMessage);
+                            $('#barcode').val('');
+                            $('#barcode').focus();
+                        }
+                    },
+                    error: function(xhr){
+                        finishBarcodeLookup(barcode);
+                        var backendMessage = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error looking up barcode. Try again.';
+                        Notiflix.Notify.failure(backendMessage);
+                        $('#barcode').val('');
+                        $('#barcode').focus();
+                    }
+                });
+
+                return true;
             }
 
             function stopCameraScan() {
@@ -708,16 +793,15 @@
                 $('#cameraScanWrap').hide();
                 $('#startCameraScan').show();
                 $('#stopCameraScan').hide();
-                scanLocked = false;
             }
 
             function onBarcodeScanned(codeText) {
                 var cleanCode = $.trim(codeText || '');
-                if (!cleanCode || scanLocked) return;
+                if (!cleanCode) return;
 
-                scanLocked = true;
-                triggerBarcodeLookup(cleanCode);
-                notifyScan('Barcode scanned from camera', 'success');
+                if (submitBarcodeLookup(cleanCode)) {
+                    notifyScan('Barcode scanned from camera', 'success');
+                }
                 stopCameraScan();
             }
 
@@ -819,7 +903,7 @@
             $(document).on('keydown', '#barcode', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    $(this).trigger('change');
+                    submitBarcodeLookup($(this).val());
                 }
             });
 
@@ -832,61 +916,7 @@
 
             // ðŸ”¹ Handle barcode scan/entry
             $(document).on("change", "#barcode", function(){
-                var barcode = $.trim($(this).val());
-                if(!barcode) return;
-
-                $.ajax({
-                    url: "{{ route('products.findByBarcode') }}", // lookup route
-                    type: "GET",
-                    data: { barcode: barcode },
-                    success: function(product){
-                        if(product && product.id){
-                            var date = $('#date').val();
-                            var purchase_no = $('#purchase_no').val();
-
-                            // Keep product list intact and drive selection from product dropdown.
-                            $('#product_id').val(String(product.id)).trigger('change');
-
-                            // Prepare data for Handlebars row
-                            var source = $("#document-template").html();
-                            var template = Handlebars.compile(source);
-                            var data = {
-                                date: date,
-                                purchase_no: purchase_no,
-                                barcode: product.barcode,          // ðŸ”¹ added
-                                category_id: product.category_id,
-                                category_name: product.category.name,
-                                product_id: product.id,
-                                product_name: product.name,
-                                unit_id: product.unit_id,
-                                unit_name: product.unit.name,
-                            };
-                            var html = template(data);
-                            $("#addRow").append(html);
-
-                            // Clear barcode field after scan
-                            $('#barcode').val('');
-                            resetProductSelectionFields();
-
-                            // ðŸ”¹ Optional: show stock quantity
-                            // $('#current_stock_qty').val(product.quantity);
-
-                            Notiflix.Notify.success('Product added via barcode');
-                            $('#barcode').focus();
-                        } else {
-                            var backendMessage = product && product.message ? product.message : 'Product not found for this barcode.';
-                            Notiflix.Notify.failure(backendMessage);
-                            $('#barcode').val('');
-                            $('#barcode').focus();
-                        }
-                    },
-                    error: function(xhr){
-                        var backendMessage = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error looking up barcode. Try again.';
-                        Notiflix.Notify.failure(backendMessage);
-                        $('#barcode').val('');
-                        $('#barcode').focus();
-                    }
-                });
+                submitBarcodeLookup($(this).val());
             });
 
             // Existing add button flow (manual selection)

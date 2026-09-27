@@ -22,16 +22,43 @@ class AllSalesDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
+            ->addColumn('receipt_status', function($row) {
+                if ($row->printed_at) {
+                    return '<span class="badge bg-success">Printed</span>';
+                }
+
+                return '<span class="badge bg-warning text-dark">Not Printed</span>';
+            })
+
+            ->addColumn('delivery_status', function($row) {
+                if ($row->delivered_at) {
+                    return '<span class="badge bg-success">Delivered</span>';
+                }
+
+                return '<span class="badge bg-warning text-dark">Pending Delivery</span>';
+            })
+
             ->addColumn('edit_button', function($row) {
                 $printUrl = route('print.sale', Crypt::encrypt($row->id));
+                $reprintUrl = route('sales.reprint', Crypt::encrypt($row->id));
 
                 $canPrint = Gate::allows('sale-print');
+                $canReprint = Gate::allows('sale-reprint');
                 $canCancel = Gate::allows('sale-cancel');
 
                 $buttons = [];
 
-                if ($canPrint) {
-                    $buttons[] = '<a href="' . $printUrl . '" class="btn btn-sm btn-info">Print <i class="fa fa-print"></i></a>';
+                if (! $row->printed_at && $canPrint) {
+                    $buttons[] = '<a href="' . $printUrl . '" class="btn btn-sm btn-outline-primary"><i class="fa fa-print me-1"></i> Print</a>';
+                }
+
+                if ($row->printed_at && $canReprint) {
+                    $buttons[] = '<button type="button"
+                        class="btn btn-sm btn-outline-secondary btn-reprint-sale ms-1"
+                        data-url="' . e($reprintUrl) . '"
+                        data-no="' . e($row->sale_no) . '">
+                        <i class="fa fa-repeat"></i> Reprint
+                    </button>';
                 }
 
                 if ($canCancel && !$row->cancelled_at) {
@@ -48,7 +75,7 @@ class AllSalesDataTable extends DataTable
                     return '<span class="text-muted">No actions</span>';
                 }
 
-                return implode(' ', $buttons);
+                return '<div class="d-inline-flex flex-nowrap gap-1 align-items-center">' . implode(' ', $buttons) . '</div>';
             })
 
             ->addColumn('cancelled_status', function($row) {
@@ -116,7 +143,7 @@ class AllSalesDataTable extends DataTable
             })
 
             
-            ->rawColumns(['amount', 'edit_button', 'cancelled_status'])
+            ->rawColumns(['amount', 'receipt_status', 'delivery_status', 'edit_button', 'cancelled_status'])
             ->setRowId('id');
     }
 
@@ -127,7 +154,7 @@ class AllSalesDataTable extends DataTable
     {
         $query = $model->newQuery()
             ->with(['payment.customer', 'createdBy', 'cancelledBy'])
-            ->orderBy('date', 'ASC');
+            ->orderBy('date', 'DESC');
 
         /** @var \App\Models\User|null $currentUser */
         $currentUser = auth()->user();
@@ -231,6 +258,8 @@ class AllSalesDataTable extends DataTable
             Column::make('sale_no'),
             Column::make('customer_name')->title('Customer Name'),
             Column::make('amount')->title('Amount (Gh¢)'),
+            Column::make('receipt_status')->title('Receipt')->searchable(false)->orderable(false),
+            Column::make('delivery_status')->title('Delivery')->searchable(false)->orderable(false),
         ];
 
         if (Gate::allows('user-audit-view')) {
@@ -241,7 +270,7 @@ class AllSalesDataTable extends DataTable
 
         if (Gate::allows('sale-print') || Gate::allows('sale-cancel')) {
             $columns[] = Column::make('edit_button')->title('Actions')
-                ->searchable(false)->printable(false)->exportable(false);
+                ->searchable(false)->printable(false)->exportable(false)->width('220px');
         }
 
         return $columns;

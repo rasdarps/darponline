@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Backend;
 
 use App\DataTables\Admin\Report\Sales\AllSalesDataTable;
+use App\DataTables\Admin\Report\Sales\SaleReceiptAuditDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Sale;
 use App\Models\SaleDetail;
+use App\Models\SaleReceiptEvent;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Unit;
@@ -22,6 +24,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class SaleController extends Controller
 {
@@ -30,7 +33,11 @@ class SaleController extends Controller
     $this->middleware('permission:sale-list', ['only' => ['index']]);
     $this->middleware('permission:sale-create', ['only' => ['create', 'store']]);
     $this->middleware('permission:sale-cancel', ['only' => ['cancel']]);
-    $this->middleware('permission:sale-print', ['only' => ['printSaleList', 'printSale']]);
+    $this->middleware('permission:sale-print|sale-list', ['only' => ['printSaleList']]);
+    $this->middleware('permission:sale-print', ['only' => ['printSale']]);
+    $this->middleware('permission:sale-reprint', ['only' => ['reprintSale']]);
+    $this->middleware('permission:sale-receipt-print-audit-view', ['only' => ['receiptAuditReport']]);
+    $this->middleware('permission:sale-delivery-verify', ['only' => ['deliveryVerification', 'verifyDelivery']]);
     $this->middleware('permission:sale-list', ['only' => ['dailyTotalSales']]);
     }
 
@@ -190,6 +197,10 @@ class SaleController extends Controller
                         'description' => $request->description,
                         'created_by' => Auth::id(),
                     ]);
+
+                    $Sale->forceFill([
+                        'delivery_code' => $this->generateDeliveryCode((int) $Sale->id),
+                    ])->saveQuietly();
 
                     $countProducts = count($request->product_id);
                     for ($i = 0; $i < $countProducts; $i++) {
@@ -538,7 +549,10 @@ class SaleController extends Controller
 
     public function printSaleList(){
 
-       $allData = Sale::orderBy('date','desc')->orderBy('id','desc')->get();
+       $allData = Sale::with(['payment.customer', 'printedBy', 'deliveredBy'])
+           ->orderBy('date','desc')
+           ->orderBy('id','desc')
+           ->get();
          return view('backend.sale.print_sale_list',compact('allData'));
     } // End Method
 
@@ -547,9 +561,178 @@ class SaleController extends Controller
     public function printSale($encryptedId){
 
         $id = Crypt::decrypt($encryptedId);
-        $Sale = Sale::with(['sale_details.category', 'sale_details.product', 'createdBy', 'payment.customer'])->findOrFail($id);
+        $receiptData = DB::transaction(function () use ($id) {
+            $sale = Sale::with(['sale_details.category', 'sale_details.product', 'createdBy', 'printedBy', 'deliveredBy', 'payment.customer'])
+                ->lockForUpdate()
+                ->findOrFail($id);
+
+            if ($sale->printed_at) {
+                return [
+                    'redirect' => true,
+                    'message' => 'Sale #' . $sale->sale_no . ' has already been printed.',
+                ];
+            }
+
+            $sale->forceFill([
+                'printed_at' => now(),
+                'printed_by' => Auth::id(),
+            ])->save();
+
+            $this->recordReceiptEvent($sale, 'original_print');
+
+            return [
+                'redirect' => false,
+                'sale' => $sale->fresh(['sale_details.category', 'sale_details.product', 'createdBy', 'printedBy', 'deliveredBy', 'payment.customer']),
+            ];
+        });
+
+        if (! empty($receiptData['redirect'])) {
+            return redirect()->route('sales.index')->with('error', $receiptData['message']);
+        }
+
         $companyInfo = Company::first();
-        return view('backend.sale.sale_receipt',compact('Sale','companyInfo'));
+        $Sale = $receiptData['sale'];
+        $printMode = 'original';
+
+        return view('backend.sale.sale_receipt',compact('Sale','companyInfo','printMode'));
+
+    } // End Method
+
+    public function reprintSale(Request $request, $encryptedId)
+    {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ], [
+            'reason.required' => 'Please provide a reason for the reprint.',
+        ]);
+
+        $id = Crypt::decrypt($encryptedId);
+
+        $receiptData = DB::transaction(function () use ($id, $validated, $request) {
+            $sale = Sale::with(['sale_details.category', 'sale_details.product', 'createdBy', 'printedBy', 'deliveredBy', 'payment.customer'])
+                ->lockForUpdate()
+                ->findOrFail($id);
+
+            if (! $sale->printed_at) {
+                return [
+                    'redirect' => true,
+                    'message' => 'Original print must be recorded before a reprint is allowed.',
+                ];
+            }
+
+            $this->recordReceiptEvent($sale, 'reprint', $validated['reason'], $request);
+
+            return [
+                'redirect' => false,
+                'sale' => $sale->fresh(['sale_details.category', 'sale_details.product', 'createdBy', 'printedBy', 'deliveredBy', 'payment.customer']),
+            ];
+        });
+
+        if (! empty($receiptData['redirect'])) {
+            return redirect()->route('sales.index')->with('error', $receiptData['message']);
+        }
+
+        $companyInfo = Company::first();
+        $Sale = $receiptData['sale'];
+        $printMode = 'reprint';
+
+        return view('backend.sale.sale_receipt',compact('Sale','companyInfo','printMode'));
+
+    }
+
+    public function receiptAuditReport(SaleReceiptAuditDataTable $dataTable)
+    {
+        $viewer = Auth::user();
+        $viewerIsSuperAdmin = $viewer && strtolower((string) ($viewer->user_type ?? '')) === 'super admin';
+
+        $salesQuery = Sale::query()
+            ->select('sales.id', 'sales.sale_no')
+            ->join('sale_receipt_events', 'sale_receipt_events.sale_id', '=', 'sales.id')
+            ->join('users', 'users.id', '=', 'sale_receipt_events.operator_id')
+            ->distinct();
+
+        if (! $viewerIsSuperAdmin) {
+            $salesQuery->whereRaw("LOWER(COALESCE(users.user_type, '')) <> 'super admin'");
+        }
+
+        $sales = $salesQuery->orderBy('sales.sale_no')->get();
+
+        $usersQuery = User::query()->select(['id', 'name', 'username']);
+        if (! $viewerIsSuperAdmin) {
+            $usersQuery->whereRaw("LOWER(COALESCE(user_type, '')) <> 'super admin'");
+        }
+
+        $users = $usersQuery->orderBy('name')->get();
+
+        return $dataTable->render('backend.report.sale_receipt_audit', compact('sales', 'users', 'viewerIsSuperAdmin'));
+
+    }
+
+    public function deliveryVerification()
+    {
+        $companyInfo = Company::first();
+
+        return view('backend.sale.delivery_verification', compact('companyInfo'));
+    }
+
+    public function verifyDelivery(Request $request)
+    {
+        $validated = $request->validate([
+            'delivery_code' => ['required', 'string', 'max:40'],
+        ]);
+
+        $normalizedCode = $this->normalizeDeliveryCode($validated['delivery_code']);
+
+        if ($normalizedCode === '') {
+            return response()->json([
+                'status' => 422,
+                'message' => 'Please scan or enter a valid receipt delivery code.',
+            ], 422);
+        }
+
+        $result = DB::transaction(function () use ($normalizedCode, $request) {
+            $sale = Sale::where('delivery_code', $normalizedCode)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $sale) {
+                return [
+                    'status' => 404,
+                    'message' => 'No sale was found for that delivery code.',
+                ];
+            }
+
+            if ($sale->cancelled_at) {
+                return [
+                    'status' => 422,
+                    'message' => 'Cancelled sales cannot be marked delivered.',
+                ];
+            }
+
+            if ($sale->delivered_at) {
+                return [
+                    'status' => 409,
+                    'message' => 'This sale was already marked delivered at ' . $sale->delivered_at->format('d-m-Y h:i A') . '.',
+                ];
+            }
+
+            $sale->forceFill([
+                'delivered_at' => now(),
+                'delivered_by' => Auth::id(),
+            ])->save();
+
+            $this->recordReceiptEvent($sale, 'delivery', null, $request);
+
+            return [
+                'status' => 200,
+                'message' => 'Sale #' . $sale->sale_no . ' marked delivered successfully.',
+                'sale_no' => $sale->sale_no,
+                'delivery_code' => $sale->delivery_code,
+                'delivered_at' => $sale->delivered_at?->format('d-m-Y h:i A'),
+            ];
+        });
+
+        return response()->json($result, $result['status']);
 
     } // End Method
 
@@ -612,6 +795,33 @@ class SaleController extends Controller
             'totalSalesAmount' => (float) $totalSalesAmount,
             'companyInfo' => $companyInfo,
         ]);
+    }
+
+    private function generateDeliveryCode(int $saleId): string
+    {
+        do {
+            $candidate = sprintf('DLV-%08d-%s', $saleId, strtoupper(Str::random(6)));
+        } while (Sale::where('delivery_code', $candidate)->exists());
+
+        return $candidate;
+    }
+
+    private function recordReceiptEvent(Sale $sale, string $eventType, ?string $reason = null, ?Request $request = null): SaleReceiptEvent
+    {
+        return SaleReceiptEvent::create([
+            'sale_id' => $sale->id,
+            'operator_id' => Auth::id(),
+            'event_type' => $eventType,
+            'reason' => $reason,
+            'event_at' => now(),
+            'ip_address' => $request?->ip() ?: request()->ip(),
+            'user_agent' => $request?->userAgent() ?: request()->userAgent(),
+        ]);
+    }
+
+    private function normalizeDeliveryCode(?string $code): string
+    {
+        return strtoupper(trim((string) $code));
     }
 
 }

@@ -16,6 +16,11 @@ class Sale extends Model
         'sale_no',
         'date', 
         'description',
+        'delivery_code',
+        'printed_at',
+        'printed_by',
+        'delivered_at',
+        'delivered_by',
         'cancelled_at',
         'cancelled_by',
         'cancellation_reason',
@@ -25,7 +30,11 @@ class Sale extends Model
 
     protected $casts = [
         'date' => 'date',
+        'printed_at' => 'datetime',
+        'delivered_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'printed_by' => 'integer',
+        'delivered_by' => 'integer',
         'cancelled_by' => 'integer',
         'created_by' => 'integer',
         'updated_by' => 'integer',
@@ -51,6 +60,21 @@ class Sale extends Model
     public function cancelledBy()
     {
         return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    public function printedBy()
+    {
+        return $this->belongsTo(User::class, 'printed_by');
+    }
+
+    public function deliveredBy()
+    {
+        return $this->belongsTo(User::class, 'delivered_by');
+    }
+
+    public function receiptEvents()
+    {
+        return $this->hasMany(SaleReceiptEvent::class, 'sale_id', 'id');
     }
 
     // Existing relationships

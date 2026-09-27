@@ -265,6 +265,9 @@ Route::prefix('admin')->group(function () {
                 Route::get('/', [SaleController::class, 'index'])->name('index');
                 Route::get('/create', [SaleController::class, 'create'])->name('create');
                 Route::get('/daily-total-sales', [SaleController::class, 'dailyTotalSales'])->name('daily-total-sales');
+                Route::get('/receipt-audit', [SaleController::class, 'receiptAuditReport'])->name('receipt-audit');
+                Route::get('/delivery-verification', [SaleController::class, 'deliveryVerification'])->name('delivery-verification');
+                Route::post('/verify-delivery', [SaleController::class, 'verifyDelivery'])->name('verify-delivery');
                 Route::post('/store', [SaleController::class, 'store'])->name('store');
                 Route::post('/cancel/{id}', [SaleController::class, 'cancel'])->name('cancel');
             });
@@ -274,6 +277,7 @@ Route::prefix('admin')->group(function () {
             Route::controller(SaleController::class)->group(function () {
                 Route::get('/print/sale/list', 'printSaleList')->name('print.sale.list');
                 Route::get('/print/sale/{id}', 'printSale')->name('print.sale');
+                Route::post('/print/sale/{id}/reprint', 'reprintSale')->name('sales.reprint');
 
                 
                 

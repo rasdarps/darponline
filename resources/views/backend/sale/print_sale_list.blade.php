@@ -58,9 +58,18 @@
                 <td>  {{ $item['payment']['total_amount'] }} </td>
 
                 <td>
-                    @can('sale-print')
-                        <a href="{{ route('print.sale',$item->id) }}" class="btn btn-danger sm" title="Print Sale" >  <i class="fa fa-print"></i> </a>
-                    @endcan
+                    @if(! $item->printed_at)
+                        @can('sale-print')
+                            <a href="{{ route('print.sale', Crypt::encrypt($item->id)) }}" class="btn btn-danger sm" title="Print Sale" >  <i class="fa fa-print"></i> </a>
+                        @endcan
+                    @else
+                        <span class="badge bg-success">Already Printed</span>
+                        @can('sale-reprint')
+                            <button type="button" class="btn btn-primary btn-sm ms-1 btn-reprint-sale" data-no="{{ $item->sale_no }}" data-url="{{ route('sales.reprint', Crypt::encrypt($item->id)) }}">
+                                <i class="fa fa-repeat"></i> Reprint
+                            </button>
+                        @endcan
+                    @endif
                 </td>
                
             </tr>
@@ -68,6 +77,11 @@
                         
                         </tbody>
                     </table>
+
+                    <form id="reprintSaleForm" method="POST" style="display:none;">
+                        @csrf
+                        <input type="hidden" name="reason" id="reprint_reason">
+                    </form>
         
                                     </div>
                                 </div>
@@ -80,4 +94,36 @@
                 </div>
  
 
+@endsection
+
+@section('scripts')
+    <script>
+        $(document).on('click', '.btn-reprint-sale', function() {
+            const saleNo = $(this).data('no');
+            const actionUrl = $(this).data('url');
+            if (!(window.Notiflix && Notiflix.Confirm && typeof Notiflix.Confirm.prompt === 'function')) {
+                Notiflix.Notify.failure('Reprint reason dialog is unavailable.');
+                return;
+            }
+
+            Notiflix.Confirm.prompt(
+                'Reprint Sale',
+                'Enter reason for reprint of Sale #' + saleNo + ':',
+                '',
+                'Submit',
+                'Cancel',
+                function(clientAnswer) {
+                    const reason = (clientAnswer || '').trim();
+
+                    if (!reason) {
+                        Notiflix.Notify.failure('Please enter a reason for reprint.');
+                        return;
+                    }
+
+                    $('#reprintSaleForm').attr('action', actionUrl).find('#reprint_reason').val(reason);
+                    $('#reprintSaleForm')[0].submit();
+                }
+            );
+        });
+    </script>
 @endsection

@@ -3,6 +3,13 @@
 
 @section('content')
  <script src="{{ asset('backend/assets/libs/jquery/jquery.min.js') }}"></script>
+@php $printMode = $printMode ?? 'original'; @endphp
+@php
+    $companyName = optional($companyInfo)->name ?? 'N/A';
+    $companyAddress = optional($companyInfo)->address ?? 'N/A';
+    $companyPhone = optional($companyInfo)->phone ?? 'N/A';
+    $companyTin = optional($companyInfo)->tin_number ?? 'N/A';
+@endphp
 
 <div class="page-content">
     <div class="container-fluid">
@@ -45,11 +52,11 @@
                                         <h5 class="receipt-header-line">
                                             Sales Receipt No. # {{ $Sale->sale_no }}
                                         </h5>
-                                        <h5 class="receipt-header-line">{{ $companyInfo->name }}
+                                        <h5 class="receipt-header-line">{{ $companyName }}
                                             <br>
-                                        {{ $companyInfo->address }}
+                                        {{ $companyAddress }}
                                         <br>
-                                        {{ $companyInfo->phone }} |  TIN: {{ $companyInfo->tin_number ?? 'N/A' }}</h5>
+                                        {{ $companyPhone }} |  TIN: {{ $companyTin }}</h5>
                                     </div>
                                     <hr>
                                     <div class="row">
@@ -153,10 +160,35 @@
                                     <div class="receipt-summary-spacer">&nbsp;</div>
                                 </div>
 
+                                @if(!empty($Sale->delivery_code))
+                                    <div class="text-center mt-2 mb-2 d-print-none">
+                                        <small class="text-muted">Delivery verification code</small>
+                                        <div class="fw-bold">{{ $Sale->delivery_code }}</div>
+                                    </div>
+                                    <div class="text-center mb-2">
+                                        <svg id="deliveryCodeBarcode" class="receipt-barcode" style="width:100%;max-width:240px;height:64px;"></svg>
+                                    </div>
+                                @endif
+
+                                @if($printMode === 'reprint')
+                                    <div class="text-center mb-2">
+                                        <span class="badge bg-warning text-dark">MANAGER REPRINT</span>
+                                    </div>
+                                @endif
+
+                                <div class="alert alert-info py-2 d-print-none mt-3 mb-2">
+                                    <small>This records the authorized receipt print request. Browser and printer success cannot be guaranteed.</small>
+                                </div>
+
                                 <div class="d-print-none">
                                     <div class="float-end">
                                         @can('sale-print')
                                             <a href="javascript:void(0)" onclick="printInvoiceAndRedirect()" class="btn btn-success waves-effect waves-light"><i class="fa fa-print"></i></a>
+                                        @endcan
+                                        @can('sale-reprint')
+                                            <a href="javascript:void(0)" onclick="printInvoiceAndRedirect()" class="btn btn-warning waves-effect waves-light ms-2">
+                                                <i class="fa fa-repeat"></i> Reprint
+                                            </a>
                                         @endcan
                                         @can('sale-print')
                                             <a href="javascript:void(0)" onclick="downloadPDF()" class="btn btn-primary waves-effect waves-light ms-2">
@@ -251,6 +283,11 @@
             margin-top: 2px;
         }
 
+        .receipt-barcode {
+            display: block;
+            margin: 0 auto;
+        }
+
         .item-name {
             display: block;
             width: 100%;
@@ -306,6 +343,12 @@
             .receipt-container {
                 width: 100% !important;
                 min-width: 0 !important;
+            }
+
+            .receipt-barcode {
+                max-width: 240px !important;
+                width: 100% !important;
+                height: auto !important;
             }
 
             /* Print only the receipt block to avoid blank pages from hidden layout wrappers. */
@@ -497,6 +540,7 @@
 @endsection
 
 @section('scripts')
+<script src="{{ asset('vendor/jsbarcode/JsBarcode.all-3.11.6.min.js') }}"></script>
 <script>
     (function () {
         var originalTitle = document.title;
@@ -522,13 +566,35 @@
 
         window.addEventListener('afterprint', function () {
             if (printRequested) {
-                window.location.href = redirectUrl;
+                window.location.replace(redirectUrl);
+            }
+        });
+
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.replace(redirectUrl);
             }
         });
 
         window.addEventListener('load', function () {
             // Give the browser a short render window before opening print dialog.
             setTimeout(triggerPrint, 250);
+
+            var barcodeValue = @json($Sale->delivery_code ?? '');
+            if (barcodeValue && typeof JsBarcode !== 'undefined') {
+                try {
+                    JsBarcode('#deliveryCodeBarcode', barcodeValue, {
+                        format: 'CODE128',
+                        displayValue: true,
+                        fontSize: 11,
+                        width: 1.2,
+                        height: 36,
+                        margin: 0
+                    });
+                } catch (error) {
+                    console.error('Failed to render delivery barcode', error);
+                }
+            }
         });
     })();
 </script>

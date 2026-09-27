@@ -200,14 +200,19 @@
             </a>
         @endcan --}}
         <!-- Reports -->
-        @can('report-summary-ledger')
+        {{-- @can('report-summary-ledger')
             <a href="{{ route('reports.summary-ledger') }}" class="btn quick-action-btn header-item waves-effect" title="Summary Ledger">
                 <i class="ri-money-dollar-circle-line align-middle"></i>
             </a>
-        @endcan
-        @can('report-profit')
+        @endcan --}}
+        {{-- @can('report-profit')
             <a href="{{ route('reports.profit') }}" class="btn quick-action-btn header-item waves-effect" title="Profit Report">
                 <i class="ri-money-dollar-circle-line align-middle"></i>
+            </a>
+        @endcan --}}
+        @can('expense-create')
+            <a href="{{ route('expense-vouchers.create') }}" class="btn quick-action-btn header-item waves-effect" title="Create Expense">
+                        <i class="ri-wallet-3-line align-middle"></i>
             </a>
         @endcan
         @can('report-expense')
@@ -220,16 +225,16 @@
                 <i class="ri-bar-chart-box-line align-middle"></i>
             </a>
         @endcan
-        @can('stock-ledger-report')
+        {{-- @can('stock-ledger-report')
             <a href="{{ route('stock.ledger_report') }}" class="btn quick-action-btn header-item waves-effect" title="Stock Ledger Report">
                 <i class="ri-bar-chart-box-line align-middle"></i>
             </a>
-        @endcan
-        @can('report-stock-adjustment')
+        @endcan --}}
+        {{-- @can('report-stock-adjustment')
             <a href="{{ route('reports.stock-adjustment') }}" class="btn quick-action-btn header-item waves-effect" title="Stock Adjustment Report">
                 <i class="ri-bar-chart-box-line align-middle"></i>
             </a>
-        @endcan
+        @endcan --}}
         @can('product-price-history-list')
             <a href="{{ route('product-prices.product_price_history') }}" class="btn quick-action-btn header-item waves-effect" title="Product Price History">
                 <i class="ri-history-line align-middle"></i>
@@ -246,11 +251,11 @@
             </a>
         @endcan
         <!-- Settings & Logout -->
-        @can('settings-manage')
+        {{-- @can('settings-manage')
             <a href="{{ route('settings.index') }}" class="btn quick-action-btn header-item waves-effect" title="Settings">
                 <i class="ri-settings-3-line align-middle"></i>
             </a>
-        @endcan
+        @endcan --}}
         {{-- <a href="{{ route('admin.logout') }}" class="btn quick-action-btn header-item waves-effect" title="Logout">
             <i class="ri-logout-box-r-line align-middle"></i>
         </a> --}}

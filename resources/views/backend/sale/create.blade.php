@@ -168,14 +168,14 @@
                                                     <tr>
                                                         <td colspan="6">Grand Total</td>
                                                         <td>
-                                                            <input style="text-align: right;" type="text" name="estimated_amount" value="0" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
+                                                            <input style="text-align: right;" type="text" name="estimated_amount" value="0.00" id="estimated_amount" class="form-control estimated_amount" readonly style="background-color: #ddd;">
                                                         </td>
                                                         <td></td>
                                                     </tr>
                                                     <tr>
                                                         <td colspan="6">Cash Tendered</td>
                                                         <td>
-                                                            <input style="text-align: right;" type="number" step="0.01" min="0" name="cash_tendered" value="0" id="cash_tendered" class="form-control" placeholder="Enter cash tendered">
+                                                            <input style="text-align: right;" type="number" step="0.01" min="0" name="cash_tendered" value="" id="cash_tendered" class="form-control" placeholder="Enter cash tendered">
                                                         </td>
                                                         <td></td>
                                                     </tr>
@@ -446,6 +446,27 @@
         const PREVENT_BACKDATED_INVOICES = @json((bool) ($preventBackdatedInvoices ?? false));
         const ALLOW_MANUAL_DISCOUNT_ENTRY_BY_STAFF = @json((bool) ($allowManualDiscountEntryByStaff ?? true));
 
+        function round2(num) {
+            return (Math.round((num + Number.EPSILON) * 100) / 100).toFixed(2);
+        }
+
+        function parseMoney(value) {
+            if (typeof value === 'number') {
+                return value;
+            }
+
+            var normalized = String(value || '').replace(/,/g, '').trim();
+            var parsed = parseFloat(normalized);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function formatMoney(num) {
+            return parseFloat(round2(num)).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
         $(document).ready(function (){
             // Handle form submission
             $('#invoiceForm').on('submit', function(e) {
@@ -544,9 +565,9 @@
                     return;
                 }
 
-                var totalAmount = parseFloat($('#estimated_amount').val()) || 0;
-                var cashTendered = parseFloat($('#cash_tendered').val());
-                if(isNaN(cashTendered) || cashTendered < 0) {
+                var totalAmount = parseMoney($('#estimated_amount').val());
+                var cashTendered = parseMoney($('#cash_tendered').val());
+                if (isNaN(cashTendered) || cashTendered <= 0) {
                     notify('Please enter a valid cash tendered amount');
                     return;
                 }
@@ -799,9 +820,25 @@
                 return (Math.round((num + Number.EPSILON) * 100) / 100).toFixed(2);
             }
 
+            function parseMoney(value) {
+                if (typeof value === 'number') {
+                    return value;
+                }
+
+                var normalized = String(value || '').replace(/,/g, '').trim();
+                var parsed = parseFloat(normalized);
+                return isNaN(parsed) ? 0 : parsed;
+            }
+
+            function formatMoney(num) {
+                return parseFloat(round2(num)).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
             function getNumeric(selector) {
-                var value = parseFloat($(selector).val());
-                return isNaN(value) ? 0 : value;
+                return parseMoney($(selector).val());
             }
 
             function updateTenderSummary() {
@@ -817,7 +854,12 @@
             var scanRafId = null;
             var zxingReader = null;
             var zxingControls = null;
-            var scanLocked = false;
+            var barcodeScanState = {
+                inFlight: false,
+                lastCode: '',
+                lastCompletedAt: 0,
+                cooldownMs: 1500
+            };
 
             function notifyScan(message, type) {
                 if (typeof Notiflix !== 'undefined') {
@@ -833,9 +875,100 @@
                 }
             }
 
-            function triggerBarcodeLookup(scannedBarcode) {
-                if (!scannedBarcode) return;
-                $('#barcode').val(scannedBarcode).trigger('change');
+            function normalizeBarcode(code) {
+                return $.trim((code || '')).toUpperCase();
+            }
+
+            function canProcessBarcode(barcode) {
+                var now = Date.now();
+
+                if (!barcode || barcodeScanState.inFlight) {
+                    return false;
+                }
+
+                if (barcodeScanState.lastCode === barcode && (now - barcodeScanState.lastCompletedAt) < barcodeScanState.cooldownMs) {
+                    return false;
+                }
+
+                barcodeScanState.inFlight = true;
+                return true;
+            }
+
+            function finishBarcodeLookup(barcode) {
+                barcodeScanState.inFlight = false;
+                barcodeScanState.lastCode = barcode;
+                barcodeScanState.lastCompletedAt = Date.now();
+            }
+
+            function submitBarcodeLookup(scannedBarcode) {
+                var barcode = normalizeBarcode(scannedBarcode);
+                if (!canProcessBarcode(barcode)) {
+                    $('#barcode').val('').focus();
+                    return false;
+                }
+
+                $.ajax({
+                    url: "{{ route('products.findByBarcode') }}",
+                    type: "GET",
+                    data: { barcode: barcode },
+                    success: function(product){
+                        if(product && product.id){
+                            var availableQty = parseFloat(product.quantity);
+                            if (isNaN(availableQty) || availableQty <= 0) {
+                                finishBarcodeLookup(barcode);
+                                Notiflix.Notify.failure('Cannot add this item. Available stock is 0. Please restock before adding to invoice.');
+                                $('#barcode').val('');
+                                $('#barcode').focus();
+                                return;
+                            }
+
+                            var date = $('#date').val();
+                            var sale_no = $('#sale_no').val();
+
+                            $('#product_id').val(String(product.id)).trigger('change');
+
+                            var source = $("#document-template").html();
+                            var template = Handlebars.compile(source);
+                            var data = {
+                                date: date,
+                                sale_no: sale_no,
+                                barcode: product.barcode,
+                                category_id: product.category_id,
+                                category_name: product.category.name,
+                                product_id: product.id,
+                                product_name: product.name,
+                                available_qty: availableQty,
+                                unit_id: product.unit_id,
+                                unit_name: product.unit.name,
+                                unit_selling_price: product.selling_price
+                            };
+                            var html = template(data);
+                            $("#addRow").append(html);
+
+                            finishBarcodeLookup(barcode);
+                            $('#barcode').val('');
+                            resetProductSelectionFields();
+
+                            Notiflix.Notify.success('Product added via barcode');
+                            $('#barcode').focus();
+                        } else {
+                            finishBarcodeLookup(barcode);
+                            var backendMessage = product && product.message ? product.message : 'Product not found for this barcode.';
+                            Notiflix.Notify.failure(backendMessage);
+                            $('#barcode').val('');
+                            $('#barcode').focus();
+                        }
+                    },
+                    error: function(xhr){
+                        finishBarcodeLookup(barcode);
+                        var backendMessage = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error looking up barcode. Try again.';
+                        Notiflix.Notify.failure(backendMessage);
+                        $('#barcode').val('');
+                        $('#barcode').focus();
+                    }
+                });
+
+                return true;
             }
 
             function stopCameraScan() {
@@ -868,16 +1001,15 @@
                 $('#cameraScanWrap').hide();
                 $('#startCameraScan').show();
                 $('#stopCameraScan').hide();
-                scanLocked = false;
             }
 
             function onBarcodeScanned(codeText) {
                 var cleanCode = $.trim(codeText || '');
-                if (!cleanCode || scanLocked) return;
+                if (!cleanCode) return;
 
-                scanLocked = true;
-                triggerBarcodeLookup(cleanCode);
-                notifyScan('Barcode scanned from camera', 'success');
+                if (submitBarcodeLookup(cleanCode)) {
+                    notifyScan('Barcode scanned from camera', 'success');
+                }
                 stopCameraScan();
             }
 
@@ -979,7 +1111,7 @@
             $(document).on('keydown', '#barcode', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    $(this).trigger('change');
+                    submitBarcodeLookup($(this).val());
                 }
             });
 
@@ -992,71 +1124,7 @@
 
              // ðŸ”¹ Handle barcode scan/entry
             $(document).on("change", "#barcode", function(){
-                var barcode = $.trim($(this).val());
-                if(!barcode) return;
-
-                $.ajax({
-                    url: "{{ route('products.findByBarcode') }}", // lookup route
-                    type: "GET",
-                    data: { barcode: barcode },
-                    success: function(product){
-                        if(product && product.id){
-                            var availableQty = parseFloat(product.quantity);
-                            if (isNaN(availableQty) || availableQty <= 0) {
-                                Notiflix.Notify.failure('Cannot add this item. Available stock is 0. Please restock before adding to invoice.');
-                                $('#barcode').val('');
-                                $('#barcode').focus();
-                                return;
-                            }
-
-                            var date = $('#date').val();
-                            var sale_no = $('#sale_no').val();
-
-                            // Keep product list intact and drive selection from product dropdown.
-                            $('#product_id').val(String(product.id)).trigger('change');
-
-                            // Prepare data for Handlebars row
-                            var source = $("#document-template").html();
-                            var template = Handlebars.compile(source);
-                            var data = {
-                                date: date,
-                                sale_no: sale_no,
-                                barcode: product.barcode,          // ðŸ”¹ added
-                                category_id: product.category_id,
-                                category_name: product.category.name,
-                                product_id: product.id,
-                                product_name: product.name,
-                                available_qty: availableQty,
-                                unit_id: product.unit_id,
-                                unit_name: product.unit.name,
-                                unit_selling_price: product.selling_price // ðŸ”¹ add this
-                            };
-                            var html = template(data);
-                            $("#addRow").append(html);
-
-                            // Clear barcode field after scan
-                            $('#barcode').val('');
-                            resetProductSelectionFields();
-
-                            // ðŸ”¹ Optional: show stock quantity
-                            // $('#current_stock_qty').val(product.quantity);
-
-                            Notiflix.Notify.success('Product added via barcode');
-                            $('#barcode').focus();
-                        } else {
-                            var backendMessage = product && product.message ? product.message : 'Product not found for this barcode.';
-                            Notiflix.Notify.failure(backendMessage);
-                            $('#barcode').val('');
-                            $('#barcode').focus();
-                        }
-                    },
-                    error: function(xhr){
-                        var backendMessage = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Error looking up barcode. Try again.';
-                        Notiflix.Notify.failure(backendMessage);
-                        $('#barcode').val('');
-                        $('#barcode').focus();
-                    }
-                });
+                submitBarcodeLookup($(this).val());
             });
 
             // Existing add button flow (manual selection)
@@ -1177,7 +1245,7 @@
                 $('#getfund_amount').val(round2(getfundAmount));
                 $('#vat_amount').val(round2(vatAmount));
 
-                $('#estimated_amount').val(round2(netTotal));
+                $('#estimated_amount').val(formatMoney(netTotal));
                 updateTenderSummary();
 
             }  

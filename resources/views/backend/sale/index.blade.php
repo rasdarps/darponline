@@ -11,7 +11,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Sales Sale All</h4>  
+                    <h4 class="mb-sm-0">All Sales</h4>  
                 </div>
             </div>
         </div>
@@ -131,6 +131,11 @@
         </div>
     </div>
 @endcan
+
+<form id="reprintSaleForm" method="POST" style="display:none;">
+    @csrf
+    <input type="hidden" name="reason" id="reprint_reason">
+</form>
 @endsection
 
 @section('scripts')
@@ -216,6 +221,40 @@
                             $btn.prop('disabled', false).html('<i class="fas fa-ban me-1"></i> Confirm Cancellation');
                         }
                     });
+                });
+            @endcan
+
+            @can('sale-reprint')
+                $(document).on('click', '.btn-reprint-sale', function() {
+                    const saleNo = $(this).data('no');
+                    const actionUrl = $(this).data('url');
+                    if (!(window.Notiflix && Notiflix.Confirm && typeof Notiflix.Confirm.prompt === 'function')) {
+                        Notiflix.Notify.failure('Reprint reason dialog is unavailable.');
+                        return;
+                    }
+
+                    Notiflix.Confirm.prompt(
+                        'Reprint Sale',
+                        'Enter reason for reprint of Sale #' + saleNo + ':',
+                        '',
+                        'Submit',
+                        'Cancel',
+                        function(clientAnswer) {
+                            const reason = (clientAnswer || '').trim();
+
+                            if (!reason) {
+                                Notiflix.Notify.failure('Please enter a reason for reprint.');
+                                return;
+                            }
+
+                            $('#reprintSaleForm')
+                                .attr('action', actionUrl)
+                                .find('#reprint_reason')
+                                .val(reason);
+
+                            $('#reprintSaleForm')[0].submit();
+                        }
+                    );
                 });
             @endcan
         });

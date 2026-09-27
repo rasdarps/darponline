@@ -66,6 +66,7 @@ class PermissionTableSeeder extends Seeder
 
         $transactions_management_permissions = [ 
               'sale-list','sale-create','sale-cancel','sale-print',
+              'sale-reprint','sale-receipt-audit-view','sale-receipt-print-audit-view','sale-delivery-verify',
                 'purchase-list','purchase-create','purchase-edit','purchase-cancel','purchase-print',
         ];
 
@@ -308,6 +309,9 @@ class PermissionTableSeeder extends Seeder
                 'cash-reconciliation-show',
                 'cash-reconciliation-approve',
                 'cash-reconciliation-reverse-approval',
+                'sale-reprint',
+                'sale-receipt-audit-view',
+                'sale-delivery-verify',
             ]
         );
 
@@ -339,6 +343,9 @@ class PermissionTableSeeder extends Seeder
             'cash-reconciliation-reverse-approval',
             'user-audit-view',
             'user-filter-view',
+            'sale-reprint',
+            'sale-receipt-audit-view',
+            'sale-delivery-verify',
         ];
 
         foreach ($supervisor_permissions as $supervisor_permission) {

@@ -65,6 +65,9 @@
                                                     <li><a href="{{ route('sales.index') }}">All Sales</a></li>
                                                     <li><a href="{{ route('sales.daily-total-sales') }}">Daily Total Sales</a></li>
                                                 @endcan
+                                                @can('sale-delivery-verify')
+                                                    <li><a href="{{ route('sales.delivery-verification') }}">Delivery Verification</a></li>
+                                                @endcan
                                                 
                                             </ul>
                                         </li>
@@ -125,7 +128,7 @@
                             @endcanany
                          {{-- transaction menu ends --}}
 
-                         @canany(['report-summary-ledger', 'report-profit', 'report-expense', 'report-stock-adjustment', 'stock-product-trail-report', 'stock-report', 'stock-value-report', 'stock-ledger-report', 'product-price-history-list', 'view-purchase-edit-trail'])
+                         @canany(['report-summary-ledger', 'report-profit', 'report-expense', 'report-stock-adjustment', 'stock-product-trail-report', 'stock-report', 'stock-value-report', 'stock-ledger-report', 'product-price-history-list', 'view-purchase-edit-trail', 'sale-receipt-audit-view'])
                          <li class="menu-title">Reports</li>
                             <li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -168,6 +171,9 @@
                                     <span>Audit Report</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
+                                    @can('sale-receipt-print-audit-view')
+                                        <li><a href="{{ route('sales.receipt-audit') }}">Receipt Print Audit</a></li>
+                                    @endcan
                                     @can('view-purchase-edit-trail')
                                         <li><a href="{{ route('reports.purchase-edit-trail') }}">Purchase Edit Trail</a></li>
                                     @endcan

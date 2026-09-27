@@ -40,14 +40,18 @@ class CreateAdminUserSeeder extends Seeder
                 'phone' => $adminPhone,
                 'password' => bcrypt('Juliana@1985'),
                 'user_type' => 'Super Admin',
-                'created_by' => 1,
+                'created_by' => null,
             ]);
+
+            $user->forceFill([
+                'created_by' => $user->id,
+            ])->saveQuietly();
         } else {
             $updates = [
                 'name' => 'Kwaku Darpah',
                 'phone' => $adminPhone,
                 'user_type' => 'Super Admin',
-                'created_by' => 1,
+                'created_by' => $user->created_by ?: null,
             ];
 
             if ($user->email !== $adminEmail && ! User::where('email', $adminEmail)->whereKeyNot($user->getKey())->exists()) {
