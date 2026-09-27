@@ -27,6 +27,24 @@
         flex: 0 0 auto;
     }
 
+    #page-topbar .navbar-brand-box {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding-left: 10px;
+        padding-right: 8px;
+        min-width: 170px;
+    }
+
+    #page-topbar .header-brand-logo {
+        display: block;
+        width: auto;
+        max-width: 170px;
+        max-height: 44px;
+        object-fit: contain;
+        margin-top: 0 !important;
+    }
+
     @media (max-width: 991.98px) {
         #page-topbar .navbar-header {
             height: auto;
@@ -118,7 +136,7 @@
                                     <img src="{{ asset('images/logo_cart.png') }}" alt="logo_cart.png-light" height="22">
                                 </span> --}}
                                 <span class="logo-lg">
-                                    <img src="{{ asset('images/rict_logo.png') }}" alt="logo-light" height="60" style="margin-top: 5px;">
+                                    <img class="header-brand-logo" src="{{ asset('images/bg_logo.PNG') }}" alt="logo-light">
                                 </span>
                             </a>
                         </div>
@@ -291,7 +309,7 @@
     <div class="dropdown d-inline-block user-dropdown">
         <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <img class="rounded-circle header-profile-user" src="{{ asset('images/rict_logo.png') }}"
+            <img class="rounded-circle header-profile-user" src="{{ asset('images/bg_logo.PNG') }}"
                 alt="Application logo">
             <span class="d-none d-xl-inline-block ms-1">{{ $adminData->username }}</span>
             <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>

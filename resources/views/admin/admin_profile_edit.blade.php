@@ -53,7 +53,7 @@
 
                                 <div class="col-md-4 text-center">
                                     <label class="d-block"><strong>Profile Image</strong></label>
-                                    <img class="rounded-circle shadow-sm" width="140" height="140" src="{{ asset('images/rict_logo.png') }}" alt="Application logo">
+                                    <img class="rounded-circle shadow-sm" width="140" height="140" src="{{ asset('images/bg_logo.PNG') }}" alt="Application logo">
                                 </div>
                             </div>
 

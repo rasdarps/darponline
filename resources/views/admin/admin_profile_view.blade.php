@@ -20,7 +20,7 @@
             <div class="col-xl-4 col-lg-5">
                 <div class="card">
                     <div class="card-body text-center py-4">
-                        <img class="rounded-circle shadow-sm mb-3" width="120" height="120" src="{{ asset('images/rict_logo.png') }}" alt="Application logo">
+                        <img class="rounded-circle shadow-sm mb-3" width="120" height="120" src="{{ asset('images/bg_logo.PNG') }}" alt="Application logo">
                         <h5 class="mb-1">{{ $adminData->name }}</h5>
                         <p class="text-muted mb-0">{{ $adminData->username }}</p>
                     </div>
